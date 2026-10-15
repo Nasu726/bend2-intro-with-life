@@ -76,17 +76,17 @@ def glider() -> Array<U32>:
 # Carry a board, neighbour count, and original cell state together.
 # Destructuring is allowed here because r is a parameter.
 def fill(todo: Nat, +i: U32, r: Array<U32> & (U32 & U32), out: Array<U32>) -> Array<U32>:
-  (old, pair) = r
-  (n, alive) = pair
   match todo:
     case 0n:
       out
     case 1n+p:
+      (old, pair) = r
+      (n, alive) = pair
       next = rule(alive, n)
       out1 = Array.set(U32, out, i, next)
       +j = (i + 1 : U32)
       x = (j % 8 : U32)
-      y = (j / 8 : U32)
+      y = ((j / 8 : U32) % 8 : U32)
       fill(p, j, neighbors(x, y, old), out1)
 
 def step(board: Array<U32>) -> Array<U32>:

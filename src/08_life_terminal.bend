@@ -74,17 +74,17 @@ def glider() -> Array<U32>:
 # Carry a board, neighbour count, and original cell state together.
 # Destructuring is allowed here because r is a parameter.
 def fill(todo: Nat, +i: U32, r: Array<U32> & (U32 & U32), out: Array<U32>) -> Array<U32>:
-  (old, pair) = r
-  (n, alive) = pair
   match todo:
     case 0n:
       out
     case 1n+p:
+      (old, pair) = r
+      (n, alive) = pair
       next = rule(alive, n)
       out1 = Array.set(U32, out, i, next)
       +j = (i + 1 : U32)
       x = (j % 8 : U32)
-      y = (j / 8 : U32)
+      y = ((j / 8 : U32) % 8 : U32)
       fill(p, j, neighbors(x, y, old), out1)
 
 def step(board: Array<U32>) -> Array<U32>:
@@ -92,12 +92,13 @@ def step(board: Array<U32>) -> Array<U32>:
 
 # The recursion itself receives the array and the value as a parameter.
 def read_cells(todo: Nat, +i: U32, text: String, r: Array<U32> & U32) -> Array<U32> & String:
-  (board, v) = r
-  newer = text ++ U32.show(v)
   match todo:
     case 0n:
-      (board, newer)
+      (board, v) = r
+      (board, text ++ U32.show(v))
     case 1n+p:
+      (board, v) = r
+      newer = text ++ U32.show(v)
       read_cells(p, (i + 1 : U32), newer, Array.get(U32, board, (i + 1 : U32)))
 
 def render_cells(n: Nat, +i: U32, board: Array<U32>) -> Array<U32> & String:
@@ -108,12 +109,13 @@ def render_cells(n: Nat, +i: U32, board: Array<U32>) -> Array<U32> & String:
       read_cells(p, i, "", Array.get(U32, board, i))
 
 def read_rows(todo: Nat, +i: U32, text: String, r: Array<U32> & String) -> Array<U32> & String:
-  (board, line) = r
-  newer = text ++ line ++ "\n"
   match todo:
     case 0n:
-      (board, newer)
+      (board, line) = r
+      (board, text ++ line ++ "\n")
     case 1n+p:
+      (board, line) = r
+      newer = text ++ line ++ "\n"
       read_rows(p, (i + 8 : U32), newer, render_cells(8n, (i + 8 : U32), board))
 
 def render_rows(n: Nat, +i: U32, board: Array<U32>) -> Array<U32> & String:
@@ -124,14 +126,15 @@ def render_rows(n: Nat, +i: U32, board: Array<U32>) -> Array<U32> & String:
       read_rows(p, i, "", render_cells(8n, i, board))
 
 def show_rendered(todo: Nat, +generation: U32, r: Array<U32> & String) -> IO(Unit):
-  (board, picture) = r
   match todo:
     case 0n:
+      (board, picture) = r
       do IO<Unit>:
         IO.print("generation " ++ U32.show(generation))
         IO.print(picture)
         IO.print("done")
     case 1n+p:
+      (board, picture) = r
       do IO<Unit>:
         IO.print("generation " ++ U32.show(generation))
         IO.print(picture)
