@@ -1,8 +1,8 @@
-# Bend 2 基本機能監査（v1.1）
+# Bend 2 基本機能監査（第1版）
 
 監査基準: [公式ガイド](https://github.com/bendlang/bend/blob/main/guide/GUIDE.md)、[公式README](https://github.com/bendlang/bend)、[Base](https://github.com/bendlang/bend/blob/main/bend2/base.bend)。2026-10-16時点のBend 2.0.36を対象とする。
 
-「掲載済み」は本文・演習・ソースで取り上げたことを意味する。**Bend CLIで正常動作を確認したという意味ではない**。独立PythonテストはBendの型チェックや停止性の証明とは無関係。
+「掲載済み」は本文・演習・ソースで取り上げたことを意味します。**Bend 2.0.37を使ったCIでは26ファイルの型検査と逐次ライフゲームの実行比較に成功しています**が、掲載したすべてのGUI・GPU・証明用APIの実行を保証するものではありません。
 
 | 仕様分野 | 対応 | サンプル / 実装段階 |
 | --- | --- | --- |
@@ -16,7 +16,7 @@
 | Bool/Cmp、F32、Char/String、bit | 本文と演習 | `bend base`で定義を参照。F32精度の証明は対象外 |
 | Maybe、Result、モナドとdo | 本文と例 | `21_monadic_maybe.bend` |
 | Map / Set | Mapは例、Setは課題 | `25_map_basics.bend`, `bend base Set` |
-| モジュール / import / 構築 | 本文と例 | `18_module_math.bend`, `19_module_main.bend` |
+| モジュール / import / 構築 | 本文と例 | `module_math.bend`, `19_module_main.bend` |
 | IO、File、args、エラー | 本文とFile例 | `20_io_fork.bend`, `26_file_write.bend`（上書き注意） |
 | IOの並行性 / Channels | 本文と例 | `20_io_fork.bend` |
 | 純粋なCPU並列 / GPU ! | 本文と独立例 | `09_parallel_tree.bend`, `10_gpu_tree.bend`。Life本体は未実装 |
@@ -27,8 +27,8 @@
 
 ## 既知の未完・未検証事項
 
-1. Bendが制作環境に存在しないため、全`.bend`例の構文と型の最終確認は未実施。`make bend-check`を導入環境で実行する。
-2. 8×8のLife完成版はPythonオラクル6件に対応するBendソースを用意済みだが、Bend CLIでの差分照合は未実施。`make check`で照合する。
+1. GitHub Actions上のBend 2.0.37で、意図的に誤った例を除く26ソースファイルの型検査に成功しています。
+2. Bendで生死規則の18ケースと8×8の5世代全セルを検査し、Python参照実装と一致しました。
 3. 並列GPUのLife本体、ファイルからのパターン読込、可変サイズ、GUI版、盤面全体の形式証明は発展課題。
 4. Set、ネットワーク、音声、独自FFI、BendHubについては概念とAPI調査課題を用意。全APIの実演・動作確認はしていない。
 
