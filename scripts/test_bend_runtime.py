@@ -35,11 +35,17 @@ def run(args: list[str], timeout: int = 120) -> str:
 def test_all_sources() -> None:
     sources = sorted(SOURCE.glob("*.bend"))
     assert sources, "No Bend examples found"
+    errors = []
     for src in sources:
         if src == FAILURE_SOURCE:
             continue
         print(f"TYPECHECK {src.relative_to(ROOT)}", flush=True)
-        run(["bend", str(src), "--check-only"])
+        try:
+            run(["bend", str(src), "--check-only"])
+        except AssertionError as exc:
+            errors.append(str(exc))
+    if errors:
+        raise AssertionError("\n\n".join(errors))
     print(f"PASS: {len(sources)-1} source files typechecked")
 
 
