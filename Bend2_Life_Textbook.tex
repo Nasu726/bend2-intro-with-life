@@ -1,0 +1,1187 @@
+% !TEX program = xelatex
+% Bend 2.0.36 / 2026-10-16; reproducible source of the accompanying PDF.
+\documentclass[11pt,a4paper,openany]{book}
+\usepackage[margin=22mm,top=25mm,bottom=24mm,headheight=16pt]{geometry}
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setmainfont{Noto Serif}
+\setsansfont{Noto Sans}
+\setmonofont{Noto Sans Mono CJK JP}[Scale=0.84]
+\setCJKmainfont{Noto Serif CJK JP}
+\setCJKsansfont{Noto Sans CJK JP}
+\setCJKmonofont{Noto Sans Mono CJK JP}
+\usepackage{amsmath,amssymb,mathtools,booktabs,tabularx,longtable,multicol}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,fit,shapes.geometric}
+\usepackage[most]{tcolorbox}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{needspace}
+\usepackage{etoc}
+\usepackage{float}
+\definecolor{ink}{HTML}{17263C}
+\definecolor{blue}{HTML}{176A9A}
+\definecolor{teal}{HTML}{167A72}
+\definecolor{warm}{HTML}{C16D25}
+\definecolor{paper}{HTML}{F5F7FA}
+\definecolor{soft}{HTML}{E6EDF2}
+\definecolor{codebg}{HTML}{F4F7FA}
+\definecolor{muted}{HTML}{536378}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=teal,pdftitle={ライフゲームで学ぶ はじめてのBend2},pdfauthor={Nasu726},pdfsubject={Bend 2 hands-on programming and Game of Life}}
+\setlength{\parskip}{.5em}
+\setlength{\parindent}{0pt}
+\setlist{nosep,leftmargin=2em}
+\fancyhf{}
+\fancyhead[LE,RO]{\sffamily\small\textcolor{muted}{ライフゲームで学ぶ はじめてのBend2}}
+\fancyhead[LO,RE]{\sffamily\small\textcolor{muted}{\nouppercase{\leftmark}}}
+\fancyfoot[C]{\sffamily\small\thepage}
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0.3pt}
+\usepackage{titlesec}
+% 標準bookクラスのpartは独立した見出しページを作ります。
+% straightクラスへ変え、見出しの直後に当該Partの目次を配置します。
+\titleclass{\part}{straight}
+\titleformat{\part}[display]
+  {\sffamily\bfseries\color{ink}\raggedright}
+  {\color{teal}\fontsize{16}{21}\selectfont PART \thepart}
+  {5mm}
+  {\fontsize{27}{35}\selectfont}
+\titlespacing*{\part}{0pt}{30mm}{15mm}
+\titleformat{\chapter}[display]{\normalfont\sffamily\bfseries\color{ink}}{\fontsize{12}{14}\selectfont Chapter \thechapter}{10pt}{\fontsize{24}{30}\selectfont}
+\titleformat{\section}{\Large\sffamily\bfseries\color{ink}}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\sffamily\bfseries\color{blue}}{\thesubsection}{1em}{}
+\lstdefinelanguage{BendTwo}{
+  morekeywords={import,def,law,type,is,match,case,do,return,for,exs,where,unsafe},
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]",
+}
+\lstset{language=BendTwo,basicstyle=\ttfamily\footnotesize,
+ keywordstyle=\color{blue}\bfseries,commentstyle=\color{muted}\itshape,
+ stringstyle=\color{teal},numbers=left,numberstyle=\tiny\color{muted},
+ stepnumber=1,numbersep=8pt,breaklines=true,breakatwhitespace=true,
+ showstringspaces=false,columns=fullflexible,keepspaces=true,upquote=true,
+ tabsize=2,frame=single,rulecolor=\color{soft},backgroundcolor=\color{codebg},
+ xleftmargin=12pt,xrightmargin=3pt,framexleftmargin=12pt,
+ aboveskip=9pt,belowskip=9pt,captionpos=b}
+\newtcolorbox{pointbox}[1][]{enhanced,breakable,colback=paper,colframe=blue!32,
+ boxrule=.6pt,arc=2mm,left=4mm,right=4mm,top=3mm,bottom=3mm,
+ title={\sffamily\bfseries 要点},coltitle=ink,fonttitle=\sffamily\bfseries,#1}
+\newtcolorbox{exercisebox}[1][]{enhanced,breakable,colback=white,colframe=teal!55,
+ boxrule=.7pt,arc=1.5mm,left=4mm,right=4mm,top=3mm,bottom=3mm,
+ title={\sffamily\bfseries ハンズオン／確認問題},coltitle=ink,#1}
+\newtcolorbox{cautionbox}[1][]{enhanced,breakable,colback=warm!5,colframe=warm!65,
+ boxrule=.7pt,arc=1.5mm,left=4mm,right=4mm,top=3mm,bottom=3mm,
+ title={\sffamily\bfseries 注意},coltitle=ink,#1}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\file}[1]{\textsf{\color{blue}#1}}
+\newcommand{\term}[1]{\textbf{#1}}
+\newcommand{\key}[1]{\textcolor{blue}{\textbf{#1}}}
+\newcommand{\readcode}[2]{\lstinputlisting[caption={#2}]{src/#1}}
+\newcommand{\exercise}[1]{\begin{exercisebox}#1\end{exercisebox}}
+% Part別の章一覧は .toc から自動抽出。章を増減しても同期します。
+\newcommand{\partchaptertoc}{%
+  \begingroup
+  \etocsetnexttocdepth{chapter}%
+  \etocsettocstyle{%
+    \vspace{2mm}\begin{tcolorbox}[colback=paper,colframe=blue!32,boxrule=.5pt,arc=2mm,
+        title={\sffamily\bfseries このPartの目次},coltitle=ink,fonttitle=\sffamily\bfseries]
+    \small\sffamily
+  }{\end{tcolorbox}}%
+  \localtableofcontents
+  \endgroup
+}
+
+\begin{document}
+\frontmatter
+\begin{titlepage}
+  \pagecolor{paper}
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[blue] ([xshift=-2.2cm,yshift=-8.3cm]current page.north east) circle (4.0cm);
+    \fill[teal!70] ([xshift=-2.2cm,yshift=-8.3cm]current page.north east) circle (2.6cm);
+    \foreach \x/\y in {0/0,1/0,2/0,2/1,1/2,0/2,3/3,4/2,5/1,4/0} {
+      \fill[white,opacity=.55] ([xshift=-4.3cm,yshift=-10.7cm]current page.north east) ++(\x*.37cm,\y*.37cm) rectangle ++(.28cm,.28cm);
+    }
+  \end{tikzpicture}
+  \vspace*{34mm}
+  {\sffamily\fontsize{15}{19}\selectfont\color{blue} 実装し、観測し、速くし、正しさを確かめる}\par
+  \vspace{13mm}
+  {\sffamily\bfseries\fontsize{22}{29}\selectfont\color{blue} ライフゲームで学ぶ\par}
+  \vspace{5mm}
+  {\sffamily\bfseries\fontsize{37}{48}\selectfont\color{ink} はじめてのBend2\par}
+  \vspace{12mm}
+  {\sffamily\Large 基礎文法からライフゲームの完成、並列計算と証明へ}\par
+  \vfill
+  {\sffamily\large 本文・演習・Bendソース・独立テスト付き}\par
+  \vspace{5mm}
+  {\sffamily\large 2026年10月16日・第1版 \quad / \quad Bend 2.0.36 基準}\par
+  \vspace{15mm}
+\end{titlepage}
+\nopagecolor
+\chapter*{本書の読み方と検証状態}
+\addcontentsline{toc}{chapter}{本書の読み方と検証状態}
+本書で作るものは、\term{8×8のトーラス型ライフゲーム（B3/S23）を5世代表示するターミナル・シミュレータ}です。
+完成版は\file{src/08\_life\_terminal.bend}に収録しています。ただし、初めから完成版を丸写しするのではありません。
+まず小さな関数で1セルの規則を表し、配列の操作を覚え、盤面と近傍の計算を加えます。最後に1世代の更新と文字表示を組み合わせます。
+
+\begin{pointbox}
+まず\textbf{Part Iで言語の基礎}を学び、\textbf{Part IIでライフゲーム本体}を組み立てます。Part IIIでは入出力（I/O）や画面表示などのアプリケーション基礎を学び、Part IVでは計算量、並列化、証明へ進みます。各章では「出力を予想する $\rightarrow$ 実行する $\rightarrow$ 改造する $\rightarrow$ 結果を記録する」を繰り返しましょう。最後に自分で新しいパターンを追加し、テストで確かめます。
+\end{pointbox}
+
+\begin{cautionbox}
+\textbf{検証状態を区別してください。} 掲載するBendのコードは公式ガイドと公開例を参照して作成しましたが、このPDFの生成環境には\code{bend}コンパイラがないため、\textbf{ローカルではBendの型検査と実行は未確認です}。一方、独立したPythonの参照実装と6件の自動テストは実行済みで、すべて成功しました。Pythonによる参照テストだけでは、Bendコードがそのまま動く保証になりません。そこでCIではBend本体の型検査、実行出力の厳密な比較、意図的に誤ったコードの失敗検査まで行います。構文や型のエラーが見つかった場合は、インストールした版の\code{bend guide}と\code{bend base}を確認し、検証ログへ記録してください。\textbf{GPUで動作するライフゲーム本体は未完成です。}
+\end{cautionbox}
+
+本書では、各Partの見出しと章別目次を同じページにまとめました。また、章の冒頭に学習内容の見取り図を置き、必要な用語を登場する場所で説明します。基本機能の学習範囲は、最後の「Bend 2 基本機能監査表」で確認できます。
+
+\term{必修実装}は、CPU上で5世代を表示するターミナル・シミュレータです。\term{上級拡張}は、CPUでのマルチコア化、GPU移植、ライフゲームに関する形式的な証明を扱う研究演習です。付属する独立の並列サンプルや証明例と、ライフゲーム本体への統合が完了した状態とは区別してください。
+
+\section*{同梱ファイル}
+\begin{tabularx}{\linewidth}{@{}p{46mm}X@{}}
+\toprule
+\file{src/01...11.bend} & Life本体、並列・GPU独立例、局所規則の証明例。\\
+\file{src/13...26.bend} & 型、リスト、関数、テンプレート、モジュール、IO、App、Kind、Map、ファイル、帰納法の基本機能補充例。\\
+\file{src/12\_...INVALID.bend} & アフィン性の違反を観察するための\textbf{意図的な誤り}。通常のビルド対象から外す。\\
+\file{scripts/reference.py} & Python製の独立オラクル。期待盤面を生成します。\\
+\file{scripts/check\_bend.py} & Bend出力をオラクルと比較し、不一致や実行失敗で非ゼロ終了する統合テスト。\\
+\file{tests/test\_reference.py} & Pythonオラクル自体の6件の検査。\\
+\file{Bend2\_Life\_Textbook.tex} & XeLaTeX原稿。編集・再組版が可能です。\\
+\bottomrule
+\end{tabularx}
+
+
+\chapter*{学習前に知っておきたい基本用語}
+\addcontentsline{toc}{chapter}{学習前に知っておきたい基本用語}
+プログラミングを始めたばかりの方も、本書を読み進められるようにします。
+ここでは、まず\term{プログラム}が「コンピュータに行わせる処理を書いたもの」であることを確認します。
+そのプログラムを人が読んだり編集したりできる文字列が\term{ソースコード（source code）}です。
+難しい言葉をすべて覚える必要はありません。コードに出てきたときに、このページへ戻ってください。
+
+\begin{longtable}{@{}p{47mm}p{103mm}@{}}
+\toprule 用語 & 意味と本書での使い方\\\midrule\endhead
+\term{値（value）} & 数値の\code{3}や文字列の\code{"Life"}など、計算の対象になるものです。\\
+\term{変数（variable）} & 値に付ける名前です。\code{x}や\code{board}などを使います。Bend 2では利用回数に制約がある場合があります。\\
+\term{式（expression）} & 計算して値になる記述です。たとえば\code{(2 + 3 : U32)}です。\\
+\term{関数（function）} & 入力を受け取り結果を返す処理です。\code{rule}は一つのセルの次の状態を求めます。\\
+\term{引数（argument）} & 関数に渡す具体的な値です。\code{rule(1,3)}の\code{1}と\code{3}が引数です。関数を宣言するときの\code{alive}などの名前は\term{仮引数（parameter）}と呼びます。\\
+\term{返り値（return value）} & 関数が計算の結果として返す値です。\code{rule(1,3)}の返り値は\code{1}です。\\
+\term{型（type）} & 値の種類と、可能な操作を表す情報です。\code{U32}は32ビット符号なし整数、\code{String}は文字列の型です。\\
+\term{配列（array）} & 複数の値を順番に並べ、位置を指定してアクセスする構造です。本書では64個のセルを並べて盤面を表します。\\
+\term{添字（index）} & 配列の要素がどの位置にあるかを示す番号です。最初の位置を0として数えます。\\
+\term{再帰（recursion）} & 関数が自分自身を呼ぶ処理です。終わる条件を設ける必要があります。\\
+\term{副作用（side effect）} & 値を返すだけでなく、画面表示やファイル書き込みなど外部へ働きかけることです。\\
+\term{コンパイル（compilation）} & ソースコードを、実行できる形式などへ変換する工程です。\term{型検査（type checking）}は、各式の型が合っているかを調べる検査です。\\
+\term{テスト（test）} & 期待した入力と出力を用意し、実際の動作が一致するかを調べることです。すべての入力に対する数学的な証明とは異なります。\\
+\bottomrule
+\end{longtable}
+
+\begin{pointbox}
+本書では、日常的な説明には一般に使われている日本語を優先します。Bendの型名や構文（\code{Kind}、\code{Data}、\code{IO}など）はそのまま記しますが、登場する場所で意味を説明します。
+\end{pointbox}
+
+\tableofcontents
+\mainmatter
+\clearpage
+\part{はじめてのBend 2}
+\partchaptertoc
+\chapter{目標設定とライフゲームの仕様}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 本章では、ライフゲームの規則を日本語と数式で整理します。\term{仕様（specification）}とは「完成したプログラムが何をするべきか」を定めた約束です。まず仕様を決めると、後で正しさを確認しやすくなります。
+\end{tcolorbox}
+
+\section{何を作るか}
+ライフゲームは二次元格子の各セルが生存（1）か死亡（0）かを持つ\term{セル・オートマトン（cellular automaton）}です。周囲8方向にある\term{近傍セル（neighboring cell）}の生存数を数えて、次の状態を決めます。簡単な規則ですが、移動する模様や形を変え続ける模様が生まれます。そのため、小さなプログラムでも\term{モデル化（modeling）}、境界での処理、テスト、性能評価を学べます。
+
+本書では格子を8行×8列、セルを\code{U32}の0と1、座標を\((x,y)\)（左上が\((0,0)\)）とします。盤面の右端は左端に、下端は上端につながります。これを\term{周期境界条件（periodic boundary condition）}と呼びます。全セルを\textbf{同時に更新}します。
+
+\section{生死規則 B3/S23}
+セル\(a\in\{0,1\}\)と、その8近傍の生存数\(n\in\{0,\ldots,8\}\)に対して
+\[
+F(a,n)=\begin{cases}
+1&n=3\quad\text{（生死によらず誕生／生存）}\\
+a&n=2\quad\text{（現状維持）}\\0&\text{その他}
+\end{cases}
+\]
+これが\textbf{B3/S23}（Birth at 3, Survive at 2 or 3）です。いわゆる「生存セルは2～3近傍で生き残る」という説明と矛盾しません。生存数だけでは次状態は決まらず、\(n=2\)なら現在の状態を参照することに注意してください。
+
+\begin{center}
+\begin{tikzpicture}[scale=.62]
+\foreach \x in {0,...,7}{\foreach \y in {0,...,7}{\draw[gray!50] (\x,\y) rectangle ++(1,1);}}
+\foreach \x/\y in {1/7,2/6,0/5,1/5,2/5}{\fill[teal!75] (\x+.07,\y+.07) rectangle ++(.86,.86);}
+\node[anchor=west,align=left,font=\sffamily\small] at (8.5,5.7) {世代0のグライダー\\生存: 5セル\\1=生存、0=死亡};
+\draw[-{Stealth},very thick,teal] (8.4,4.3)--(10.0,3.4);
+\node[anchor=west,font=\sffamily\small] at (8.6,3.1) {4世代後に右下へ1マス};
+\end{tikzpicture}
+\end{center}
+
+\section{受け入れ条件}
+\begin{enumerate}
+\item 正しいグライダーを初期状態として5枚（世代0～4）の8×8盤面を表示します。
+\item 近傍として数えるのは周囲の8マス\textbf{だけ}です。中心のセル自身は数えません。
+\item すべてのセルの新状態を、更新前の盤面だけから計算します。\term{その場更新（in-place update）}を1セルずつ行う方法は採用しません。
+\item ブロックが静止、ブリンカーが周期2、グライダーが4世代で斜めへ1マス動くことをPythonの独立実装と照合します。
+\item 表示と更新を分離して、後で表示形式・実行先を交換できる形にします。
+\end{enumerate}
+\exercise{上の規則から、現在0/1の各場合について近傍数0～8の真理値表（\(2\times9\)個）を作ってみましょう。なぜ「3なら1、2なら現状、それ以外0」の3分岐で全部を処理できるのかを説明してみましょう。}
+
+\chapter{環境構築と最初の実行}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 本章では、\term{ターミナル（terminal）}という文字入力の画面からBendを起動します。コマンドを一つ実行し、表示が変わるところまで進みましょう。
+\end{tcolorbox}
+
+\section{導入前に確認すること}
+Bend 2は旧Bend 1とは別物として扱います。2026年10月16日時点でGitHubの公式リリース一覧における最新タグは\code{v2.0.36}。本書の例もこれを基準とします。WindowsはWSLのLinux環境で進めるとよいでしょう。macOSやLinuxではターミナルを使います。GPUがなくても基礎章と証明章は学習できます。
+
+\begin{lstlisting}[language={},caption={導入、動作確認、一次資料の表示}]
+curl -fsSL https://bend-lang.com/install.sh -o install-bend.sh
+# Inspect install-bend.sh before execution.
+sh install-bend.sh
+export PATH="$HOME/.bend/bin:$PATH"
+bend version
+bend guide
+bend base
+\end{lstlisting}
+\code{bend version}の値と表示されたパスを\file{VERSION\_LOG.md}へ記録します。インストール用シェルを内容確認せず実行しません。\code{bend update}がある環境では勝手に更新した後の資料と旧コードを混ぜず、バージョンを記録してから学習します。
+
+\section{Bendのプログラムを実行する}
+\readcode{01_hello.bend}{はじめてのBend 2（01\_hello.bend）}
+
+\code{import Base}は標準ライブラリの参照であり、\code{def main() -> IO(Unit):}は端末表示という副作用を伴う入口を宣言します。\code{do IO<Unit>:}で順番に効果を行い、\code{IO.print}を実行します。「純粋な値を返す関数」と「外界へ働きかける関数」は区別されます。
+
+\begin{lstlisting}[language={},caption={確認からネイティブ生成まで}]
+bend src/01_hello.bend
+bend src/01_hello.bend --check-only
+bend src/01_hello.bend -o build/hello
+./build/hello
+\end{lstlisting}
+ネイティブ生成には適切なClangが必要です。GPUを呼ぶコードでは要求バージョンが高くなり、LinuxではCUDA 12、macOSではMetalの要件があります。\textbf{Bendインタプリタの所要時間とネイティブ実行時間を同列で比較しません。}
+
+\section{型エラーの表示を確認する}
+\code{IO.print}の文字列を数値に変えてみましょう。次に型注釈を消してみます。さらに返り値の型を\code{U32}にして表示命令を残し、どのエラーが出るか観察します。エラーメッセージのうち\term{expected}と\term{observed}がどの式を指しているかを説明します。
+
+\exercise{(1) \code{Bend 2 Life Lab}の文字列を変更して実行します。(2) \code{bend guide shaders}を実行し見出しを確認してみましょう。(3) 導入版・OS・CPU/GPU・Clangの情報を\file{VERSION\_LOG.md}に保存します。\textbf{合格条件}: ソースを編集して標準出力を変えられること。}
+
+\chapter{値、関数、数値型を使う}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small ここから実際に計算を記述します。\term{関数（function）}、\term{引数（argument）}、\term{返り値（return value）}を一つの短い式に結び付けて考えます。
+\end{tcolorbox}
+
+\section{引数と返り値の型}
+Bendでは\code{def f(x: T) -> R:}の形で関数を宣言します。戻り値は最後の式であり、Pythonのように常に\code{return}が必要なのではありません。\code{U32}は0以上の整数を32ビットに格納する型です。\code{Nat}は0、1、2、……という\term{自然数（natural number）}の型で、再帰や型の添字に使います。\code{3n}は\code{Nat}のリテラルで、\code{3}とは扱いを区別します。
+
+\readcode{02_arithmetic.bend}{行優先の添字計算（02\_arithmetic.bend）}
+座標\((x,y)\)を一列の配列に格納するとき、\(i=yW+x\)とします。幅\(W=8\)で\((2,3)\)なら\(i=26\)となります。\code{(y * 8 + x : U32)}は演算の型注釈です。\code{+x}の\code{+}は「値を複数回使える」と示す\term{使用量（quantity）}の指定であり、この短い例では実際には必須ではありません。量の意味は配列とアフィン性の章で扱います。
+
+\section{演算でつまずく場所}
+整数加減算の演算子だけを式として書かず、\code{(x + y : U32)}のように型を与える。\code{Nat}と\code{U32}の暗黙変換を当てにしません。\code{U32.to\_nat}・\code{U32.from\_nat}等は\code{bend base}で確認します。\code{U32}には範囲の限界があり、任意精度整数として扱ってはいけません。
+
+\begin{pointbox}
+数字だけで動作確認する\code{main() -> U32}は、値の正規化と表示が行われる経路になります。大きな仕事量・並列性能の測定では\code{-o}で生成した実行ファイルを用いる。
+\end{pointbox}
+
+\exercise{\(W=8\)について\((0,0),(7,0),(0,7),(7,7)\)を添字に変換しましょう。幅を16に変えるにはどの定数を差し替えるか。将来、幅を値\code{w: U32}として引数にした場合、どの式はそのままでよいか。}
+
+\chapter{パターンマッチで生死規則を実装する}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small Bend 2では、条件ごとに処理を分けるときに\term{パターンマッチ（pattern matching）}を使います。まず生死規則の三つの場合に当てはめましょう。
+\end{tcolorbox}
+
+\section{条件に応じて処理を分ける方法}
+「隣の生存セルが3個なら生きる」という規則には、条件による場合分けが必要です。ここでは\code{match}を使うと、どの条件に対応する処理なのかを明確に書けます。
+
+Bend 2の公開ガイドには通常の\code{if ... else}構文がなく、\code{match}と\code{True\{\}}／\code{False\{\}}を使います。特に\textbf{計算した式を直接matchできない}制限があります。例えば\code{match U32.is\_eq(n,3):}をそのまま書くのではなく、比較の結果を別関数の引数に渡し、その関数が\code{match}します。
+
+\readcode{03_rule.bend}{ライフゲームの遷移規則（03\_rule.bend）}
+\code{choose}に渡す二つのBooleanは\code{rule}で計算した値です。\code{choose}の中では引数として渡された値だけを\code{match}するので、公式ガイドが許す形になります。\code{+neighbors}は、\code{neighbors}を2度比較するために必要です。ここでの\code{+}は加算ではなく、変数を複数回使ってよいことを示す記号です。
+
+\section{三つの条件分岐を順番に追う}
+\begin{tabularx}{\linewidth}{@{}c c c X@{}}
+\toprule
+入力\(a\) & 近傍\(n\) & 結果 & どの分岐か\\
+\midrule
+0 & 3 & 1 & \code{is\_three=True}で生まれる。\\
+1 & 3 & 1 & \code{is\_three=True}で生存します。\\
+0 & 2 & 0 & \code{is\_two=True}で元の状態を返します。\\
+1 & 2 & 1 & \code{is\_two=True}で元の状態を返します。\\
+1 & 1 & 0 & 両方Falseなので死ぬ。\\
+1 & 4 & 0 & 両方Falseなので死ぬ。\\
+\bottomrule
+\end{tabularx}
+
+\exercise{\code{rule(0,3)}、\code{rule(1,2)}、\code{rule(1,4)}の出力を確認してみましょう。\code{+neighbors}を削除して期待したエラーになるか検証します。\textbf{追加}: 総当たりで18ケースを確認する表を作ってみましょう。}
+
+\chapter{配列とアフィン性を初めて理解する}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small これまでは数値一つを扱いました。ここから64個の値を保存する\term{配列（array）}を学びます。Bend独特の\term{アフィン性（affinity）}は「同じ値を何度も使ってよいとは限らない」という性質です。
+\end{tcolorbox}
+
+\section{配列から値を取り出す基本操作}
+
+配列の要素を読むには、\code{Array.get}を使います。ここで一つだけ、普通の配列操作と違う点があります。
+Bend 2では、通常の配列は所有する値として扱われ、操作に渡すと元の変数をそのまま再利用できません。
+そこで\code{Array.get}は、\textbf{取り出した要素}だけでなく、\textbf{その後も使うための配列}も組で返します。
+まずこの形を見てから、なぜ所有権が必要なのかを確認しましょう。
+
+\code{Array<U32>}は、32ビット符号なし整数を格納する配列型です。\term{種類（kind）}とは「型を分類するための分類」で、\code{Type}は値を自由に複製できない種類、\code{Data}は複製を許せる種類を表します。\code{Array<U32>}は\code{Type}に属するため、同じ配列を二つの処理に勝手に渡せません。読み取るときは\code{Array.get}が\term{組（pair）}として「続けて使う配列」と「読み取った値」の両方を返します。こうすることで同じ配列を勝手に何度も使わず、読み取り後の配列を再び明示して処理できます。
+
+\readcode{04_array.bend}{書き換えと読み出し（04\_array.bend）}
+\code{[0 : U32*8n]}は、0を8個並べて作る配列です。\code{Array.set(U32,a,5,42)}は、添字5に42を書き込みます。続く\code{Array.get}は、\code{(a,value)}という組を返します。最後は\code{value}だけを結果とするので、\code{a}は破棄されます。Bendは\textbf{アフィン}（高々1回の使用）であり、破棄は許されます。後出の「配列操作の糖衣構文」では\code{a[i]}と\code{a[i] <- v}も紹介します。
+
+\begin{cautionbox}
+\code{Array}は\code{+board}を宣言して何度も使うことができません。\file{src/12\_affine\_probe\_INVALID.bend}はこの失敗を観察する専用ファイルであり\textbf{正しくないことが正常}。普通の実行対象には含めない。
+\end{cautionbox}
+
+\section{値を使える回数を表す記号}
+\begin{tabularx}{\linewidth}{@{}p{28mm}X@{}}
+\toprule
+記法 & 解釈\\
+\midrule
+\code{x: T} & 変数\code{x}を高々1度使う。使わなくてもよい。\\
+\code{+x: T} & \code{T}が\code{Data}なら何度も使えます。参照カウント等のコストは無視できません。\\
+\code{-A: Data} & 消去される型引数。計算結果の型検査には現れるが実行時には不要。\\
+\code{Array<T>} & \code{Type}に属し、通常はコピー可能な\code{Data}ではありません。\\
+\bottomrule
+\end{tabularx}
+\exercise{\code{Array.get}の\code{(array,value)}を\code{(value,array)}と逆にするとどうなるか。\code{Array.set}した配列を使わず、古い配列を再利用すると何が問題か。エラーの全文を記録し、型エラーと規則違反を区別します。}
+
+
+\chapter{ユーザー定義型とデータのモデリング}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 数値の0と1で生死を表すと便利ですが、2や42も受け付けてしまいます。型の仕組みを使って、そもそも不適切な状態を作れないようにする考え方を学びます。
+\end{tcolorbox}
+
+\section{0/1から専用のCell型へ}
+前章までの\code{U32}なら\code{42}をセル状態として渡せてしまいます。\term{代数的データ型（algebraic data type; ADT）}は、許される状態をコンストラクタで限定します。Bendでは\code{type}で宣言し、\code{is Data}ならその値を再利用可能にできます。次の\code{Cell}は生死の二択以外を構築できません。
+\readcode{13_cell_adt.bend}{Cell型の導入（13\_cell\_adt.bend）}
+\code{match c}はコンストラクタに基づく場合分けです。コンストラクタのフィールドは\code{Square\{s: U32\}}のように名前を付けられます。\code{type Task is Type:}のように種類を\code{Type}とする宣言では、その値を\code{+}で複製することはできません。
+\section{ライフゲームとの接続}
+実装済みの\code{Array<U32>}を一気に置き換える必要はありません。まず境界で\code{Cell}と\code{U32}を変換し、無効な値を流入させない設計を考えます。次に\code{Array<Cell>}へ変更する場合、\code{Array.get}などの型引数、数え上げ、表示をどう変えるか列挙します。
+\exercise{(1) \code{Cell}に\code{Unknown\{\}}を追加すると表現できる状態はいくつか。(2) 生存セルだけに近傍数2/3の条件を適用する\code{Cell -> U32 -> Cell}を設計しましょう。(3) データ型に余分な状態があると不変条件の証明が難しくなる理由を説明しましょう。}
+
+\chapter{ListとMaybe：再帰的データと失敗を扱う}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 配列以外のデータの表し方を学びます。\term{リスト（list）}は要素を先頭からつなぐ構造で、\code{Maybe}は「結果があるかどうか」を型に含める仕組みです。
+\end{tcolorbox}
+
+\section{配列とリストを区別する}
+\code{Array}は長さが2の冪などの制約を持つ所有権付き領域であり、\code{List<A>}は\code{Nil\{\}}または\code{Con\{h,t\}}で構成される帰納的な鎖です。ライフゲームの\term{パターンに属する座標の列}や\term{描画イベントの列}はListで表現しやすい。
+\readcode{14_list_basics.bend}{リストを構造再帰で処理する（14\_list\_basics.bend）}
+\section{MaybeとResultの違い}
+\code{Maybe<A>}は値が\code{Some\{value\}}か\code{None\{\}}かを表します。\code{Result}は成功または失敗の情報を保持する用途に適します。パターンをファイルから読んで座標を解析する場面では、0を「解析失敗」と兼用せず、失敗を型で表す方が安全になります。\code{Maybe}の正確な量パラメータは\code{bend base Maybe}で確認します。
+\begin{pointbox}
+再帰関数は\term{停止性を証明できる構造的な減少}が重要です。\code{List}では\code{Con}のtail、\code{Nat}では\code{1n+p}のpが自然な減少引数になります。
+\end{pointbox}
+\exercise{(1) 生存セルの座標を一次元添字\code{List<U32>}として返す関数を設計します。(2) 空リストでは合計0になることを確認してみましょう。(3) 数値の解析に失敗した場合を\code{Maybe}で表現します。}
+
+\chapter{クロージャと高階関数}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small \term{クロージャ（closure）}は関数と、その関数が外側から覚えた値をまとめたものです。関数を引数として渡す\term{高階関数（higher-order function）}への入り口です。
+\end{tcolorbox}
+
+\section{関数も値になる}
+クロージャは関数本体と、そこに捕捉された値をまとめたものです。\code{x => e}で無名関数を作れるが、Bendでは\term{クロージャ自体がアフィン}なので、捕捉した値が\code{Data}であっても呼び出しは高々1回になります。
+\readcode{15_closure.bend}{異なる値を捕捉する二つのクロージャ（15\_closure.bend）}
+\code{U32.add(2)}のような部分適用もクロージャ。対照的に\term{トップレベル定義}は再利用できます。何度も呼ぶ変換関数を関数値として受け渡すときには、次章のテンプレートが選択肢になります。
+\section{ゲーム規則を差し替える設計}
+ルール\(F\)を引数として渡せると、Conway以外のB/S規則を試せる。一方、1セルの更新ごとに同じアフィン・クロージャを使い回すのは許されません。そのため「一度の呼び出しで一つの処理をする高階関数」と「再利用するルールを埋め込むテンプレート」を区別します。
+\exercise{(1) \code{adder(3)}と\code{adder(5)}を作って返り値を予想します。(2) 一つの\code{add2}を二度呼ぶプログラムを試し、量の制約のエラーを観察してみましょう。(3) 頻繁なゲームルール適用にテンプレートが適する理由を説明しましょう。}
+
+\chapter{テンプレートとコンパイル時の引数}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 「実行するたびに値を受け取る」のと「コンパイル時に処理を埋め込む」のは違います。ここでは\term{テンプレート（template）}を後者として理解します。
+\end{tcolorbox}
+
+\section{\code{\textasciitilde{}}は実行時のクロージャではない}
+テンプレート・パラメータ\code{\textasciitilde{}f}はコンパイル時にコードとして代入されます。関数適用が複数必要なときでも、アフィンなクロージャを無理にコピーしません。\term{各テンプレート引数の組み合わせごとにインスタンス化}されるため、コードサイズとのトレードオフがあります。
+\readcode{16_template.bend}{同じ処理を2度行うテンプレート（16\_template.bend）}
+\code{\textasciitilde{}(x => (x + 1 : U32))}は\term{呼び出し元の局所変数を捕捉しない閉じた構文}でなければなりません。テンプレートの宣言順序にも制約があります。\code{List.map}などBaseの定義を\code{bend base}で読むと利用例が分かります。
+\section{更新規則をコンパイル時に選択する}
+Lifeの\code{rule}を通常の関数として固定してもよいが、他のセル・オートマトン規則を差し替える実験では\code{\textasciitilde{}rule}を受け取るテンプレート化が有用です。ただし複数の規則を混在させる前に、\term{同じ型・同じ全体仕様}を満たすかを確認します。
+\exercise{\code{twice}を\code{thrice}へ拡張してみましょう。テンプレートと普通のクロージャの寿命・生成コードの違いを、実行時とコンパイル時に分けて説明してみましょう。}
+
+\chapter{数値・文字列・演算子と標準ライブラリ}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 数値型と文字列型は、用途ごとに使い分けます。まず整数と小数の違い、演算子が受け取る型、標準ライブラリの調べ方を整理します。
+\end{tcolorbox}
+
+\section{主要な値の型}
+Bend 2の基本的な数値型は\code{Nat}、\code{U32}、\code{F32}です。\code{F32}は小数を近似的に表す\term{浮動小数点数（floating-point number）}で、ビット単位の演算や丸めに注意します。\code{Bool}、\code{Cmp}、\code{Char}、\code{String}も使用します。現行の公式ガイドは\term{F64やI64が最初から使える}とは述べていない。
+\readcode{17_numbers_strings.bend}{整数演算と文字列化（17\_numbers\_strings.bend）}
+\section{演算子の型付けとビット演算}
+\code{(a + b : U32)}のように、型注釈は\term{その演算を囲う式自身}に置きます。\code{\&\&}・\code{||}はBool、\code{++}はString。\code{.\&.}、\code{.|.}、\code{.\^{}.}や\code{<<}などは\code{U32}のビット演算で、一般の数学的な等式と区別します。\code{F32}のビット精度を形式的に証明できると期待しません。
+\section{Baseを読む}
+\code{bend base --types}は型、\code{bend base U32}は整数、\code{bend base String}は文字列、\code{bend base Map}は連想写像のAPIを調べる手段となります。\code{Map}は文字列キーの辞書、\code{Set}は集合。学習では\term{新しい名前を勝手に推測せず、インストール版のBaseで引数・返却型を確認する}。
+\readcode{25_map_basics.bend}{Mapの所有権付きアクセス（25\_map\_basics.bend）}
+\exercise{(1) \code{Nat}と\code{U32}が自動変換されない例を探してみましょう。(2) \code{U32}のAND・OR・XORと比較の違いを小さい入力で表にします。(3) 生存セルの座標表示に使う数値$\rightarrow$文字列変換を列挙します。}
+
+\chapter{モジュールと複数ファイルのプログラム}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 一つのファイルが長くなったら、機能ごとに分割します。\term{モジュール（module）}とは、関数や型をひとまとめにした再利用単位です。
+\end{tcolorbox}
+
+\section{\code{import ./... as M}}
+ソースを分割するとLifeの純粋な更新核、IO、テスト、証明の責務が明確になります。各\code{.bend}ファイルがモジュールであり、\code{import ./file.bend as M}は名前空間\code{M}を与える。
+\readcode{18_module_math.bend}{取り込まれる側の定義（18\_module\_math.bend）}
+\readcode{19_module_main.bend}{別ファイルから定義を呼ぶ（19\_module\_main.bend）}
+\begin{lstlisting}[language={},caption={モジュールの実行と将来の分割}]
+bend src/19_module_main.bend
+# 将来: src/life_rule.bend, src/life_grid.bend, src/life_ui.bend
+\end{lstlisting}
+\section{パッケージ配布と名前の扱い}
+BendHubには内容ハッシュ指定や名前とバージョンによるimportと、\code{--publish}があります。公開は外部送信で取り消しの難しい操作なので、教材をGitHubに置くことと\term{BendHubにpublishすること}は分けて判断します。ライセンスやAPIバージョン管理も重要です。
+\exercise{Lifeの\code{rule}だけを別の\code{.bend}へ切り出す。importを通して呼べることを確認し、循環依存を作らずに整理しましょう。}
+
+\clearpage
+\part{ライフゲームを組み立てる}
+\partchaptertoc
+\chapter{一次元配列で8×8盤面を表す}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small ここからライフゲーム本体を作ります。2次元の盤面を1次元の配列に変換する方法を、実例と図で確かめましょう。
+\end{tcolorbox}
+
+\section{二次元の盤面を一次元配列に並べる}
+ボードを二重配列にするのではなく、長さ64の一次元\code{Array<U32>}とします。変換は\(i=8y+x\)、逆変換は\(x=i\bmod8,\ y=\lfloor i/8\rfloor\)。範囲は\(0\leq x,y<8\)、\(0\leq i<64\)です。配列アクセスに用いる\code{U32}添字は固定幅として扱います。
+
+
+\begin{pointbox}
+\textbf{配列は64要素に固定されていません。} 本書の64要素は8行×8列の盤面に合わせた設計上の選択です。
+Bend 2 の基本的な配列は要素数が2の累乗になる平衡二分木で表されます。
+たとえば\code{[0 : U32*256n]}は256要素、\code{Array.new(U32, 8n, 0)}も深さ8の256要素です。
+\code{Array.new}の深さは要素数そのものではなく、要素数\(2^d\)の指数\(d\)です。
+また\code{Array<Array<U32>>}のように\textbf{配列を要素に持つ配列}で二次元構造を表せます。
+ただし、本書では座標計算と更新を見通しよくするために一次元に並べます。
+縦横の長さが2の累乗でない盤面は、余白を設けたり、別の構造を選んだりする設計が必要です。
+\end{pointbox}
+
+\section{すべてのセルを0で初期化する}
+\code{[0 : U32*64n]}で要素64個を確保します。書き込みは\code{Array.set(U32,b,index,value)}で新しい所有者に移る。よって\code{b0,b1,b2,...}と変数名を変えていくとアフィン性が見えます。インデックスは\(8y+x\)で求めます。
+
+\begin{center}
+\begin{tikzpicture}[x=.78cm,y=.62cm]
+\foreach \x in {0,...,7}{\foreach \y in {0,...,3}{
+\draw[soft,thick] (\x,\y) rectangle ++(1,1);
+\pgfmathtruncatemacro{\idx}{8*(3-\y)+\x}
+\node[font=\ttfamily\tiny] at (\x+.5,\y+.5) {\idx};
+}}
+\node[anchor=west,font=\sffamily\small] at (8.4,1.5) {添字：上段が0～7、次が8～15…};
+\end{tikzpicture}
+\end{center}
+\section{配列の添字と盤面の座標を区別する}
+Bendの配列は範囲外インデックスがラップする仕様を持ちます。しかし\textbf{一次元のラップ}は\textbf{二次元のトーラス隣接}と同じではありません。\((7,0)\)の右隣は\((0,0)\)であって\((0,1)\)ではありません。近傍計算は座標ごとに\(x\)と\(y\)を循環させてから一次元化します。
+
+\exercise{添字7と8の意味を説明してみましょう。\((7,0)\)から右に動いたとき\code{i+1}してはいけない理由を図解します。}
+
+\chapter{グライダーを初期配置する}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 次に、最初の盤面を用意します。小さな生存セルの模様を指定し、正しい位置に置けたかを自分で確認します。
+\end{tcolorbox}
+
+\section{小さなパターンを正確に配置する}
+グライダーは生存セル5個で右下へ移動する周期4の模様。本書の初期配置は次の5点です。\[\{(1,0),(2,1),(0,2),(1,2),(2,2)\}\]行優先添字に変換すると\(1,10,16,17,18\)になります。
+
+\readcode{05_glider.bend}{初期グライダー（05\_glider.bend）}
+図で見れば次の配置です。\code{1}を生存、\code{0}を死亡とします。
+\begin{lstlisting}[language={},numbers=none,caption={世代0の配置（8列×8行）}]
+01000000
+00100000
+11100000
+00000000
+00000000
+00000000
+00000000
+00000000
+\end{lstlisting}
+\section{盤面を数える}
+グライダーの生存数は5。今はセル値を\code{U32}として持つため、\code{2}や\code{42}も表現自体はできます。\textbf{セルが0/1であるという不変条件}は今のところシードと更新関数がそれ以外を作らないという開発規約に依存しています。後半では「\code{U32}で表現可能」と「型で0/1に限定される」を分けて考えます。
+
+\exercise{ブロック（\((3,3),(4,3),(3,4),(4,4)\)）を初期化する\code{block()}を作ってみましょう。ブリンカーを\(y=3,x=3,4,5\)に置く\code{blinker()}を作ってみましょう。出力で指定した場所だけが1となることを確認してみましょう。}
+
+\chapter{トーラスの座標と8近傍}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small どのセルが隣かを決めます。今回は画面の右端と左端、上端と下端がつながる\term{トーラス（torus）}状の盤面です。
+\end{tcolorbox}
+
+\section{盤面の端を越えた座標を計算する}
+左隣は\((x-1+8)\bmod8\)、右隣は\((x+1)\bmod8\)。\(x\in\{0,\ldots,7\}\)に限れば\((x+7)\bmod8\)で代用できます。同様に上下も\((y+7)\bmod8\)、\((y+1)\bmod8\)で求まる。負の数を\code{U32}に入れない。
+\[
+L(x)=(x+7)\bmod8,\quad R(x)=(x+1)\bmod8,\\
+T(y)=(y+7)\bmod8,\quad B(y)=(y+1)\bmod8.
+\]
+\section{周囲8セルを読み取り生存数を数える}
+\readcode{06_neighbors.bend}{近傍数を足す（06\_neighbors.bend）}
+\code{neighbors}は\code{(board,sum)}を返します。元の配列を\code{b1,b2,...,b8}へ順に渡すので、8回の読み取りで\code{board}を違法に共有しません。\code{+xl}、\code{+xr}、\code{+yt}、\code{+yb}は、計算した座標値を複数の読み取りに使うために必要。
+
+\begin{pointbox}
+近傍の重複を防ぐには、\(3\times3\)の中心\((x,y)\)を除く8箇所を列挙し、同じ\((x,y)\)を含めていないか紙に書いて点検します。\textbf{旧盤面から読み、読んだ配列を戻す}という型付きの設計は、この過程の所有権をはっきりさせる。
+\end{pointbox}
+
+\section{境界にいるセルを手計算する}
+例えば\((0,0)\)の8近傍は\((7,7),(0,7),(1,7),(7,0),(1,0),(7,1),(0,1),(1,1)\)。四隅のセルで座標の循環をテストします。\((4,4)\)など内部座標だけを調べても境界バグは見つからない。
+
+\exercise{(1) \((0,0)\)の8近傍座標を書き出してみましょう。(2) 初期グライダーに対して\((1,1)\)の生存近傍数を手計算します。(3) コード内で\code{+xl}を外して、どの使用が重複するか確認してみましょう。(4) \file{06\_neighbors.bend}で\code{neighbors(4,4,...)}の期待値は3になることを考えます。}
+
+\chapter{全セルを同期的に更新する}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small いよいよ1世代の更新を実装します。\term{同期更新（synchronous update）}とは、次の盤面を計算するとき、すべてのセルが同じ古い盤面を読む方法です。
+\end{tcolorbox}
+
+\section{更新に必ず二枚の盤面を使う}
+\term{正しい更新}では、時刻\(t\)の状態\(B_t\)だけを見て\(B_{t+1}\)を作る。例えば上から順に古い配列に直接書き込むと、後で処理するセルが更新済みの近傍値を読みます。その瞬間、同時更新ではなく走査順依存の別のゲームになります。
+\[
+B_{t+1}(x,y)=F\Big(B_t(x,y),\sum_{(u,v)\in N(x,y)}B_t(u,v)\Big).
+\]
+\section{再帰処理が終わる条件を決める}
+\term{燃料（fuel）}とは、再帰を続ける残り回数を表す値を比喩的に呼んだものです。燃料が0になれば止まる、と決めれば無限に繰り返さないことを説明しやすくなります。
+
+\code{fill(todo, i, old, out)}の\code{todo}は\code{Nat}で、残り何セル更新するかを表します。\code{match todo}で0なら出力盤面を返し、\code{1n+p}なら1セル更新して\code{fill(p,...)}を呼びます。再帰が必ず止まることを\code{todo}の減少から説明できます。
+
+\readcode{07_life_core.bend}{完成した純粋な更新核（07\_life\_core.bend）}
+
+\section{ソースを読む順番}
+\begin{enumerate}
+\item \code{glider()}は5セルを1にした入力の配列を作る。
+\item \code{step(board)}は旧盤面と全0の新盤面を用意します。
+\item \code{fill(64n,0,old,out)}はセル\(i=0\)から\(63\)を処理します。
+\item \code{neighbors}は旧盤面を読み、\code{Array.get}は対象セルの現在値を読みます。
+\item \code{rule}で次状態を決め、\code{Array.set}で新盤面の対応位置に保存します。
+\item \code{fill}が残りを処理します。旧盤面は最後まで変更しません。
+\end{enumerate}
+この走査は計算量\(O(WH)\)、追加記憶量\(O(WH)\)です。8方向参照の定数が大きいため、厳密な性能比較では「セル1個当たりの読み込み・格納」を数える。
+
+\section{別の実装と結果を比較する}
+同じ\code{neighbors}を使ってテスト期待値を作ると、その関数に同じ誤りがあった場合に見逃します。したがって\file{scripts/reference.py}は、別の記述・別の実装言語で定義した生存セルの\code{set}から計算します。\textbf{2つが一致しても全入力の正しさを証明したわけではない}が、共通の実装ミスは見つけやすい。
+
+\exercise{(1) \code{fill}の先頭引数を\code{U32}のカウンタに置き換えると停止性検査にどんな障害があるか。(2) \code{step}を旧配列1枚への更新に変え、グライダーの軌跡がどこから破綻するか観察してみましょう。(3) \code{step(glider())}の8×8値をオラクルと照合します。}
+
+\chapter{複数世代の実行とターミナル描画}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 1世代だけでなく複数世代を動かし、ターミナルへ表示します。計算と表示を別々の関数にすると、後から見た目だけを変更できます。
+\end{tcolorbox}
+
+\section{世代を繰り返す関数}
+\code{evolve(steps,board)}は、0ステップならそのまま返し、正の\code{Nat}なら\code{step}を呼んでから\code{evolve(p,...)}を呼びます。ここで\code{p}が1減った残りの自然数になっています。型検査は停止の根拠を要求するため、\code{evolve}の再帰が無限にループする例は通常許されません。
+
+\section{出力を作る関数は更新と分ける}
+一つの行は8セルを読み文字列化し、8行を結合します。\code{render\_cells}と\code{render\_rows}は\code{(board,String)}を返します。読み出しに使った配列を次の処理へ回せるようにするためです。\code{IO.print}は\code{show}だけが持つ。
+
+\readcode{08_life_terminal.bend}{完成版：5世代を表示するシミュレータ（08\_life\_terminal.bend）}
+
+\section{実行する}
+\begin{lstlisting}[language={},caption={完成版の実行}]
+bend src/08_life_terminal.bend --check-only
+bend src/08_life_terminal.bend
+bend src/08_life_terminal.bend -o build/life
+./build/life --threads 1
+\end{lstlisting}
+このプログラムは\term{世代0～4の5枚}を表示します。\code{IO.print}が末尾の改行を追加するので、盤面の間には空行が入る。\code{show(5n,0,glider())}を\code{show(10n,0,glider())}にすれば10枚になります。\code{U32}の世代番号が巨大になるほどの実験は、この入門版の想定外。
+
+\section{期待される世代4}
+\begin{lstlisting}[language={},numbers=none,caption={Pythonオラクルが算出する世代4（Bend未実行）}]
+00100000
+00010000
+01110000
+\end{lstlisting}
+これは世代0のグライダーが右下に1だけ移動した形を\textbf{一部抜粋}したもの（上段はy=1、続く行がy=2,3）。完全な8行は\file{scripts/reference.py}で出す。
+
+\exercise{(1) \code{show}の世代数を3、5、10に変更してみましょう。(2) 表示を\code{1/0}から\code{\#/\.}へ変えるための\code{glyph}関数を追加してみましょう。(3) 初期配置の章で作った\code{block()}を使い、静止パターンであることを調べてみましょう。}
+
+\chapter{テスト設計と失敗の切り分け}
+\begin{pointbox}\textbf{テストが失敗したら非ゼロ終了します。} CI（継続的インテグレーション）は、コードをGitHubへ送ったときに自動で検査する仕組みです。本書のPythonテストは\code{assertEqual}の不一致で失敗し、Bendの実行テストも終了コードと盤面を検査します。単に\code{PASS}と印字するだけの検査にはしません。\end{pointbox}
+
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 動作を確認するための\term{テスト（test）}を作ります。完成したプログラムと、別方式で作った参照実装の結果を比べます。
+\end{tcolorbox}
+
+\section{プログラムの正しさをテストで確認する}
+ここまででコードを組み立てました。しかし「文法が正しい」ことと「ライフゲームの規則を正しく実装した」ことは別です。期待する盤面をあらかじめ用意し、結果を照合して確認します。
+
+コンパイラが型の整合性と停止性を確認しても、\code{neighbors}で中央セルを足してしまう誤りや、\code{rule}で2と3を取り違える誤りは型だけでは防げない。少なくとも\term{局所規則}、\term{初期配置}、\term{時刻発展}、\term{境界条件}の4レベルで検査します。
+
+\section{参照実装を動かす}
+\begin{lstlisting}[language={},caption={付属のPython独立テスト（標準ライブラリのみ）}]
+python3 -m unittest discover -s tests -v
+python3 scripts/reference.py
+python3 scripts/check_bend.py
+python3 scripts/check_bend.py --native
+\end{lstlisting}
+最後の2行はBendが導入されている場合の任意の\term{統合テスト}です。\code{check\_bend.py}はBendの表示から5枚の盤面を取り出し、Pythonオラクルの出力と改行込みで比較します。失敗したらdiffを表示します。
+
+\section{用意された独立テスト6件}
+\begin{tabularx}{\linewidth}{@{}p{49mm}X@{}}
+\toprule
+テスト & 検査内容\\
+\midrule
+\code{test\_empty\_stays\_empty} & 空盤面は空のまま。\\
+\code{test\_block\_is\_still\_life} & ブロックは1世代後も変化しません。\\
+\code{test\_blinker\_oscillates} & ブリンカーは横 $\rightarrow$ 縦 $\rightarrow$ 横の2周期。\\
+\code{test\_glider\_moves...} & 4世代後、グライダーが斜めに1進みます。\\
+\code{test\_alive\_count...} & グライダーの生存数は12世代を通じて5。\\
+\code{test\_transcript...} & 出力の枚数・終端テキストの形。\\
+\bottomrule
+\end{tabularx}
+
+\begin{cautionbox}
+テストが成功したこととBend本体が成功したことを混同しません。\textbf{Pythonの6件はこの教材制作時に実行確認済み}だが、Bendの統合テストは\textbf{未実行}です。\code{check\_bend.py}の\code{PASS}を自分の環境で確認して初めて、出力の一致を主張できます。
+\end{cautionbox}
+
+\exercise{(1) トーラス端をまたぐブリンカーを設定して、2周期を検証するテストを書きます。(2) \code{rule}の「2のとき現状維持」を意図的に崩し、どのテストが落ちるかを報告します。(3) 手計算・Python・Bendの3列からなる検証表を作ってみましょう。}
+
+\chapter{完成版の設計をレビューする}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small いったん完成したプログラムを読み直します。\term{保守性（maintainability）}とは、後から機能追加や修正をしやすいことです。
+\end{tcolorbox}
+
+\section{関数が担う責務}
+\begin{center}
+\begin{tikzpicture}[>=Stealth,node distance=10mm, every node/.style={font=\sffamily\small}]
+\node[draw=blue,fill=blue!5,rounded corners] (seed) {glider: 初期配置};
+\node[draw=blue,fill=blue!5,rounded corners,right=of seed] (step) {step: 1世代更新};
+\node[draw=teal,fill=teal!7,rounded corners,right=of step] (view) {render: 文字列化};
+\node[draw=warm,fill=warm!7,rounded corners,below=of step] (show) {show: 繰返しとIO};
+\draw[->] (seed)--(step);\draw[->] (step)--(view);
+\draw[->] (step)--(show);\draw[->] (view)--(show);
+\node[draw=ink,fill=paper,rounded corners,above=of step] (rule) {neighbors + rule: 局所計算};
+\draw[->] (rule)--(step);
+\end{tikzpicture}
+\end{center}
+\code{rule}は1セルの遷移、\code{neighbors}は8セルの集計、\code{step}は盤面全体の遷移、\code{render}は表示、\code{show}は実行制御を担当します。更新ロジックとIOを分けることは、後でGUIやファイル出力に置き換える際に重要です。
+
+\section{保守性チェック}
+\begin{enumerate}
+\item \textbf{定数が散らばっている}: 8と64が複数箇所にある。将来は専用の盤面型に集約します。
+\item \textbf{0/1の意味が型に表れていない}: \code{U32}から\code{Cell}型に移行する余地があります。
+\item \textbf{表示が計算重視ではない}: 文字列連結は小規模ならよいが、大規模なら行単位のバッファにします。
+\item \textbf{仕様が固定}: 出力枚数と初期配置をコードで編集します。コマンドライン引数は発展課題。
+\item \textbf{多コア利用がまだない}: 次部で用途に合った表現と分割法を検討します。
+\end{enumerate}
+\exercise{関数ごとに「入力型・出力型・副作用の有無・計算量」を表にしましょう。どの関数ならGPUに移行しても意味が変わらず、どの関数がCPUに残るべきかを考察してみましょう。}
+
+
+\clearpage
+\part{アプリケーション基礎を広げる}
+\partchaptertoc
+\chapter{画面出力とファイル操作を扱う}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small プログラムがファイルや画面へ作用する場面を扱います。Bendでは、入出力（I/O: input/output）を型で明示し、純粋な計算と区別します。
+\end{tcolorbox}
+
+\section{値の計算と効果の実行}
+ライフゲームの世代更新は純粋関数で、表示は\code{IO}で行います。\code{do IO<R>:}の\code{<-}は\term{前の効果が返した値を取り出し、次の効果へ渡す}構文です。\code{return}はこの文脈では普通の関数を途中で抜ける命令ではなく、モナドの\code{pure}に相当します。
+\readcode{20_io_fork.bend}{非同期効果を含むIOプログラム（20\_io\_fork.bend）}
+\section{入力・引数・ファイル・失敗}
+\code{IO.args}は実行時引数を受け取る。\code{IO.get\_env}は環境変数の読み出し、\code{IO.try}は失敗し得るIOを扱います。ファイルAPIは\code{File.open/read/write/close}等の実際の定義を\code{bend base File}で調査します。\term{ファイルハンドルはアフィン}なので、使ったハンドルを適切に返して次の操作へ渡します。失敗時の\code{Result}を握りつぶさない。
+\section{ファイルを実際に扱う}
+\code{File.open}は失敗を含むResultを返します。\code{File.write}は\term{次の所有権を持つFileと操作結果}を返し、ファイルを閉じずに捨てないことが重要です。次の例は\file{life-demo-output.txt}を\textbf{上書き}します。実験用ディレクトリでのみ実行すること。
+\readcode{26_file_write.bend}{ファイルへ書き、失敗時にも閉じる（26\_file\_write.bend）}
+\begin{lstlisting}[language={},caption={ファイルの試験（上書きするので注意）}]
+mkdir -p scratch && cd scratch
+bend ../src/26_file_write.bend
+cat life-demo-output.txt
+cd ..
+\end{lstlisting}
+\section{Lifeでの実習}
+完成版の固定回数表示を\term{コマンドラインで世代数を与える設計}へ変更します。\code{IO.args}から\code{List<String>}を受け取り、\code{U32.read}で安全に解釈し、失敗時は理由を表示します。\code{Nat}へ変換した回数だけ進める。ただし正確なBaseの型は使用版で確認してから実装します。
+\exercise{(1) \code{IO.print}の実行順序を予想します。(2) \code{IO.get\_env}が返すエラーの扱いを\code{bend base IO.get\_env}で調べてみましょう。(3) 文字列解析と世代更新を別関数に分けます。}
+
+\chapter{複数の入出力処理を進める方法}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 複数の仕事を同時に進める方法は一つではありません。ここでは\term{並行処理（concurrency）}と\term{並列計算（parallel computation）}の違いを明確にします。
+\end{tcolorbox}
+
+\section{\code{IO.fork}と\code{IO.join}}
+\code{IO.fork}は効果付き計算を独立に開始し、結果が到着する\code{Chan}を返します。\code{IO.join}はその結果を待つ。これは\term{ファイルやネットワークの待ち時間がある処理を重ねる}ための非同期処理であり、計算を分割してCPUコアへ流す次のPartの\term{並列呼び出し}とは別です。
+\readcode{20_io_fork.bend}{fork/joinを実際に実行する例（再掲）}
+\section{キャンセル・タイムアウト・共有状態}
+\code{IO.within}は期限を過ぎた操作に\code{None}を返すが、\term{負けた処理を自動キャンセルするとは限らない}。\code{Chan.send/recv/close}などによる待ち合わせでは、相手を失うとデッドロックになり得ます。Lifeではフレーム描画とイベント受付を効果として分け、世代更新だけを純粋に保つことが安全な境界になります。
+\exercise{(1) \code{IO.sleep}を入れて二つの処理の進行を観察してみましょう。(2) CPU上での純粋関数の並列呼び出しと、IO.forkを比較表にまとめる。(3) タイムアウト時に完了しなかった処理が残る可能性を説明してみましょう。}
+
+\chapter{失敗する計算を順番につなぐ}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 入力値を読み取れなかったときも、安全に処理したいものです。\code{Maybe}と\code{Result}、そして\code{do}構文の関係を順に見ます。
+\end{tcolorbox}
+
+\section{doはIO専用ではない}
+\code{do Maybe<...>:}は、途中で失敗が起きたら残りの計算を行わず失敗を返す記述法で、\code{M.bind}と\code{M.pure}に展開できます。\code{Maybe}、\code{Result}、\code{IO}など\term{戻り値を持つ計算の文脈}を統一した記法で扱える。
+\readcode{21_monadic_maybe.bend}{数字を安全に読み足すdoブロック（21\_monadic\_maybe.bend）}
+\section{ライフゲームの設定パーサ}
+外部設定では\code{width}や\code{height}を文字列から読む処理に失敗があり得る。\code{do Maybe}なら途中に\code{None}が出たら次へ進まない。\code{Result}は\term{どの入力が原因で失敗したか}を返したいときに向いています。具体的な量指定\code{\&2}はデータが再利用可能な場合を示します。
+\exercise{(1) \code{add\_strs("12", "30")}と\code{add\_strs("abc", "30")}を試してみましょう。(2) 三つの数値の和へ拡張してみましょう。(3) 解析失敗時にサイズ0で盤面生成を始めないようにする設計を考えます。}
+
+\chapter{ライフゲームを画面に表示する準備}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small \term{GUI（graphical user interface）}はウィンドウや画像で操作する画面です。ターミナル版の処理を生かして、画面表示へ拡張する設計を学びます。
+\end{tcolorbox}
+
+\section{純粋な描画とイベント更新}
+Bendには\code{App.run}、\code{Image}、\code{Event}などがあります。\code{Image}は\code{Pix}（一様な色）と\code{Qua}（四分木）で表せる。\code{App}は状態を画像へ変える\code{view}と、イベントから次状態を決める\code{tick}を持ちます。
+\readcode{22_app_preview.bend}{ウィンドウを開く最小App（22\_app\_preview.bend）}
+\section{Lifeの画面表示への発展}
+最小Appはライフゲーム本体ではなく\term{ウィンドウとイベントを学ぶ単独デモ}です。これを起点に、状態を\code{Array<U32>}と世代番号の組に変更し、\code{view}で8×8を四分木画像へ変換し、\code{tick}で更新・一時停止・終了を行う設計に進める。\code{view}はアフィンな状態を消費するので、\term{状態と画像のペアを返す}必要があります。
+\begin{cautionbox}
+\code{App.run}にはネイティブ環境のウィンドウシステムが必要です。LinuxではX11用ライブラリが必要な場合があり、WSL/ヘッドレス環境では起動できないことがあります。画面表示はターミナル版の合格条件には含めない。
+\end{cautionbox}
+\exercise{(1) \code{Pix}と\code{Qua}で4分割の画像を設計します。(2) Closeイベントで\code{None}を返す理由を説明してみましょう。(3) Lifeの盤面更新と描画イベントの役割分担を図にしてみましょう。}
+
+\chapter{Bendのプログラムを別の環境で動かす}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small Bendのコードは単独で完結するとは限りません。他の言語やOSの機能と接続する仕組み、実行形式の違い、公開時の注意点を確認します。
+\end{tcolorbox}
+
+\section{標準IOの外に出るとき}
+Baseは端末、環境変数、ファイル、ネットワーク（TCP/UDP）、プロセス起動、音声・ウィンドウ等の効果を提供します。新しい効果は\code{import "./x.c"}と\code{import "./x.js"}によってホスト側で実装する方式を採る。\term{純粋な計算と、OSを変更する処理}を混同しません。ライフゲームならファイルの読み込み、初期配置の保存、データ形式変換などが応用例になります。
+\section{複数のターゲットを知る}
+\begin{lstlisting}[language={},caption={ターゲットを切り替えて学ぶ（対応状況は環境次第）}]
+bend src/01_hello.bend -o build/hello
+bend src/19_module_main.bend -o build/module.js
+bend src/19_module_main.bend -o build/module.c
+bend src/19_module_main.bend -o build/module.mjs
+bend guide effects
+\end{lstlisting}
+\code{.mjs}は非IOの定義をJSからimportする用途です。ブラウザはHTMLを入力して\code{-o dist}とするバンドルの仕組みもある。JavaScriptターゲットの並列実行はネイティブのCPU/GPU並列と同一とは限りません。\code{Process.run}は外部プログラムを起動するため、信頼できる引数と実行ファイルしか渡さない。
+\section{公開プロジェクトでの安全性}
+外部ライブラリのバージョン、サンプルコードの出所、権利情報を確認します。\code{--publish}はGitHubへのpushと別操作であり、\term{意図せず外部へ永続公開しない}。Bendは進化が速いため、\code{bend version}・\code{bend guide}・\code{bend base}を学習実験の記録に残す。
+\exercise{(1) C/JS出力を生成し、コード中で元の\code{main}に対応する箇所を探してみましょう。(2) ネイティブ・JS・GPUの用途を比較してみましょう。(3) 既存のLifeをブラウザAppへ持ち込む前に不足している3つの実装要素を挙げます。}
+
+\clearpage
+\part{Bendの強みを掘り下げる}
+\partchaptertoc
+\chapter{再帰の停止性と計算量}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small ここから応用編です。\term{停止性（termination）}は処理が必ず終わる性質、\term{計算量（complexity）}は入力サイズに対する時間や記憶量の増え方です。別々に考えましょう。
+\end{tcolorbox}
+
+\section{停止性は速度の話ではない}
+Bendでは原則として再帰関数の停止が必要です。\code{fill(todo,...)}は\code{todo}\(=0\)で停止し、それ以外は\(p=todo-1\)で再帰します。\code{evolve(steps,...)}も同様です。これは\textbf{有限ステップで終わる}ことの根拠であり、\textbf{実行が速い}ことの保証ではありません。
+
+\section{再帰を安全に終わらせる引数の指定}
+公式ガイドには、再帰呼び出しの引数を左から見て、ある引数が元の引数の小さい部分になるまで手前の引数がそのままでなければならないという制約があります。だから\code{fill(todo,i,old,out)}では\code{todo}を先頭にします。\code{fill(i,todo,...)}にして\code{i+1}を先に渡すと認識されにくい。
+
+\section{更新処理の計算量を見積もる}
+幅\(W\)、高さ\(H\)の盤面で、1セルに固定8回の読み込みと1回の書き込みがあるとします。1世代の時間は\(T(W,H)=\Theta(WH)\)、\(g\)世代なら\(\Theta(gWH)\)。別の出力盤面のために\(\Theta(WH)\)の追加領域を確保します。画面出力の文字列構築は別に考えます。
+
+\exercise{(1) \(N=WH\)として1世代に対して\code{Array.get}が何回呼ばれるか。(2) 再帰の最大深さはおよそ何か。(3) \code{Array.get}が実際には定数時間でないと仮定した場合、\(T(N)\)の結論がどう変わるか。}
+
+\chapter{アフィン性・所有権・配列の更新}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 配列がどう受け渡されるかをもう一度整理します。\term{所有権（ownership）}は「この値を使える責任を、どの変数が持つか」という見方です。
+\end{tcolorbox}
+
+\section{一度しか使わないとは何か}
+Bendは\term{affine}であり、名前に結びついた資源は高々1回しか消費できません。リストなど\code{Data}の値は\code{+}によって再利用できるが、配列やハンドルは通常\code{Type}なのでできません。「メモリが安全か」を局所的に検査でき、更新中の別名参照を抑えられます。
+
+\section{複数のセルを読むときの処理}
+近傍8回の読出しで毎回\code{(board,value)}を受け取る。\code{board}の所有権を順に渡しているだけなので、\code{Array.get}のたびに配列全体をコピーすることを意味しません。\code{Array.set}も同じ配列資源の所有を次へ引き継ぐ。これを「純粋な関数型の見た目とin-place更新の両立」と理解します。
+
+\section{ひとつの盤面を並列更新する際の課題}
+\code{Array<U32>}を\code{+board}にして2つの並列関数へ渡すと、\code{Array}は\code{Data}ではないので型が許しません。\textbf{無理に共有するのではなく、処理単位が所有できる入力データの構造を設計し直す}。候補は、境界の読み取り用ハローを含む独立タイル、木構造による領域分割、あるいはGPUに適したフラットなバッファを専門の手順で受け渡す方法です。
+
+\begin{cautionbox}
+\file{12\_affine\_probe\_INVALID.bend}のような「同じ\code{board}を二度読む」コードは意図的にエラーを起こす。Bendの\code{Array}を一般的な\code{const\&}参照やGC言語の共有配列と同じだと考えない。
+\end{cautionbox}
+\exercise{逐次で8回読み取るコードを書いた後、\code{(b1,v1)}の代わりに戻された配列を無視して元配列を再使用してみましょう。所有権エラーを説明し、型安全であることと並列であることが別の主張だと説明してみましょう。}
+
+\chapter{CPU並列：純粋な並列呼び出しを理解する}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 一つの大きな計算を独立した小さな計算に分け、複数のCPUコアへ割り振ります。これが本章の\term{並列計算（parallel computation）}です。
+\end{tcolorbox}
+
+\section{Bendで並列計算を記述する}
+並列な二つの呼び出しは\code{a b = f(x) g(y)}という記法で示します。出力の\code{a}と\code{b}は両方揃ってから後続の式で使えます。競合がないことは純粋性・アフィン性によってサポートされるが、負荷が不均衡だと高速化は限定的。
+
+\readcode{09_parallel_tree.bend}{均等に分割できる並列再帰（09\_parallel\_tree.bend）}
+\section{実行形態を分けて測る}
+\begin{lstlisting}[language={},caption={ネイティブ・スレッド数を変える}]
+bend src/09_parallel_tree.bend -o build/tree
+./build/tree --threads 1
+./build/tree --threads 2
+./build/tree --threads 4
+./build/tree --threads 8
+\end{lstlisting}
+\(2^{12}=4096\)が一致するのを確認します。時間差を測るときは\code{time}等の同じ方法で、複数回、同じマシンの同じ入力を比較します。\code{bend src/09\_parallel\_tree.bend}で得たインタプリタ相当の時間をネイティブ並列の評価に用いない。
+
+\section{ライフゲームへの設計移植}
+単一盤面を領域\(L,R\)に分割し、各領域の新状態を独立に計算したい。ただし左右の境界近くでは相手側の旧状態が必要です。そこで\term{halo exchange}（境界1セル分のコピー）を使う設計が考えられます。適切な分割単位\(b\)と並列タスク数\(p\)を選び、作業量をおおよそ均等にします。
+\begin{center}
+\begin{tikzpicture}[x=.57cm,y=.57cm]
+\foreach \x in {0,...,11}{\foreach \y in {0,...,5}{\draw[soft] (\x,\y) rectangle ++(1,1);}}
+\fill[blue!14] (0,0) rectangle (6,6);
+\fill[teal!16] (6,0) rectangle (12,6);
+\fill[warm!35,opacity=.8] (5,0) rectangle (7,6);
+\draw[very thick,blue] (6,0)--(6,6);
+\node[font=\sffamily\small] at (2.5,3) {左の担当};
+\node[font=\sffamily\small] at (9.4,3) {右の担当};
+\node[font=\sffamily\scriptsize,rotate=90] at (6,3) {ハロー};
+\end{tikzpicture}
+\end{center}
+本書の配布コードにこのタイル並列版を\textbf{実装済みとはしていない}。上級プロジェクトの研究課題として、入力タイルの独立性・境界値・出力マージをまず仕様化し、実装後にテスト設計の章のオラクルと完全一致することを確認します。
+\exercise{並列化対象を、(A) 同じ入力上で互いに別の初期配置をシミュレートする、(B) 一つの盤面を分割する、の2方式で考え、どちらがアフィン配列の入力共有問題を生むか説明してみましょう。}
+
+\chapter{GPU呼び出しと実行レーン}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small \term{GPU（graphics processing unit）}は多数の計算を同時に行える装置です。CPU向けの処理をそのままGPUに移せば速くなる、とは限りません。
+\end{tcolorbox}
+
+\section{\code{!}の意味}
+Bendでは\code{pow2!(12n)}のように、関数名の直後の\code{!}でGPU実行を要求します。呼び出し以下の並列分割がGPUへ配布され、利用できない場合はCPU側で処理されます。いわゆる手書きのGPUカーネルは通常の導入に必須ではありません。ただし型・所有権・データ構造の相性が速度を決める。
+
+\readcode{10_gpu_tree.bend}{GPU実行を要求するサンプル（10\_gpu\_tree.bend）}
+\begin{lstlisting}[language={},caption={GPU起動、CPU代替との比較}]
+bend guide shaders
+bend src/10_gpu_tree.bend -o build/gpu_tree
+./build/gpu_tree
+./build/gpu_tree --gpu off
+\end{lstlisting}
+GPUビルドにはmacOSのMetal、LinuxのCUDA 12等が必要です。\code{gpu\_tree.gpu}のような生成物を実行ファイルの側に保持します。\code{--gpu off}でも結果が4096になることを確認します。
+
+\section{単なるGPU化で速くなるとは限らない}
+GPUは同じ形の計算を大量に独立して実行するときに有利だが、メモリアクセス・分岐・転送・同期・タスク数に制約があります。8×8は非常に小さく、GPUを利用する固定費の方が高い可能性があります。性能向上は\textbf{実測}で判断します。
+
+\section{ライフゲームのGPU化のための要件定義}
+\begin{enumerate}
+\item CPU版の\(B_{t+1}\)とGPU版の\(B_{t+1}\)が、全セルで一致します。
+\item 各セルは同じ旧世代の値を読みます。隣接処理が他セルの書き込み順に影響されません。
+\item GPU実行の境界データや配列所有権がBendの型規則に従う。
+\item CPU側のIO・表示と純粋な更新核を分けておく。
+\item 初期のサイズは8×8、その後\(2^k\times2^k\)へ段階的に拡大します。
+\end{enumerate}
+\begin{cautionbox}
+\file{10\_gpu\_tree.bend}は\textbf{並列再帰のGPU例}であって\textbf{ライフゲームのGPU実装ではない}。GPUで動くLife本体を配布したかのように誤解しないこと。検証には実機・対応コンパイラ・ドライバが必要です。
+\end{cautionbox}
+\exercise{\(64,4096,65536\)セルの3サイズにおいてGPU化が有利になりそうな理由と不利な理由を列挙します。自分の端末で\code{--gpu off}を使い、出力と起動可否を記録してみましょう。}
+
+\chapter{性能評価：速さを数字で扱う}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 速度は「速い気がする」では比較できません。実行条件をそろえて時間を測る\term{ベンチマーク（benchmark）}の基本を学びます。
+\end{tcolorbox}
+
+\section{誤解されやすい三つの時間}
+\term{コンパイル時間}、\term{1世代を更新する実行時間}、\term{表示を含む総実行時間}は違う。表示が処理の大半を占めると更新核を何倍速くしても全体があまり速くなりません。まず測定の目的を定める。
+
+\section{比較表を作る}
+\begin{tabularx}{\linewidth}{@{}p{30mm}p{30mm}p{30mm}X@{}}
+\toprule
+方法 & 実行時間 & 正しさ & 備考\\
+\midrule
+CPU1スレッド & 自分で記入 & Pythonと比較 & 入力・測定環境を固定\\
+CPU 並列 & 自分で記入 & CPU1と比較 & 並列タイル版が完成してから\\
+GPU & 自分で記入 & CPU1と比較 & GPU版が完成してから\\
+\bottomrule
+\end{tabularx}
+
+\section{スピードアップと効率}
+基準時間\(T_1\)、\(p\)スレッド時の時間\(T_p\)なら、スピードアップ\(S_p=T_1/T_p\)、並列効率\(E_p=S_p/p\)。\(T_p\)には入力生成・転送・更新・出力のどこまで含めるかを明示します。小さな規模では実行ごとの差が大きいことがあるので、最低5回程度を測って中央値を採用します。
+
+\section{実験ノートの標準書式}
+\begin{enumerate}
+\item Bendのバージョン／コミット、OS、CPUコア数、GPU、コンパイラを記録。
+\item \(W,H,g\)、初期パターン、境界規則、出力の有無を記録。
+\item 測定するバイナリを固定してウォームアップの有無を明記。
+\item 1・2・4・8スレッド、GPU ON/OFFの可否と結果を区別します。
+\item 全ケースで最終盤面を照合してから速度比較します。
+\end{enumerate}
+\exercise{本書の8×8と4096×4096を比べ、\(8WH\)回の近傍読み出し、\(WH\)回の更新書き込みの規模を求めます。実測しない数字は\textbf{予測}と明記してレポートにまとめてみましょう。}
+
+\chapter{型を使って条件を表す}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small \term{依存型（dependent type）}は、値に応じて変化する型です。「ただの配列」よりも「長さが決まった配列」のように、仕様を型へ表す発想を紹介します。
+\end{tcolorbox}
+
+\section{値によって変わる型を理解する}
+\code{U32 -> U32}は値を一個受け取り一個返すことだけを述べる。一方「長さ\(N\)の盤面に対する安全な添字」「幅\(W\)に適合した行」など、\textbf{値に依存する条件}を型の一部に表せるのが依存型の利点です。
+
+Bendの\code{Nat}は大小関係や構造を使う再帰、\code{law}における量化、等式型に関わる。\code{for x: Nat}を使う命題は、単なる試験的な入力群ではなく、すべての自然数を対象にします。
+
+\section{セルの値を型で制限する設計}
+現在の\code{Array<U32>}では、セルが必ず0か1という要求を型が直接証明しません。検討案は次の二つ。
+\begin{enumerate}
+\item \term{閉じたデータ型} \code{Dead/Alive}を使い、どちらかだけを構築可能にします。
+\item \term{値と証拠を組にする}。\(v:U32\)に\(v=0\lor v=1\)という証拠を付ける。
+\end{enumerate}
+前者は簡潔だが配列アクセスやGPU側の表現を新しく検討する必要があり、後者は証明が重くなります。\textbf{何を表現時に保証し、何を運用とテストに委ねるか}を整理することが設計の要点。
+
+\exercise{次の条件を「型に直接書く」「関数のlawで述べる」「テストする」のどれに置くか議論します。(1) セルは0か1。(2) 近傍集合に自分を含まない。(3) 4世代後にグライダーが移動します。(4) GPUがCPUより速い。}
+
+\chapter{規則の正しさを証明する}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small \term{命題（proposition）}は真偽を論じる文で、\term{証明（proof）}はそれが正しい理由を示すものです。Bendではプログラムとして命題と証明を扱います。
+\end{tcolorbox}
+
+\section{証明したいことを型として書く}
+\code{law}で性質を表し、その性質を返す\code{def}で証明を与える。等号は\code{\{a == b : T\}}という\textbf{等式の型}であり、通常の\code{U32.is\_eq}という真偽値計算とは別物です。左右が定義を展開して同じ項になるなら\code{\{==\}}で示せる。
+
+\readcode{11_rule_proofs.bend}{局所遷移規則の3つのlaw（11\_rule\_proofs.bend）}
+
+\section{証明している命題を日本語で読む}
+\begin{enumerate}
+\item \code{three\_is\_alive}: 任意の\code{U32}のセル値に対し、近傍数が3なら結果は1。
+\item \code{two\_preserves}: 任意の\code{U32}のセル値に対し、近傍数が2なら結果はもとの値。
+\item \code{zero\_is\_dead}: 任意の\code{U32}のセル値に対し、近傍数が0なら結果は0。
+\end{enumerate}
+これらは\textbf{局所規則の三つの性質}であり、盤面の近傍数計算が正しいことや、同期的に更新されたことを含意しません。また\code{two\_preserves}は入力を任意の\code{U32}としているため、もし入力値が5なら出力も5となるが、それを「5は生存を表す」と考えてはいけません。
+
+\begin{lstlisting}[language={},caption={証明モード}]
+bend src/11_rule_proofs.bend
+bend src/11_rule_proofs.bend --verdict
+\end{lstlisting}
+\code{--verdict}は証明を追加の小さな検査器で確認する機能を使います。実機で導入版の出力を確認します。\code{@unsafe}や外国語の効果に頼るコードを証明の一部へ取り込まない。
+
+\section{意図的に破ってみる}
+\code{choose}の\code{True\{\}}側を0に変えると\code{three\_is\_alive}が壊れるはずです。実験では元のファイルを複製し、失敗が確認できたら戻す。\code{?TODO}を証明の代わりにしたものが完成した証明ではないことにも注意。
+\exercise{(1) 3つのlawの量化が何を意味するか日本語に訳す。(2) いずれかの規則を壊して証明が失敗するか調べてみましょう。(3) \code{one\_dies}（近傍数1なら必ず0）という第四のlawを追加し、\code{\{==\}}で示せるか試してみましょう。}
+
+\chapter{局所証明から盤面全体の正しさへ}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 一つのセルの規則が正しくても、盤面全体が正しく更新されるとは限りません。局所的な性質を組み合わせて全体の性質を考えます。
+\end{tcolorbox}
+
+\section{未証明の箇所を明示する}
+\textbf{局所のruleが正しい}と証明されても、\code{neighbors}が8方向を正確に読んだか、\code{fill}がすべての座標をちょうど一度書いたか、\code{step}が旧盤面だけを参照したかは別の命題です。本書では盤面全体の形式的証明を完成したとは記述しません。
+
+\section{全体仕様への分解案}
+\begin{enumerate}
+\item 座標変換\(i=yW+x\)が範囲内で一意です。
+\item 各セル\(p\)に対して定義した\(N(p)\)がトーラスのちょうど8近傍です。
+\item \(\mathrm{count}(B,p)=\sum_{q\in N(p)}B(q)\)。
+\item \(\mathrm{step}(B)(p)=F(B(p),\mathrm{count}(B,p))\)。
+\item 上の性質を\code{evolve}へ帰納して、\(g\)世代の意味と一致させる。
+\end{enumerate}
+\term{仕様を細かいlemmaに分割する}ことと\term{実装に対応した表現を選ぶ}ことが証明の大部分を占める。抽象的な無限盤面と有限の8×8トーラスを混同しません。
+
+\section{law駆動の開発}
+実際の大きなBendプロジェクトでは\file{LAWS.bend}と\file{PROOF.bend}を分ける慣行があり、実装だけを変更して法則を破ることをビルドで防げる。まず小さい\file{11\_rule\_proofs.bend}で証明の構文を学び、規則・証明を別ファイルへ分割する演習へ進みます。\code{bend PROOF.bend --verdict}を成功させることが厳密なゲートになります。
+\exercise{全体仕様の5つを「証明済み／テスト済み／未着手」に分類し、根拠を一行ずつ書きます。\textbf{型検査が通った}だけで「正しさが証明された」と言わない練習をします。}
+
+\chapter{上級プロジェクト：可変盤面とGPU化を設計する}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 最後の発展制作として、盤面サイズの変更とGPU実装の設計に進みます。ここは完成済みの機能ではなく、自分で設計・検証する課題です。
+\end{tcolorbox}
+
+\section{どの順番で拡張するか}
+8×8固定の教材から先の順番は、\textbf{(1) 設定可能なサイズ、(2) 初期パターンの読み込み、(3) 境界仕様の切り替え、(4) リファレンスとの照合、(5) 並列タイル化、(6) GPU化、(7) 証明の拡張}が妥当です。
+
+\section{可変サイズにするときの具体的な問題}
+本書は64セルと幅8がコードに直書きされます。幅\(W\)と高さ\(H\)を導入したら、\(W,H>0\)、配列容量との整合、\(W\times H\)のオーバーフロー、\code{Array}の2の冪の領域サイズ制約、物理配列の余白の扱い、端のラップをそれぞれ定義します。16×16で成功したからといって任意サイズが実装できたとは言えない。
+
+\section{ハロー付きタイル化の擬似コード}
+\begin{lstlisting}[language={},numbers=none,caption={設計用擬似コード。Bendとしてそのまま実行不可}]
+function prepare_tiles(old_board):
+    # Copy read-only 1-cell halos around each tile.
+    # Each worker owns its tile + halo snapshot.
+    return independent_inputs
+
+function step_parallel(independent_inputs):
+    # Process each tile's interior from its OLD halo.
+    # Fork/join balanced tile computations.
+    return tile_outputs
+
+function merge(tile_outputs):
+    # Each output coordinate must be written exactly once.
+    return next_board
+\end{lstlisting}
+\term{独立入力の作成}、\term{仕事量の均衡}、\term{出力の重複禁止}、\term{仕様通りの端処理}が成否を左右します。GPUへ持ち込む場合は\code{bend guide shaders}のデータ表現に合わせて計画を修正します。
+
+\section{卒業制作の到達基準}
+\begin{enumerate}
+\item 8×8版がBendで実際に動き、Pythonの5枚と一致します。
+\item 新しい初期パターンを2種類以上実装し、期待する周期・生存数を検証します。
+\item 16×16以上へ拡張し、トーラス境界のテストを追加します。
+\item CPU逐次版と新しい実装の出力を\textbf{盤面全体}で比較します。
+\item 実行時間を同一環境で測り、速さだけでなく正しさ・所有権・停止性の記録を残す。
+\item GPUあるいは並列版が未完成なら、その理由と具体的なブロッカーを正直に報告します。
+\end{enumerate}
+\exercise{上の6項目を受け入れテスト表に落とし、\code{inputs / expected / procedure / result}の4列を埋めてみましょう。計算資源が乏しい場合はまず正確な16×16 CPU版を完成させる。}
+
+
+\chapter{量付きKindと汎用的な型を整理する}\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small ここではBendの\term{種類（kind）}を整理します。型が「値の種類」なら、kindは「型そのものの分類」です。最初にこの二段階を区別しましょう。
+\end{tcolorbox}
+
+\section{TypeとDataの一般形}
+たとえば\code{3}は値で、その型は\code{U32}です。さらに、型\code{U32}は複製できる値を表す\code{Data}に属します。このように「値\(\rightarrow\)型\(\rightarrow\)種類」という段階で見ます。一方、配列を表す型\code{Array<U32>}は\code{Type}に属します。これは「配列の要素が壊れやすい」という意味ではなく、配列という値を自由に複製できないことに関係します。
+\begin{center}
+\begin{tikzpicture}[node distance=5mm, every node/.style={font=\sffamily\small}]
+\node[draw=teal!55,fill=teal!5,rounded corners,minimum width=35mm,minimum height=10mm] (v) {値：\code{3}};
+\node[draw=blue!55,fill=blue!5,rounded corners,right=15mm of v,minimum width=35mm,minimum height=10mm] (t) {型：\code{U32}};
+\node[draw=warm!55,fill=warm!5,rounded corners,right=15mm of t,minimum width=35mm,minimum height=10mm] (k) {種類：\code{Data}};
+\draw[-{Stealth},thick] (v)-- node[above] {型を持つ} (t);
+\draw[-{Stealth},thick] (t)-- node[above] {属する} (k);
+\end{tikzpicture}
+\end{center}
+
+Bendの\code{Type}は\code{Kind(\&1)}、\code{Data}は\code{Kind(\&2)}の略記で、\code{\&0}は消去量を表します。型構築子が受け取る値の再利用可能性は\code{Kind(a)}と\term{量}で記述できます。\code{a <\&> b}は量の小さい方を選ぶ演算で、複数のフィールドを持つ型の所有権の上限を考えるときに使う。
+\readcode{23_kinds.bend}{量を明示するListの長さ（23\_kinds.bend）}
+\section{配列の所有権と複製の条件}
+\code{Array<U32>}は\code{Type}に属します。中身のU32が\code{Data}でも\term{配列そのものの所有権}が自動で\code{Data}になるわけではありません。汎用関数では\code{-A: Kind(a)}と\code{List<a,A>}のように量をパラメータ化でき、実装上の制約を型に持ち込める。
+\exercise{(1) \code{List<U32>}と\code{List<U32 -> U32>}の再利用可能性を比較してみましょう。(2) \code{Kind(\&0)}, \code{Type}, \code{Data}を「いつ消えるか／何回使えるか」で整理します。}
+
+\chapter{証明の基本操作：帰納法・書き換え・反証}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 数学的な証明を一段進めます。\term{数学的帰納法（mathematical induction）}は、最初のケースと次のケースへの引き継ぎを示す方法です。
+\end{tcolorbox}
+
+\section{等式の証明を一歩進める}
+\code{\{==\}}は正規化して同じ項になった等式を証明します。任意の自然数に関する等式などでは、\code{match n}による\term{場合分け}、小さい\code{p}への再帰による\term{帰納法}、\code{\%proof : P}による\term{書き換え}が必要になります。
+\readcode{24_proof_induction.bend}{自然数についての帰納法（24\_proof\_induction.bend）}
+\section{存在と否定を表す・未完成の証明を扱う}
+\code{exs x: T}は\term{証人と、その性質の証明}を要求します。\code{\{a != b : T\}}は、等しいと仮定すれば\code{Empty}に至る関数の型です。\code{?name}はゴール表示、\code{?TODO}は未完成の穴であり、完成の証明を意味しません。\code{@unsafe}および\code{def f?}は停止性の保証から外れるので、\code{--verdict}により実装の型検査と独立に判断します。
+\section{LAWS/PROOFの二ファイル構成}
+人間が保持する\code{LAWS.bend}に法則を書き、別の\code{PROOF.bend}でその\code{law}を満たす\code{def}を定義します。どの命題が未証明かを残し、\code{bend PROOF.bend --verdict}を検査ゲートにします。Lifeでは最初に\code{rule}の三つの局所性質を証明し、次に近傍集合と同期更新の正しさへ進みます。
+\exercise{(1) \code{Nat.add(x,0n)=x}の帰納段階を一行ずつ説明してみましょう。(2) \code{?TODO}を入れると検査結果がどう変わるか確認してみましょう。(3) \code{law}の命題を変えずに実装を改修する運用案を書きます。}
+
+\clearpage
+\part{解答・補足資料}
+\partchaptertoc
+\chapter{重要演習の解答と検証方法}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small ここからは解答・付録です。自力で解いてから照合し、単に答えが一致したかだけでなく、理由も説明できるか確認してください。
+\end{tcolorbox}
+
+\section{18ケースの局所規則}
+\begin{tabularx}{\linewidth}{@{}c ccccccccc@{}}
+\toprule
+\(n\) & 0&1&2&3&4&5&6&7&8\\
+\midrule
+\(F(0,n)\)&0&0&0&1&0&0&0&0&0\\
+\(F(1,n)\)&0&0&1&1&0&0&0&0&0\\
+\bottomrule
+\end{tabularx}
+\section{代表的な添字}
+\((0,0)\mapsto0,\ (7,0)\mapsto7,\ (0,7)\mapsto56,\ (7,7)\mapsto63\)。\((2,3)\mapsto26\)。\((7,0)\)の右は\((0,0)\)で、\((0,1)\)ではありません。
+\section{グライダーの変位}
+世代0の集合は\(\{(1,0),(2,1),(0,2),(1,2),(2,2)\}\)。4回の更新後は\(\{(2,1),(3,2),(1,3),(2,3),(3,3)\}\)。\code{tests/test\_reference.py}にはこの性質を全セル集合として比較するテストがあります。
+\section{近傍読み出し回数}
+1世代で\(N=WH\)個のセルを更新するなら、現行の各セルは\code{neighbors}の8回と現在セルの1回で、合計\(9N\)回の\code{Array.get}を使います。\code{Array.set}は\(N\)回。計算量の章の「8方向参照」と現在セルの読取りを区別すること。
+\section{典型的なバグ}
+\begin{tabularx}{\linewidth}{@{}p{42mm}X@{}}
+\toprule
+症状 & 疑う箇所\\
+\midrule
+盤面右端付近だけ違う & \(x\)方向のラップと一次元添字の混同。\\
+ブリンカーが1周期で崩れる & 旧世代を更新しながら後続の近傍を読んでいる。\\
+すべてのセルが1になる & 自分自身を近傍として含めた、あるいは条件式の3と2を間違えた。\\
+\code{used more than once} & 配列を戻り値として引き継いでいない、または\code{+}の不足。\\
+\code{expected Data observed Type} & \code{+Array}とした可能性。配列を共有せず設計を直す。\\
+性能測定が極端に遅い & 正規化経路や端末描画を測っていないか確認。\\
+\bottomrule
+\end{tabularx}
+
+\chapter{環境・コマンド・参照先}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 困ったときに参照するコマンドをまとめています。\term{再現性（reproducibility）}は、同じ条件で結果を再確認できる性質です。
+\end{tcolorbox}
+
+\section{コマンド早見表}
+\begin{longtable}{@{}p{59mm}p{89mm}@{}}
+\toprule
+コマンド & 目的\\
+\midrule
+\endfirsthead
+\toprule コマンド & 目的\\\midrule\endhead
+\code{bend version} & バージョン表示。\\
+\code{bend guide} & インストール版に一致したガイド。\\
+\code{bend base} & 標準ライブラリの参照。\\
+\code{bend base Array} & 配列周辺のAPIを個別に調査。\\
+\code{bend guide shaders} & GPU・並列描画の最適化ガイド。\\
+\code{bend file.bend --check-only} & 型・停止性などのチェックだけ実施。\\
+\code{bend file.bend} & チェックと実行／正規化。\\
+\code{bend file.bend -o program} & ネイティブバイナリの生成。\\
+\code{./program --threads 4} & CPUスレッド数を指定。\\
+\code{./program --gpu off} & GPUマーク付き処理をCPUで実行。\\
+\code{bend file.bend --verdict} & 追加の証明検証を要求。\\
+\code{python3 -m unittest discover -s tests} & Python参照系の自己テスト。\\
+\bottomrule
+\end{longtable}
+\section{主要資料}
+\begin{itemize}
+\item \url{https://github.com/bendlang/bend}\newline 公式リポジトリ、README、guide、Base、リリース。
+\item \url{https://github.com/bendlang/bend/releases}（公式の最新版・リリース日時）。
+\item \url{https://bend2.dev/}（非公式だが例題の豊富な学習リファレンス。公式\code{bend guide}が優先）。
+\item \url{https://nohzafk.github.io/bend2-from-zero/}（Bend2の失敗例とライフゲームを含む独立教材。実装上の参考情報）。
+\end{itemize}
+\section{検証ログの書式}
+\begin{lstlisting}[language={},numbers=none,caption={VERSION\_LOG.mdの記入例（数値は実測値に置換）}]
+Date: YYYY-MM-DD
+OS / Arch:
+Bend version:
+Bend native clang:
+GPU backend:
+Commands:
+  bend src/08_life_terminal.bend --check-only
+  python3 scripts/check_bend.py
+Result: PASS / FAIL / SKIP
+Error output (if any):
+Changes made after checking:
+\end{lstlisting}
+\section{最後の総合チェック}
+\begin{enumerate}
+\item \textbf{動作}: 各章のプログラムの出力を自分で確認した。
+\item \textbf{数学}: B3/S23、トーラス、同期更新を自分の言葉で説明できます。
+\item \textbf{言語}: \code{Data/Type}、\code{+}、\code{Nat}、\code{Array.get}、\code{match}の制約を説明できます。
+\item \textbf{並列}: fork/joinとGPU実行の違い、計算負荷の均衡を説明できます。
+\item \textbf{証明}: lawの意味と、その法則が\textbf{保証しないこと}を説明できます。
+\item \textbf{再現性}: ソース・バージョン・コマンド・テスト結果を再現可能な形で残した。
+\end{enumerate}
+\vspace{1em}
+\begin{pointbox}
+\textbf{本書の境界線}：ライフゲームの数理的な仕様と独立Pythonオラクルは完成済み。Bendの逐次シミュレータ・局所証明ファイルはソースとして同梱済みだが、Bendコンパイラによる動作検証は未実施。並列ツリーとGPUツリーは独立の練習例であり、ライフゲームのCPU多コア版・GPU版・盤面全体の形式証明は今後の拡張課題です。
+\end{pointbox}
+
+\chapter{Bend 2 基本機能監査表}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 最後に、Bend 2の基本機能の学習範囲を確認します。本文で解説済みの項目と、実装・実行確認がまだの項目を混同しないようにしましょう。
+\end{tcolorbox}
+
+\section{監査基準と凡例}
+2026年10月16日に公式\code{guide/GUIDE.md}、公式\code{README.md}、公開\code{base.bend}を突き合わせた。下表の\term{本文・コード}は文章解説と独立\code{.bend}例が存在すること、\term{本文・課題}は構文・用途・実習課題を与えたもの、\term{発展}は高度な実装を完成したと主張していないものを指す。Bendコンパイラによる実行確認状況とは別です。
+\begingroup
+\setlength{\tabcolsep}{4pt}\renewcommand{\arraystretch}{1.2}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{45mm}>{\raggedright\arraybackslash}p{34mm}>{\raggedright\arraybackslash}p{69mm}@{}}
+\toprule
+公式ガイドの基本項目 & 対応 & 掲載内容と限界\\
+\midrule\endfirsthead
+\toprule 公式ガイドの基本項目 & 対応 & 掲載内容と限界\\\midrule\endhead
+型・関数・注釈・演算子 & 本文・コード & Part I：U32/Nat、関数、リテラルと型注釈。\\
+ADT・コンストラクタ・match & 本文・コード & Part I：Cell、パターンマッチ。\\
+再帰・停止性・unsafe & 本文・課題 & List、燃料、停止性、unsafeの保証限界。\\
+クロージャ・高階関数 & 本文・コード & adderとアフィンな関数値。\\
+テンプレート（\textasciitilde{}） & 本文・コード & twiceと閉じた引数・インスタンス化。\\
+数量（-, 無印, +） & 本文・コード & 所有権と再利用の制約、違反例。\\
+Kind, Type, Data, Quant & 本文・コード & Kind(a)、量の演算、Listの種類。\\
+List, Array, Pair & 本文・コード & 構造再帰、配列更新、ペア返却。\\
+Bool/Cmp, 数値、Char/String & 本文・課題 & 主要型、演算子、変換、bit操作。\\
+Maybe, Result, Monad/do & 本文・コード & Maybeのdo例、Resultの意味と導入課題。\\
+Map, Set & Mapにコード・Setは課題 & Mapの所有権付きAPIとSetの標準ライブラリ調査。\\
+モジュール／import & 本文・コード & 別ファイルへの分割とalias。\\
+IO、args、例外的失敗 & 本文・課題 & IO.print、IO.args、IO.try、env等。\\
+IO並行性（fork/join/Chan） & 本文・コード & fork/join例、Channelsの概念と制約。\\
+CPU並列呼び出し & 本文・コード & 独立の並列木例。Life本体は未並列化。\\
+GPU呼び出し（!） & 本文・コード & 独立のGPU木例。Life本体は未GPU化。\\
+App、Image、Event & 本文・コード & ウィンドウ入門例。LifeのGUIは未完成。\\
+ファイル、ネット、プロセス、音声 & Fileにコード・他は課題 & ファイル作成とハンドル管理。残りはAPI調査。\\
+C/JSホスト効果、JSモジュール & 本文・課題 & 仕組み、ビルドと実験。FFI実装は応用。\\
+law、等式、帰納法、verdict & 本文・コード & 局所規則、帰納法、証明の到達範囲。\\
+BendHub publish、各種出力 & 本文・課題 & 公開手順の意味、ネイティブ/C/JS/mjs。\\
+\bottomrule
+\end{longtable}
+\endgroup
+\section{網羅性の限界：基本構文と全APIは別}
+この表が意図する\term{基本機能の網羅}とは、公式ガイドが独立の見出しとして扱う概念を学習できる状態にすることです。Baseの約数千行に及ぶ全関数、ネットワークの細かな挙動、GPU最適化、独自FFI、BendHubログイン・公開の実演まで全て本文で完了したとはしていない。必要になったときは\code{bend base}、\code{bend guide effects}、\code{bend guide shaders}と現行ソースを参照します。
+\begin{cautionbox}
+\textbf{最重要の未検証事項}：追加\code{.bend}コードを含め、環境にBendコンパイラがないため実際の型検査・実行・GUI表示は未確認。監査表の「本文・コード」は\term{例を掲載した}という意味で、\term{検証に合格した}という意味ではありません。独立Python参照テストはBendの型・停止性を保証しません。
+\end{cautionbox}
+\section{追試チェックリスト（Bendを導入したら）}
+\begin{enumerate}
+\item \code{bend version}を記録し、全\code{src/*.bend}のうち\code{INVALID}を除いて\code{bend ... --check-only}を実行します。
+\item \code{src/08\_life\_terminal.bend}で差分テストを行います。Pythonと全世代全セル一致を確認します。
+\item IO、テンプレート、モジュール、Kind、Appは単独サンプルを実行し、実機とコンパイラバージョンを記録します。
+\item \code{--verdict}で証明例を確認し、\term{安全な証明}と\term{部分的な検査}を区別します。
+\item ターゲットごとの差（ネイティブ、GPU、JavaScript）と外部の必須ライブラリを記録します。
+\end{enumerate}
+
+\backmatter
+\end{document}
