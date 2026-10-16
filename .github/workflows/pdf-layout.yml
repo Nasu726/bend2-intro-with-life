@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   pdf:
@@ -51,15 +51,3 @@ jobs:
 
 
 
-      - name: Commit regenerated PDF to source branch
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add 'ライフゲームで学ぶ_はじめてのBend2.pdf'
-          if ! git diff --cached --quiet; then
-            git commit -m 'docs: regenerate PDF for clarified section 1.2'
-            git push origin "HEAD:refs/heads/${BRANCH_NAME}"
-          fi
