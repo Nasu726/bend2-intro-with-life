@@ -5,7 +5,7 @@ import Base
 import ./game.bend as Game
 import ./board.bend as Board
 
-type State is Data:
+type State is Type:
   State{mines: U32, cells: Array<Game.Square>}
 
 # Exactly 2^4=16 visible entries. Caller must restrict mines to 16 bits.
