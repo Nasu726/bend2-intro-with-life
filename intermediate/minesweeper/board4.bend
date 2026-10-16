@@ -32,7 +32,7 @@ def toggle_from_read(index: U32, read: Array<Game.Square> & Game.Square) -> Arra
   (cells, square) = read
   Array.set(Game.Square, cells, index, Game.toggle_flag(square))
 
-def toggle_cells(cells: Array<Game.Square>, index: U32) -> Array<Game.Square>:
+def toggle_cells(cells: Array<Game.Square>, +index: U32) -> Array<Game.Square>:
   toggle_from_read(index, Array.get(Game.Square, cells, index))
 
 def toggle_at(s: State, index: U32) -> State:
@@ -45,7 +45,7 @@ def reveal_from_read(index: U32, clue: U32, read: Array<Game.Square> & Game.Squa
   (cells, square) = read
   Array.set(Game.Square, cells, index, Game.reveal_safe(square, clue))
 
-def reveal_cells(cells: Array<Game.Square>, index: U32, clue: U32) -> Array<Game.Square>:
+def reveal_cells(cells: Array<Game.Square>, +index: U32, clue: U32) -> Array<Game.Square>:
   reveal_from_read(index, clue, Array.get(Game.Square, cells, index))
 
 def reveal_at(s: State, index: U32, clue: U32) -> State:
