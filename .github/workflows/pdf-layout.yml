@@ -1,0 +1,67 @@
+name: PDF layout
+on:
+  pull_request:
+    paths:
+      - 'Bend2_Life_Textbook.tex'
+      - 'src/**'
+      - '.github/workflows/pdf-layout.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  pdf:
+    name: XeLaTeX layout verification
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Check out proposed revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+
+      - name: Compile PDF with XeLaTeX
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: Bend2_Life_Textbook.tex
+          latexmk_use_xelatex: true
+          texlive_version: '2025'
+          os: debian
+          extra_system_packages: fonts-noto-cjk fonts-noto-core
+
+      - name: Fail on TeX box and font warnings
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s Bend2_Life_Textbook.log
+          if grep -nE 'Overfull|Underfull|LaTeX Font Warning|LaTeX Warning' Bend2_Life_Textbook.log; then
+            echo 'LaTeX reported layout or font warnings.' >&2
+            exit 1
+          fi
+
+      - name: Prepare reader PDF
+        run: cp Bend2_Life_Textbook.pdf 'ライフゲームで学ぶ_はじめてのBend2.pdf'
+
+      - name: Upload PDF as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: textbook-pdf
+          path: 'ライフゲームで学ぶ_はじめてのBend2.pdf'
+
+      - name: Update PDF in this repository's PR branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 'ライフゲームで学ぶ_はじめてのBend2.pdf'
+          if git diff --cached --quiet; then
+            echo 'PDF matches the committed version.'
+          else
+            git commit -m 'docs: regenerate textbook PDF after layout fix'
+            git push origin "HEAD:refs/heads/${HEAD_BRANCH}"
+          fi
