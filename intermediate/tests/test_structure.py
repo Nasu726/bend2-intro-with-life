@@ -18,8 +18,8 @@ class BookStructure(unittest.TestCase):
 
     def test_sections(self):
         text = BOOK.read_text(encoding="utf-8")
-        self.assertEqual(text.count(r"\\part{"), 6)
-        self.assertGreaterEqual(text.count(r"\\chapter{"), 20)
+        self.assertEqual(text.count(r"\part{"), 6)
+        self.assertGreaterEqual(text.count(r"\chapter{"), 20)
         for heading in ("Baseを調べる", "MapとSet", "Fileとリソース",
                         "Appとイベント", "lawを先に書く", "運ゲー無し"):
             self.assertIn(heading, text)
