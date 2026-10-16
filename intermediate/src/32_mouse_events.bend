@@ -1,12 +1,23 @@
 import Base
-import ./23_cell_hit_test.bend as Grid
+
+# This example is self-contained. We reuse the same 8x8 coordinate rule
+# introduced in 23_cell_hit_test.bend without requiring a numbered import.
+def cell_if_valid(valid: Bool, x: U32, y: U32) -> Maybe<&2, U32>:
+  match valid:
+    case True{}:
+      Some{U32.add(U32.mul(U32.div(y, 32), 8), U32.div(x, 32))}
+    case False{}:
+      None{}
+
+def pixel_to_cell(+x: U32, +y: U32) -> Maybe<&2, U32>:
+  cell_if_valid(Bool.and(U32.is_lt(x, 256), U32.is_lt(y, 256)), x, y)
 
 # Turn a mouse press into an 8x8 board index.
-# This example intentionally does not assign meanings to button numbers.
+# We deliberately leave button-number interpretation for the GUI chapter.
 def cell_on_press(down: Bool, x: U32, y: U32) -> Maybe<&2, U32>:
   match down:
     case True{}:
-      Grid.pixel_to_cell(x, y)
+      pixel_to_cell(x, y)
     case False{}:
       None{}
 
