@@ -24,6 +24,7 @@ EXPECTED = {
     "18_array_mutations.bend": "17",
     "20_process_run.bend": "0",
     "21_io_fork.bend": "7",
+    "22_result_and_game.bend": "1",
 }
 
 def run(*args):
@@ -86,6 +87,10 @@ def main():
     if "ALL PROOFS CHECK" not in local_verdict:
         raise AssertionError(f"Local inference proof not accepted:\n{local_verdict}")
     print("PASS local inference law verdict", flush=True)
+    result_verdict = run("bend", str(SAMPLES / "22_result_and_game.bend"), "--verdict")
+    if "ALL PROOFS CHECK" not in result_verdict:
+        raise AssertionError(f"Result-and-game proof not accepted:\n{result_verdict}")
+    print("PASS Result-and-game law", flush=True)
     print("PASS law verdict", flush=True)
     return 0
 
