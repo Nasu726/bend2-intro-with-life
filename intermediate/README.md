@@ -78,3 +78,8 @@ bend intermediate/minesweeper/PROOF.bend --verdict
 - [Bend 2公式リリース](https://github.com/bendlang/bend/releases)
 
 本書と付属サンプルコードは[MIT License](../LICENSE)で公開しています。
+
+今回の改稿では第5〜10章にも、`Maybe`・`Result`・`Either`、Fileの読み戻し、
+IOの外部入力、Chanの受け渡し、TCP接続の成否を示す小さなコードと演習を補いました。
+第6章に重複していた説明は整理し、各APIの詳しい説明は対応する章に置いています。
+演習解説は [solutions/05_10_io_exercises.md](solutions/05_10_io_exercises.md) に分離しています。
