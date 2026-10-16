@@ -1,0 +1,59 @@
+name: Reader download bundles
+on:
+  pull_request:
+    paths:
+      - 'README.md'
+      - 'scripts/build_reader_bundle.py'
+      - 'tests/test_reader_bundle.py'
+      - 'DISTRIBUTION_POLICY.md'
+      - '.github/workflows/reader-bundles.yml'
+      - 'ライフゲームで学ぶ_はじめてのBend2.pdf'
+      - 'src/**'
+      - 'intermediate/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    name: Validate and publish learner ZIPs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generate learner archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/build_reader_bundle.py intro
+          if test -f intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf; then
+            python3 scripts/build_reader_bundle.py intermediate
+          fi
+      - name: Verify exact package allowlists
+        run: python3 -m unittest tests.test_reader_bundle -v
+      - name: Upload permanent-download candidates as Actions artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: learner-zips
+          path: reader-packages/*.zip
+          if-no-files-found: error
+      - name: Add archives to the PR branch for stable direct-download links
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add reader-packages/*.zip
+          if ! git diff --cached --quiet; then
+            git commit -m 'build: update downloadable learner archives'
+            git push origin "HEAD:refs/heads/${BRANCH_NAME}"
+          fi
