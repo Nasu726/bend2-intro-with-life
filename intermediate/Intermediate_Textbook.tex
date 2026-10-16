@@ -72,7 +72,7 @@ bend guide
 \sectiongoal{構造の違いと、関数の選択が所有権に与える影響を理解する。}
 \code{List}は\code{Nil}と\code{Con}からなる再帰的な鎖です。\code{map}、\code{filter}、\code{foldl}、\code{foldr}、\code{sort}などが用意されています。変換したリストを作るとき、入力要素の型が\code{Type}か\code{Data}かによって、要素を何度も使えるかが変わります。
 \sample{03_list.bend}{リストを作り要素数を求める}
-このプログラムは3要素の長さを返します。\code{<>}はリストの先頭に要素を付ける記法です。\code{List.length}の引数には、数量と要素型が必要です。
+このプログラムは\code{List.replicate}で値を3個並べたリストを作り、その長さを返します。\code{List.length}の引数には、数量と要素型が必要です。先頭への追加には\code{<>}という記法も使えます。
 
 \code{Array}はインデックスを使う構造です。\code{get}と\code{set}のほか、\code{swap}、\code{clone}、\code{fork}、\code{join}、\code{to_list}、\code{map}などがあります。「読むだけ」のつもりでも所有権付き配列を消費するので、返された配列を引き継ぎます。複製やフォークは処理・メモリのコストを伴います。
 \exercise{同じ数値列を\code{List}と\code{Array}の両方で表し、要素の変更、走査、複製が必要な場合の選び方を比較してみましょう。}
