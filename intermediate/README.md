@@ -37,6 +37,19 @@ bend examples/04_flag_laws.bend --verdict
 
 現在は**執筆途中のプレビュー版**で、教材全体はまだ未完成です。マインスイーパーの完成したGUIアプリや、運ゲー無し盤面のBendによる生成はまだ収録していません。演習の参考実装や追加の技術資料は、必要に応じて[リポジトリ内の参考コード](solutions/)から参照できます。
 
+## マインスイーパーの法則駆動開発（制作途中）
+
+ゲームの実装は[要件台帳](minesweeper/REQUIREMENTS.md)と
+[LAWS.bend](minesweeper/LAWS.bend)を先に確定し、その後で
+[実装](minesweeper/game.bend)と[証明](minesweeper/PROOF.bend)を作る方式です。
+
+```sh
+bend intermediate/minesweeper/PROOF.bend --verdict
+```
+
+現在の証明範囲はマス単体の旗と公開操作だけです。盤面全体やGUIの
+正当性はまだ証明・実装されていません。
+
 ## 公式資料とライセンス
 
 - [Bend 2公式リポジトリ](https://github.com/bendlang/bend)

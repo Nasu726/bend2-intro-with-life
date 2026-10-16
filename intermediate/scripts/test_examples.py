@@ -85,6 +85,17 @@ def main():
         raise AssertionError(f"Environment example did not return a numeric length: {env_output!r}")
     print("PASS environment variable Result example", flush=True)
 
+    # The game requirements are NOT sample-local examples: import every claim,
+    # and check the independent PROOF.bend with Bend's small verified kernel.
+    game = ROOT / "minesweeper"
+    engine = run("bend", str(game / "game.bend")).splitlines()[-1]
+    if engine != "1":
+        raise AssertionError(f"Unexpected visible-state smoke output: {engine}")
+    game_verdict = run("bend", str(game / "PROOF.bend"), "--verdict")
+    if "ALL PROOFS CHECK" not in game_verdict:
+        raise AssertionError(f"Minesweeper law proof gate failed:\\n{game_verdict}")
+    print("PASS Minesweeper requirements/proof gate (C-01..C-07)", flush=True)
+
     verdict = run("bend", str(SAMPLES / "04_flag_laws.bend"), "--verdict")
     if "ALL PROOFS CHECK" not in verdict:
         raise AssertionError(f"Proof checker did not accept laws:\n{verdict}")
