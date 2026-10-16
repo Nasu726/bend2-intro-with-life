@@ -132,20 +132,23 @@ def main():
     # and check the independent PROOF.bend with Bend's small verified kernel.
     game = ROOT / "minesweeper"
     run("bend", str(game / "board.bend"), "--check-only")
+    board_result = run("bend", str(game / "board4.bend")).splitlines()[-1]
+    if board_result != "2":
+        raise AssertionError(f"Incorrect full-board clue smoke output: {board_result}")
     engine = run("bend", str(game / "game.bend")).splitlines()[-1]
     if engine != "1":
         raise AssertionError(f"Unexpected visible-state smoke output: {engine}")
     game_verdict = run("bend", str(game / "PROOF.bend"), "--verdict")
     if "ALL PROOFS CHECK" not in game_verdict:
         raise AssertionError(f"Minesweeper law proof gate failed:\n{game_verdict}")
-    print("PASS Minesweeper law proof gate (7 C laws + 9 local B laws)", flush=True)
+    print("PASS Minesweeper law proof gate (22 laws, including whole-board mine invariants and clues)", flush=True)
     verify_full_neighbor_table(game)
 
     # Mutation test: keeping the function well-typed must not suffice when
     # it violates an independently declared requirement.
     with tempfile.TemporaryDirectory() as td:
         mutant_dir = pathlib.Path(td)
-        for name in ("LAWS.bend", "PROOF.bend", "board.bend"):
+        for name in ("LAWS.bend", "PROOF.bend", "board.bend", "board4.bend"):
             shutil.copyfile(game / name, mutant_dir / name)
         original = (game / "game.bend").read_text(encoding="utf-8")
         mutant = original.replace("    case Hidden{}:\n      Flag{}",

@@ -2,6 +2,7 @@
 import Base
 import ./game.bend as Game
 import ./board.bend as Board
+import ./board4.bend as Board4
 import ./LAWS.bend as Laws
 
 def Laws.hidden_is_flagged():
@@ -71,4 +72,25 @@ def Laws.board_reveal_monotone_on_open(mine, old_clue, new_clue):
   {==}
 
 def Laws.board_safe_reveal_keeps_flag(mine, clue):
+  {==}
+
+# The whole board state stores one mine mask, preserved through any
+# visible-only update. These laws quantify over arbitrary contents.
+def Laws.board4_toggle_keeps_all_mines(mines, cells, index):
+  {==}
+
+def Laws.board4_reveal_keeps_all_mines(mines, cells, index, clue):
+  {==}
+
+# Clue conditions, including the quantified empty-board contract.
+def Laws.board4_empty_clue_is_zero(x, y):
+  {==}
+
+def Laws.board4_own_mine_not_counted():
+  {==}
+
+def Laws.board4_diagonal_clue():
+  {==}
+
+def Laws.board4_two_mines_clue():
   {==}
