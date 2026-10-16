@@ -12,31 +12,33 @@
 | 機能群 | 本文 | コード | 追加すべき実習・検査 |
 |---|---|---|---|
 | `Nat`, `U32`, `F32`, `Word`, `Cmp` | 第2章・第23章 | 他の例で一部使用 | 変換、丸め、境界値 |
-| `String`, `Char` | 第2章 | Map・Setのキー | 分割、変換失敗、符号化 |
-| `List`, 高階関数と畳み込み | 第3章 | `03_list.bend` | `map/filter/fold/sort`の専用例 |
-| `Array` 操作、`fork/join/clone` | 第3章 | 前巻に基本例 | 詳細API、所有権、実行テスト |
-| `Map`（文字列キー） | 第4章 | `02_map.bend` | 欠落/削除/走査 |
-| `Set` | 第4章 | `01_set.bend`, `05_marking.bend` | 削除、重複、集合化 |
+| `String`, `Char` | 第2章 | `15_string_parse.bend`、Map・Setのキー | `trim`と`U32.read`を検証。split/join、文字境界は追加予定 |
+| `List`, 高階関数と畳み込み | 第3章 | `03_list.bend`、`17_list_pipeline.bend` | filter/foldを実行照合。map/sortと数量指定は追加予定 |
+| `Array` 操作、`fork/join/clone` | 第3章 | `18_array_mutations.bend`、前巻の基本例 | new/set/getの実行照合。fork/join/cloneは今後 |
+| `Map`（文字列キー） | 第4章 | `02_map.bend`、`16_map_set_api.bend` | keysの実行照合。get欠落と順序の詳細は今後 |
+| `Set` | 第4章 | `01_set.bend`、`05_marking.bend`、`16_map_set_api.bend` | 追加・重複・削除・サイズを照合 |
 | `Maybe`, `Result`, `Either` | 第5・第6章 | 前巻にMaybeの例 | Result/Either専用例 |
 | `Pair`, `Sigma`, `Exists`, `Or` | 第5・第16章 | 追加実習 | 依存する値・存在証明 |
 | `Kind`, `Quant`, 消去引数 | 第5・第16章 | 追加実習 | 型エラーとの対比 |
 | `IO`, `IO.try`, `IO.die` | 第6章 | `08_args.bend` | 失敗時の終了コード |
 | `File`（文字列・バイト） | 第7章 | `12_file_write.bend`、`13_file_read.bend` | 保存・読出し・閉鎖を実行検証、bytesは今後 |
-| 引数・環境変数・乱数・時刻 | 第8章 | `08_args.bend` | get_env/random/nowの実行例 |
-| `Process.run` | 第8章 | 追加実習 | 出力、終了コード、タイムアウト |
-| `IO.fork/join`, `Chan` | 第9章 | 追加実習 | 通信・終了・失敗 |
+| 引数・環境変数・乱数・時刻 | 第8章 | `08_args.bend`、`11_random_io.bend`、`19_environment.bend` | 乱数IO・環境変数の例。now/sleepは今後 |
+| `Process.run` | 第8章 | `20_process_run.bend` | Linuxでの終了コード実行例。stderr・失敗は今後 |
+| `IO.fork/join`, `Chan` | 第9章 | `21_io_fork.bend` | fork/joinの実行照合。Chan送受信・終了は今後 |
 | `IO.within`, `Poll` | 第9章 | 追加実習 | タイムアウト |
 | TCP/UDP/Socket/Listener | 第10章 | 追加実習 | ループバックテスト |
 | `Image`, `Pix`, `Qua` | 第11章 | `07_gui_hello.bend` | 描画関数テスト |
 | `App`, `Event`, `Window` | 第12–14章 | `07_gui_hello.bend` | GUI実機・入力イベント |
 | `Audio` | 第14・第20章 | 追加実習 | 出力デバイス確認 |
-| `law`, `Equal`, 帰納法 | 第15–18章 | `04_flag_laws.bend` | 帰納法・補題・等式操作 |
+| `law`, `Equal`, 帰納法 | 第15–18章・第22章 | `04_flag_laws.bend`、`14_local_inference.bend` | 局所法則のLean検査。帰納法・補題の追加例は今後 |
 | `@unsafe`, 外部信頼境界 | 第18・20章 | 追加実習 | 証明検査の境界 |
 | CPU並列、GPU指定 | 第19章 | `06_parallel.bend` | GPUターゲット別検査 |
 | `Array.atomic` | 第19章 | 追加実習 | 使用制約と対応環境 |
 | C/JavaScriptと外部連携 | 第20章 | 追加実習 | 生成コード・FFI |
 | モジュール・パッケージ | 第20章 | 追加実習 | 公開と配布 |
-| 4×4盤面の近傍数 | 第13章 | `10_board_neighbors.bend` | 境界ケースと盤面全体の更新 |\n| 乱数IOの失敗処理 | 第8章 | `11_random_io.bend` | 実機での失敗・再現性確認 |\n| 旗の基本操作・局所法則 | 第13・15章 | `09_minesweeper_status.bend`, `04_flag_laws.bend` | 操作の網羅 |
+| 4×4盤面の近傍数 | 第13章 | `10_board_neighbors.bend` | 境界ケースと盤面全体の更新 |
+| 乱数IOの失敗処理 | 第8章 | `11_random_io.bend` | 実機での失敗・再現性確認 |
+| 旗の基本操作・局所法則 | 第13・15章 | `09_minesweeper_status.bend`, `04_flag_laws.bend` | 操作の網羅 |
 | プレイ可能な通常版マインスイーパー | 第21章 | **未実装** | GUI、勝敗、0展開、保存 |
 | 運ゲー無し版 | 第22章 | `14_local_inference.bend`（局所推論）・`solutions/noguess_reference.py`（Python参考実装） | Bend版生成とGUIは未実装。Python参考実装は全列挙・失敗明示・小盤面テスト |
 
