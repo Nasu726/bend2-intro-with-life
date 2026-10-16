@@ -1,5 +1,5 @@
 import Base
-import ./41_board_index.bend as Board
+import ./board_index.bend as Board
 
 # The helper lives in a different file but works like a normal function.
 def main() -> U32:

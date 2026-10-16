@@ -1367,16 +1367,16 @@ bend examples/15_string_parse.bend -o parse.mjs
 \section{二つのファイルへ分けてみる}
 ここまで一つのファイルに書いていた関数を、別のファイルから呼び出したい場面があります。マインスイーパーで「行と列から配列の番号を計算する」処理を別にしてみましょう。
 
-\sample{41_board_index.bend}{4×4盤面の添字を計算する小さなモジュール}
+\sample{board_index.bend}{4×4盤面の添字を計算する小さなモジュール}
 \sample{42_module_board.bend}{別ファイルの関数をimportして利用する}
 
-まず\code{41_board_index.bend}には\code{index}という関数が入っています。行を\code{row}、列を\code{col}とすると、添字は\code{row * 4 + col}です。2行目の3列目なら11になります。
+まず\code{board_index.bend}には\code{index}という関数が入っています。行を\code{row}、列を\code{col}とすると、添字は\code{row * 4 + col}です。2行目の3列目なら11になります。
 
 もう一つのファイルでは、次のように読み込みます。
 
 \begin{lstlisting}[caption={モジュールへ別名を付けて呼び出す}]
 import Base
-import ./41_board_index.bend as Board
+import ./board_index.bend as Board
 
 def main() -> U32:
   Board.index(2, 3)
