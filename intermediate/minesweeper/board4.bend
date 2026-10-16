@@ -111,17 +111,13 @@ def reveal_checked(state: State, +index: U32, clue: U32) -> State:
 # Standard Array.clone is appropriate: we inspect the same cells while
 # retaining them in the returned State, without duplicating the game logic.
 def counts_as_cleared(square: Game.Square, mine: Bool) -> Bool:
-  match mine:
-    case True{}:
+  match square mine:
+    case Game.Open{clue} _:
       True{}
-    case False{}:
-      match square:
-        case Game.Open{clue}:
-          True{}
-        case Game.Hidden{}:
-          False{}
-        case Game.Flag{}:
-          False{}
+    case _ True{}:
+      True{}
+    case _ False{}:
+      False{}
 
 def all_safe_open(squares: List<Game.Square>, +mines: U32, +bit: U32) -> Bool:
   match squares:

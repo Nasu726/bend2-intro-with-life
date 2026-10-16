@@ -57,7 +57,7 @@ def click_hidden(is_mine: Bool, mines: U32, cells: Array<Game.Square>, index: U3
     case False{}:
       open_safe(mines, cells, index)
 
-def click_read(+mines: U32, index: U32, read: Array<Game.Square> & Game.Square) -> Session:
+def click_read(+mines: U32, +index: U32, read: Array<Game.Square> & Game.Square) -> Session:
   (cells, square) = read
   match square:
     case Game.Hidden{}:
