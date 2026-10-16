@@ -4,6 +4,7 @@
 import Base
 import ./game.bend as Game
 import ./board.bend as Board
+import ./board4.bend as Board4
 
 # C-01: A hidden cell acquires a flag.
 law hidden_is_flagged:
@@ -84,3 +85,38 @@ law board_safe_reveal_keeps_flag:
   for mine: Bool
   for clue: U32
   {Board.visible_of(Board.reveal(Board.Cell{mine, Game.Flag{}}, clue)) == Game.Flag{} : Game.Square}
+
+# B-02 (whole board): a visible-state edit must preserve ALL 16 mine bits.
+# A State is a dense 16-cell Array plus the U32 mine mask.
+# The index can be arbitrary here: Array's out-of-range behavior is a
+# separate input-validation obligation, and does not weaken this invariant.
+law board4_toggle_keeps_all_mines:
+  for mines: U32
+  for cells: Array<Game.Square>
+  for index: U32
+  {Board4.mine_mask(Board4.toggle_at(Board4.State{mines, cells}, index)) == mines : U32}
+
+law board4_reveal_keeps_all_mines:
+  for mines: U32
+  for cells: Array<Game.Square>
+  for index: U32
+  for clue: U32
+  {Board4.mine_mask(Board4.reveal_at(Board4.State{mines, cells}, index, clue)) == mines : U32}
+
+# B-04: 0 mines means 0 adjacent mines at every coordinate.
+law board4_empty_clue_is_zero:
+  for x: U32
+  for y: U32
+  {Board4.clue(0, x, y) == 0 : U32}
+
+# Concrete regression contracts distinguish cell from neighbor and edge
+# from toroidal wrap. Every possible single-mine position is also tested
+# independently against a Python oracle.
+law board4_own_mine_not_counted:
+  {Board4.clue(1, 0, 0) == 0 : U32}
+
+law board4_diagonal_clue:
+  {Board4.clue(1, 1, 1) == 1 : U32}
+
+law board4_two_mines_clue:
+  {Board4.clue(33, 1, 0) == 2 : U32}
