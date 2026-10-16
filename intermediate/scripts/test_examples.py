@@ -11,8 +11,8 @@ SAMPLES = ROOT / "src"
 EXPECTED = {
     "01_set.bend": "1",
     "02_map.bend": "7",
-    "03_list.bend": "3",
-    "05_marking.bend": "0",
+    "03_list.bend": "3n",
+    "05_marking.bend": "0n",
     "06_parallel.bend": "256",
     "09_minesweeper_status.bend": "1",
 }
