@@ -95,6 +95,11 @@ jobs:
           path: |
             intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf
             reader-packages/bend2-intermediate-reader-preview.zip
+      - name: Install PDF text comparison utility
+        if: github.event_name == 'pull_request'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
       - name: Compare checked-in PDF and ZIP by content, not PDF timestamps
         if: github.event_name == 'pull_request'
         run: python3 intermediate/scripts/check_bundle_consistency.py
