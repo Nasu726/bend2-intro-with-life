@@ -35,6 +35,14 @@ jobs:
           curl -fsSL https://bend-lang.com/install.sh -o /tmp/install-bend.sh
           sh /tmp/install-bend.sh
           echo "$HOME/.bend/bin" >> "$GITHUB_PATH"
+      - name: Install Lean 4 proof kernel prerequisite
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o /tmp/elan-init.sh
+          sh /tmp/elan-init.sh -y --default-toolchain leanprover/lean4:v4.34.0 --no-modify-path
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+          "$HOME/.elan/bin/lean" --version
       - name: Check Bend compiler version
         run: bend version
       - name: Typecheck, run and verify proof examples
