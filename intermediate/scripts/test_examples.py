@@ -26,6 +26,8 @@ EXPECTED = {
     "21_io_fork.bend": "7",
     "22_result_and_game.bend": "1",
     "23_cell_hit_test.bend": "10",
+    "24_bool_proofs.bend": "1",
+    "25_either_case.bend": "7",
 }
 
 def run(*args):
@@ -92,6 +94,10 @@ def main():
     if "ALL PROOFS CHECK" not in result_verdict:
         raise AssertionError(f"Result-and-game proof not accepted:\n{result_verdict}")
     print("PASS Result-and-game law", flush=True)
+    bool_verdict = run("bend", str(SAMPLES / "24_bool_proofs.bend"), "--verdict")
+    if "ALL PROOFS CHECK" not in bool_verdict:
+        raise AssertionError(f"Boolean law not accepted:\n{bool_verdict}")
+    print("PASS universal Boolean law", flush=True)
     print("PASS law verdict", flush=True)
     return 0
 
