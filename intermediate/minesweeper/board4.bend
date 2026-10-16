@@ -128,7 +128,7 @@ def all_safe_open(squares: List<Game.Square>, +mines: U32, +bit: U32) -> Bool:
         counts_as_cleared(square, bit_is_set(mines, bit)),
         all_safe_open(rest, mines, (bit + bit : U32)))
 
-def checked_from_clone(mines: U32, pair: Array<Game.Square> & Array<Game.Square>) -> State & Bool:
+def checked_from_clone(+mines: U32, pair: Array<Game.Square> & Array<Game.Square>) -> State & Bool:
   (keep, inspect) = pair
   (State{mines, keep}, all_safe_open(Array.to_list(Game.Square, inspect), mines, 1))
 
