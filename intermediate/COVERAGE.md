@@ -14,7 +14,7 @@
 | `Nat`, `U32`, `F32`, `Word`, `Cmp` | 第2章・第23章 | 他の例で一部使用 | 変換、丸め、境界値 |
 | `String`, `Char` | 第2章 | `15_string_parse.bend`、Map・Setのキー | `trim`と`U32.read`を検証。split/join、文字境界は追加予定 |
 | `List`, 高階関数と畳み込み | 第3章 | `03_list.bend`、`17_list_pipeline.bend` | filter/foldを実行照合。map/sortと数量指定は追加予定 |
-| `Array` 操作、`fork/join/clone` | 第3章 | `18_array_mutations.bend`、前巻の基本例 | new/set/getの実行照合。fork/join/cloneは今後 |
+| `Array` 操作、`fork/join/clone` | 第3章 | `18_array_mutations.bend`、`30_array_clone.bend`、前巻の基本例 | new/set/getとcloneを実行照合。fork/joinと共有時の競合は今後 |
 | `Map`（文字列キー） | 第4章 | `02_map.bend`、`16_map_set_api.bend` | keysの実行照合。get欠落と順序の詳細は今後 |
 | `Set` | 第4章 | `01_set.bend`、`05_marking.bend`、`16_map_set_api.bend` | 追加・重複・削除・サイズを照合 |
 | `Maybe`, `Result`, `Either` | 第5・第6章 | `15_string_parse.bend`、`22_result_and_game.bend`、`25_either_case.bend` | Maybe/Result/Eitherの独立例。失敗と二者択一を区別 |
