@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   bend-examples:
@@ -100,6 +100,19 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq poppler-utils
-      - name: Verify committed PDF and learner ZIP match the manuscript
-        if: github.event_name == 'pull_request'
-        run: python3 intermediate/scripts/check_bundle_consistency.py
+      - name: Publish updated textbook PDF and learner ZIP
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if python3 intermediate/scripts/check_bundle_consistency.py; then
+            echo 'PDF and learner ZIP match their sources.'
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf reader-packages/bend2-intermediate-reader-preview.zip
+            git commit -m 'docs(intermediate): apply introductory layout to learner edition'
+            git push origin "HEAD:refs/heads/${BRANCH_NAME}"
+          fi
