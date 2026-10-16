@@ -13,7 +13,7 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
-PDF = Path("intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf")
+PDF = Path("intermediate/Bend2を使いこなす_プレビュー.pdf")
 ZIP = Path("reader-packages/bend2-intermediate-reader-preview.zip")
 
 def committed(path: Path) -> bytes:
