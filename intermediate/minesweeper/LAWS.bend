@@ -5,6 +5,7 @@ import Base
 import ./game.bend as Game
 import ./board.bend as Board
 import ./board4.bend as Board4
+import ./session.bend as Session
 
 # C-01: A hidden cell acquires a flag.
 law hidden_is_flagged:
@@ -134,3 +135,38 @@ law board4_rejects_invalid_reveal_index:
   for cells: Array<Game.Square>
   for clue: U32
   {Board4.reveal_checked(Board4.State{mines, cells}, 16, clue) == Board4.State{mines, cells} : Board4.State}
+
+# G-02: game rules are written BEFORE the implementation in session.bend.
+# A left-click on a hidden mine loses; a flagged mine is not opened.
+law session_mine_click_loses:
+  {Session.phase_of(Session.click(Session.new(1), 0)) == Session.Lost{} : Session.Phase}
+
+law session_flag_protects_mine:
+  {Session.phase_of(Session.click(Session.mark(Session.new(1), 0), 0)) == Session.Playing{} : Session.Phase}
+
+# Invalid indexes must not count as clicks, including on an otherwise mined board.
+law session_outside_ignored:
+  for mines: U32
+  {Session.phase_of(Session.click(Session.new(mines), 16)) == Session.Playing{} : Session.Phase}
+
+# Once a game is finished no later click (or flag change) can revive it.
+law session_lost_is_terminal:
+  for board: Board4.State
+  for index: U32
+  {Session.click(Session.Session{board, Session.Lost{}}, index) == Session.Session{board, Session.Lost{}} : Session.Session}
+
+law session_won_is_terminal:
+  for board: Board4.State
+  for index: U32
+  {Session.click(Session.Session{board, Session.Won{}}, index) == Session.Session{board, Session.Won{}} : Session.Session}
+
+# G-03: a board with 15 mines has one safe cell: clicking it wins.
+# The general criterion ("all safe cells opened, and only then") is
+# implemented by scanning the Array, and checked separately by an oracle.
+law session_last_safe_cell_wins:
+  {Session.phase_of(Session.click(Session.new(65534), 0)) == Session.Won{} : Session.Phase}
+
+# The user-facing click computes the true adjacent clue; it does NOT trust
+# a caller-supplied number, and it never changes already-visible numbers.
+law session_safe_click_shows_true_clue:
+  {Session.read_square(Session.click(Session.new(1), 5), 5) == Game.Open{1} : Game.Square}
