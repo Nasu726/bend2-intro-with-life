@@ -26,14 +26,14 @@ class TextbookStructureTests(unittest.TestCase):
                 self.assertNotIn(phrase, self.part1)
 
     def test_basic_types_come_before_functions_and_pattern_matching(self):
-        self.assertLess(self.part1.index(r'\\chapter{値とデータ型を理解する}'),
-                        self.part1.index(r'\\chapter{関数を定義して数値を計算する}'))
-        self.assertLess(self.part1.index(r'\\chapter{値とデータ型を理解する}'),
-                        self.part1.index(r'\\chapter{パターンマッチで場合分けをする}'))
+        self.assertLess(self.part1.index(r'\chapter{値とデータ型を理解する}'),
+                        self.part1.index(r'\chapter{関数を定義して数値を計算する}'))
+        self.assertLess(self.part1.index(r'\chapter{値とデータ型を理解する}'),
+                        self.part1.index(r'\chapter{パターンマッチで場合分けをする}'))
 
     def test_monads_precede_io(self):
-        self.assertLess(self.source.index(r'\\chapter{モナドと\\code{do}構文を理解する}'),
-                        self.source.index(r'\\chapter{画面出力とファイル操作を扱う}'))
+        self.assertLess(self.source.index(r'\chapter{モナドと\code{do}構文を理解する}'),
+                        self.source.index(r'\chapter{画面出力とファイル操作を扱う}'))
 
     def test_second_part_starts_with_specification(self):
         spec = self.part2.index(r"\chapter{ライフゲームのしくみと制作するもの}")
