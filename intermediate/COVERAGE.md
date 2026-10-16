@@ -24,7 +24,7 @@
 | `File`（文字列・バイト） | 第7章 | `12_file_write.bend`、`13_file_read.bend` | 保存・読出し・閉鎖を実行検証、bytesは今後 |
 | 引数・環境変数・乱数・時刻 | 第8章 | `08_args.bend`、`11_random_io.bend`、`19_environment.bend` | 乱数IO・環境変数の例。now/sleepは今後 |
 | `Process.run` | 第8章 | `20_process_run.bend` | Linuxでの終了コード実行例。stderr・失敗は今後 |
-| `IO.fork/join`, `Chan` | 第9章 | `21_io_fork.bend` | fork/joinの実行照合。Chan送受信・終了は今後 |
+| `IO.fork/join`, `Chan` | 第9章 | `21_io_fork.bend`、`28_chan_roundtrip.bend` | fork/joinとChan送受信・closeの実行照合。失敗・時間制限の実践は今後 |
 | `IO.within`, `Poll` | 第9章 | 追加実習 | タイムアウト |
 | TCP/UDP/Socket/Listener | 第10章 | `27_tcp_connect.bend` | TCP接続の型・成功失敗分岐例。送受信・UDPループバックは今後 |
 | `Image`, `Pix`, `Qua` | 第11章 | `07_gui_hello.bend` | 描画関数テスト |
