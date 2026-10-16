@@ -52,6 +52,8 @@ jobs:
 
   intermediate-pdf:
     name: Intermediate XeLaTeX PDF
+    permissions:
+      contents: write
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -95,6 +97,21 @@ jobs:
           path: |
             intermediate/Bend2を使いこなす_プレビュー.pdf
             reader-packages/bend2-intermediate-reader-preview.zip
+      # One-time synchronization on our own Draft PR branch only. The build is
+      # required to be clean before committing its two reader artifacts.
+      # Remove this step after the committed TeX, PDF and ZIP are synchronized.
+      - name: Synchronize the two reader artifacts with this TeX revision
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feat/intermediate-minesweeper-textbook'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -- 'intermediate/Bend2を使いこなす_プレビュー.pdf' 'reader-packages/bend2-intermediate-reader-preview.zip'
+          if ! git diff --cached --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'docs(intermediate): synchronize built textbook PDF and learner ZIP'
+            git push origin 'HEAD:refs/heads/feat/intermediate-minesweeper-textbook'
+          fi
       - name: Install PDF text comparison utility
         if: github.event_name == 'pull_request'
         run: |
