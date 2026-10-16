@@ -109,6 +109,36 @@ def test_life_transcript() -> None:
     print("PASS: complete five-generation board transcript")
 
 
+
+def test_higher_order_result() -> None:
+    """Check actual output, not just the function's type."""
+    actual = run(["bend", str(SOURCE / "29_higher_order.bend")]).strip()
+    if actual.splitlines()[-1] != "42":
+        raise AssertionError(f"Higher-order function expected 42, got {actual!r}")
+    print("PASS: higher-order apply(lambda, 40) = 42")
+
+
+def test_monad_bind_equivalence() -> None:
+    """Both do-notation and explicit bind handle success and failure alike."""
+    for path, fn in (("21_monadic_maybe.bend", "add_strs"),
+                     ("30_monad_explicit.bend", "add_strs_explicit")):
+        original = (SOURCE / path).read_text(encoding="utf-8")
+        head, separator, _main = original.partition("def main() ->")
+        if not separator:
+            raise AssertionError(f"Missing main definition in {path}")
+        for a, b, expected in (("40", "2", 42), ("bad", "2", 999)):
+            program = (head + "def main() -> U32:\n"
+                       + f'  Maybe.default(&2, U32, {fn}("{a}", "{b}"), 999)\n')
+            with tempfile.TemporaryDirectory(prefix="bend-monad-") as td:
+                tmp = Path(td) / "main.bend"
+                tmp.write_text(program, encoding="utf-8")
+                observed = run(["bend", str(tmp)]).strip()
+            if observed.splitlines()[-1] != str(expected):
+                raise AssertionError(f"{path}({a!r},{b!r}) expected {expected}, got {observed!r}")
+    print("PASS: do and explicit bind match on success and failure")
+
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--no-typecheck", action="store_true")
@@ -117,7 +147,7 @@ def main() -> int:
         print("ERROR: Bend is not installed; tests must not silently skip", file=sys.stderr)
         return 2
     print("Installed Bend:", run(["bend", "version"]).strip(), flush=True)
-    tests = [test_rule_table, test_life_transcript]
+    tests = [test_rule_table, test_life_transcript, test_higher_order_result, test_monad_bind_equivalence]
     if not args.no_typecheck:
         tests[:0] = [test_all_sources, test_expected_failure]
     errors = []
