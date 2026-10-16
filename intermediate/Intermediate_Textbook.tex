@@ -731,6 +731,8 @@ def new_state(mines: U32) -> State:
 
 \exercise{第12章の\code{23_cell_hit_test.bend}に(31,31)、(32,0)、(255,255)を渡し、表と一致するか確認してください。次に「盤面外のクリックは何もしない」を満たすために、\code{None{}}の場合はどのように分岐させるべきか説明しましょう。}
 
+\part{仕様駆動開発と形式的証明}
+\partchaptertoc
 \chapter{lawを先に書く}
 \sectiongoal{期待する動きをコードにする前に言葉で決め、法則を実際に実行して検査する。}
 
@@ -961,6 +963,8 @@ GUIの座標変換は純粋関数なので、ウィンドウを開かなくて�
 
 \exercise{\code{04_flag_laws.bend}の\code{toggle_twice}について、「動作例が一つ正しい」「任意の状態で法則が正しい」「完成ゲームの旗操作が正しい」の三つの説明を比べてください。どの段階までをコードと証明が支えているか、理由とともに答えてみましょう。}
 
+\part{並列実行とその他の応用}
+\partchaptertoc
 \chapter{CPU、GPU、Array.atomic}
 \sectiongoal{純粋計算の並列呼び出し、IOの並行実行、共有配列の更新を区別し、必要なときだけ正しい機能を選ぶ。}
 
