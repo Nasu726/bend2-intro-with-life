@@ -49,7 +49,7 @@ bend examples/04_flag_laws.bend --verdict
 引き続き第19・20・21章を増補し、さらに第11・12章を『はじめてのBend2』と同じ
 **小さなコード→実行結果→仕組みの解説→演習**の流れに沿って改稿しました。
 新たに `31_image_quadrants.bend`、`32_mouse_events.bend`、
-`33_nat_induction.bend` と `34_mine_mask_law.bend` を追加し、実行可能なサンプルは**34本**になりました。
+`33_nat_induction.bend` と `34_mine_mask_law.bend` を追加し、実行可能なサンプルは**37本**になりました。
 第13〜18章は、マスの状態→座標の境界→旗操作の `law`→自然数の帰納法→
 盤面全体の不変条件→検証範囲の順に書き直し、本文の重複も整理しました。
 章別補稿とマインスイーパー草稿の全文が統合済みという意味ではなく、
@@ -83,3 +83,8 @@ bend intermediate/minesweeper/PROOF.bend --verdict
 IOの外部入力、Chanの受け渡し、TCP接続の成否を示す小さなコードと演習を補いました。
 第6章に重複していた説明は整理し、各APIの詳しい説明は対応する章に置いています。
 演習解説は [solutions/05_10_io_exercises.md](solutions/05_10_io_exercises.md) に分離しています。
+
+第1・2・4・23章の再編集では、入門書の編集方針に沿って、
+**必要性→実行可能な短い例→結果と型→解説→演習**の流れを強化しました。
+`35_string_fields.bend`（文字列分割）、`36_map_missing.bend`（Mapにキーがあるか）、
+`37_u32_dimension.bend`（Nat/U32変換と比較）を追加し、教材サンプルは**37本**です。
