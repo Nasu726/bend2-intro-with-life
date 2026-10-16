@@ -45,6 +45,7 @@ INTERMEDIATE_EXAMPLES = (
     "29_io_within.bend", "30_array_clone.bend",
     "31_image_quadrants.bend", "32_mouse_events.bend",
     "33_nat_induction.bend",
+    "34_mine_mask_law.bend",
 )
 
 def readme(track: str) -> str:

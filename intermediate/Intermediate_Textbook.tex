@@ -879,23 +879,43 @@ bend examples/33_nat_induction.bend --verdict
 
 変わったのは表示状態だけです。では、この規則を16マスの盤面全体についてどのように述べればよいでしょうか。
 
-\section{地雷配置をひとつの値として保存する}
-第13章の\code{State}は、地雷位置を\code{mines: U32}、画面の状態を\code{cells: Array<Game.Square>}に分けていました。16ビットのマスクを使えば、全16マスの地雷位置が一つの\code{U32}に収まります。
+\section{まず二つの数値だけで試す}
+第13章では、表示状態を\code{Array}にまとめました。しかし、その大きな盤面について証明を書く前に、「地雷の配置」と「旗の配置」だけを持つ小さな構造から始めてみましょう。どちらも16ビットのマスクなら\code{U32}で表せます。
 
-そこで「旗操作の前後で\code{mines}が同じ」という要求を、次のような法則で表せます。
+\sample{34_mine_mask_law.bend}{旗は変わるが地雷は動かないことを確かめる}
 
-\begin{lstlisting}[caption={地雷位置を変えないという要求の抜粋}]
-law board4_toggle_keeps_all_mines:
-  for mines: U32
-  for cells: Array<Game.Square>
-  for index: U32
-  {Board4.mine_mask(Board4.toggle_at(
-    Board4.State{mines, cells}, index)) == mines : U32}
+\code{MiniBoard}には\code{mines}と\code{flags}の二つの値が入っています。\code{toggle_first}は左上のマスの旗だけを切り替える関数です。\code{U32.xor(flags, 1)}は、一番下のビットが0なら1、1なら0へ反転させます。その間、地雷の位置を表す\code{mines}は受け取った値をそのまま返します。
+
+例えば地雷のマスクが5、旗が一つもない状態から始めると、操作後の旗のマスクは1になります。
+
+\begin{lstlisting}[language={},caption={一つ目の旗を立てる}]
+bend examples/34_mine_mask_law.bend
 \end{lstlisting}
 
-\code{Board4.toggle_at}は表示状態の一か所を更新する関数です。\code{Board4.mine_mask}は更新後の地雷位置を取り出します。式の左右が等しいなら、\textbf{どのマスに旗を立てても地雷位置は変わらない}と主張できます。
+出力は\code{1}です。ところが、\textbf{これを実行しただけではどんな地雷配置でも安全かは分かりません}。そこで、次の法則を宣言しています。
 
-ここで一つだけ、対象の大きさに気を付けてください。\code{for mines: U32}はすべての32ビットの値、\code{for cells: Array<Game.Square>}はすべての配列を対象としています。配列が必ず16要素であることまで、この法則だけで保証したわけではありません。ゲームの盤面として入力を受け取るときの条件は別に必要です。
+\begin{lstlisting}[caption={地雷の位置は操作前後で一致する}]
+law toggle_keeps_mines:
+  for mines: U32
+  for flags: U32
+  {mines_of(toggle_first(MiniBoard{mines, flags}))
+      == mines : U32}
+\end{lstlisting}
+
+\code{for mines: U32}は、特定の配置5だけでなく、任意の32ビットの値について主張します。\code{flags}についても同様です。証明は同じサンプルの\code{def toggle_keeps_mines}で与えられます。
+
+ただし、この法則だけでは「何も操作しない関数」も合格します。そこで\code{toggle_changes_flag}という別の法則で、旗のビットが実際に反転することも要求します。第15章で考えた\textbf{正しいだけでなく、十分な仕様であるか}という問題がここでも現れます。
+
+\begin{lstlisting}[language={},caption={二つの法則をまとめて検査する}]
+bend examples/34_mine_mask_law.bend --verdict
+\end{lstlisting}
+
+\section{16マスの配列へ広げる}
+今の例は、旗と地雷を\code{U32}の二つのビットマスクだけで表した最小例です。実際のゲームでは公開済みの数字も必要なので、第13章の\code{Board4.State}のように、内部の地雷マスクと可視状態の\code{Array}を組み合わせます。
+
+そこで要求するのは、\textbf{任意の位置で旗操作をしても、盤面全体の地雷マスクが同じであること}です。参考実装の\code{board4_toggle_keeps_all_mines}はこれを\code{LAWS.bend}で宣言して証明しています。読者用ZIPの小さな例を理解したら、リポジトリ側の\code{board4.bend}と\code{PROOF.bend}も比べてみてください。
+
+注意したいのは、\code{for mines: U32}が32ビットのあらゆる値を対象にすることと、ゲームとして地雷が16マスの範囲内だけに置かれることは\textbf{別の条件}だという点です。入力条件を取り違えないようにしましょう。
 
 \section{表示済みの数字は閉じてよい？}
 開いたマスに数字が出た後、別のマスをクリックしたら数字が消えたとします。それではプレイヤーが手掛かりを失ってしまいます。すでに開いたマスは、通常の公開操作によって再び閉じないようにしたいのです。

@@ -33,6 +33,7 @@ EXPECTED = {
     "31_image_quadrants.bend": "16711680",
     "32_mouse_events.bend": "10",
     "33_nat_induction.bend": "0",
+    "34_mine_mask_law.bend": "1",
 }
 
 def run(*args):
@@ -314,6 +315,10 @@ def main():
     if "ALL PROOFS CHECK" not in nat_verdict:
         raise AssertionError(f"Natural-number induction proof failed:\\n{nat_verdict}")
     print("PASS induction law for every Nat", flush=True)
+    mask_verdict = run("bend", str(SAMPLES / "34_mine_mask_law.bend"), "--verdict")
+    if "ALL PROOFS CHECK" not in mask_verdict:
+        raise AssertionError(f"Mine/flag invariants failed: {mask_verdict}")
+    print("PASS mine mask unchanged and flag bit changed", flush=True)
 
     verdict = run("bend", str(SAMPLES / "04_flag_laws.bend"), "--verdict")
     if "ALL PROOFS CHECK" not in verdict:
