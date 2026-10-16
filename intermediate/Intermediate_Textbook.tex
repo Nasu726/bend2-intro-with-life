@@ -409,14 +409,17 @@ result = Map.get(U32, 0, m1, "wins")
 \section{登録済みの0と、存在しないキーを分ける}
 \sample{36_map_missing.bend}{Map.hasとMap.getの役割を比べる}
 
-このプログラムは、\code{"wins"}というキーに0を保存します。\code{"losses"}は保存しません。その後、両方のキーについて\code{Map.has}で存在を確かめ、\code{Map.get}で値を読みます。
+このプログラムは、\code{"wins"}というキーに0を保存します。\code{"losses"}は保存しません。その後、両方のキーについて\code{Map.has}で存在を確かめます。
 
-\begin{lstlisting}[caption={キーがあるかを先に確認する}]
-(m2, has_wins) = Map.has(&2, U32, m1, "wins")
-(m3, has_losses) = Map.has(&2, U32, m2, "losses")
+\begin{lstlisting}[caption={計算した組を引数として受け渡す}]
+def count_first(r: Map<&2, U32> & Bool) -> U32:
+  (m, first) = r
+  count_second(Map.has(&2, U32, m, "losses"), first)
 \end{lstlisting}
 
-結果は\code{1}です。\code{has_wins}は真で1、\code{has_losses}は偽で0です。両方の\code{Map.get}は0になりますが、それらを足しても結果は変わりません。これは\textbf{値を取り出すことと、キーの存在を確かめることが違う}と示す小さな実習です。
+Bend 2では、\code{Map.has}の計算結果をその場で分解できない場面があります。この例では結果を補助関数\code{count_first}の\textbf{引数}へ渡してから、集合と真偽値を取り出します。続く\code{count_second}も同様です。数量の都合で必要な二つの小さな関数なので、複雑な抽象化にはしません。
+
+結果は\code{1}です。\code{"wins"}は存在するので真で1、\code{"losses"}は存在しないので偽で0です。\code{Map.get}を既定値0で呼んだ場合、登録済みの0と未登録のキーの両方で0が返ります。だからこそ、\textbf{値を読み出すことと、キーの存在を確かめることは違う}のです。
 
 \begin{lstlisting}[language={},caption={未登録キーの例を実行する}]
 bend examples/36_map_missing.bend
