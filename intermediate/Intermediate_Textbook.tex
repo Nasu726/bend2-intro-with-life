@@ -322,43 +322,118 @@ Bendの\code{String}は文字の列です。ただし、一つの文字として
 \exercise{\code{37_u32_dimension.bend}の幅を16に変更して結果を予想し、確かめましょう。\code{35_string_fields.bend}の設定行を\code{"board-size=4=extra"}へ変更すると分割後の個数はいくつになるでしょうか。次に\code{15_string_parse.bend}で\code{" abc "}を与え、\code{Some}と\code{None}のどちらになるか調べてみましょう。}
 
 \chapter{ListとArrayの詳しい使い方}
-\sectiongoal{構造の違いと、関数の選択が所有権に与える影響を理解する。}
-\code{List}は\code{Nil}と\code{Con}からなる再帰的な鎖です。\code{map}、\code{filter}、\code{foldl}、\code{foldr}、\code{sort}などが用意されています。変換したリストを作るとき、入力要素の型が\code{Type}か\code{Data}かによって、要素を何度も使えるかが変わります。
-\sample{03_list.bend}{リストを作り要素数を求める}
-このプログラムは\code{List.replicate}で値を3個並べたリストを作り、その長さを返します。\code{List.length}の引数には、数量と要素型が必要です。先頭への追加には\code{<>}という記法も使えます。
+\sectiongoal{目的に合う標準のList・Array操作を選び、所有権に従って結果を受け渡せるようになる。}
 
-\section{List.filterとfoldlを組み合わせる}
-\code{List.filter}は条件を満たす要素だけを残します。\code{List.foldl}は先頭から値を集計し、最後の一つの値にまとめます。「抽出」と「集計」は別の操作です。
-\sample{17_list_pipeline.bend}{小さい整数だけを抽出して合計する}
-\code{List.range(4n)}は0から3までのリストを作り、\code{List.filter}で3未満の値を残します。その合計は\code{3n}です。\code{foldl}は「現在までの合計」と「次の要素」を受け取る関数を引数にします。この二つは関数を受け取る\term{高階関数}です。今回必要なのは「選ぶ」と「集計する」ことなので、それぞれ標準の関数を使う方が、自分で状態管理の再帰を追加するよりも計算の意図が明快になります。\code{foldl}の最後の\code{0n}は初期値です。ここを5に変えると結果も5だけ増えます。
+\section{「何をしたいか」で操作を選ぶ}
+地雷の候補番号を並べて調べたい場合を考えてみましょう。番号を順に数えるなら\code{List}が使えます。一方、4×4盤面の7番目のマスを直接書き換えるなら、添字で操作できる\code{Array}が向いています。
 
-\code{List.filter}は\code{List<&2, A>}を扱う一方、\code{List.map}は\code{List<A>}を受け取るなど、同じ\code{List}に見えても数量指定が異なるAPIがあります。呼び出せないときは、引数の個数だけでなく\textbf{型の数量指定}まで比較しましょう。型の制約に合わないリストを強引に再解釈するのではなく、選ぶ関数やデータの構造を見直します。
+最初にリストの一番簡単な例を動かします。
+\sample{03_list.bend}{同じ値を3個並べて長さを調べる}
 
-\code{Array}はインデックスを使う構造です。\code{get}と\code{set}のほか、\code{swap}、\code{clone}、\code{fork}、\code{join}、\code{to_list}、\code{map}などがあります。「読むだけ」のつもりでも所有権付き配列を消費するので、返された配列を引き継ぎます。\code{clone}は独立した内容を複製し、\code{fork}は実体を共有するハンドルを作ります。使い方や費用は異なります。
-\section{Array.newの引数は長さではない}
-\code{Array.new}の第二引数は「作る要素数」そのものではなく、二分木状の配列の深さです。深さを\(d\)とすると要素数は\(2^d\)です。たとえば\code{Array.new(U32, 3n, 0)}は8要素を作ります。
-\sample{18_array_mutations.bend}{8要素の配列の2番目と7番目を書き換える}
-\code{Array.set}は更新した配列を返します。以前の配列をそのまま後続で使うのではなく、返された配列を引き継ぎます。\code{Array.get}は配列と読み出した値の組を返します。例では配列を再使用しないため捨てていますが、次の読み出しや更新を行う場合は受け取ってください。インデックスが範囲外の場合の扱いも、公開APIの実装を確認しましょう。
+\code{List.replicate(U32,3n,7)}は7を3個並べます。\code{List.length}の結果は\code{3n}です。ここで\code{3n}は\code{Nat}、要素の7は\code{U32}です。要素の型と個数の型は同じではありません。
 
-\section{Array.cloneとArray.forkは同じなのか}
-ここで「配列を二つの処理に渡したい」という場面を考えます。片方で値を書き換えても、もう片方に影響しない方がよい場合は、\code{Array.clone}で\term{独立した複製}を作ります。
+\begin{lstlisting}[language={},caption={Listの長さを確認する}]
+bend examples/03_list.bend
+\end{lstlisting}
 
-\sample{30_array_clone.bend}{独立した二つの配列を作る}
-両方の配列の初期値は5ですが、片方の0番目だけを17に変更します。もう片方の0番目は5のままなので、最後の合計は22です。結果を予想した後、コード内の更新値を変えて違いを確かめてください。
+\section{リストの値を全部1ずつ増やす}
+次はリストの各要素を一つずつ変える操作です。例えば\code{[1,2,3]}を\code{[2,3,4]}にしてみましょう。自分で再帰関数を書くこともできますが、標準の\code{List.map}がちょうどこの仕事をします。
 
-一方、\code{Array.fork}は配列の実体を共有した複数のハンドルを作ります。独立したコピーを作る\code{clone}とは異なり、\textbf{一方の変更がもう一方から見える}ことがあります。同じ場所へ並行して書き込む際には、原子的操作と実行順序の問題もあります。ここではまず\code{clone}を使い、\code{fork}と\code{join}の制約は並列計算の章で確認しましょう。
+\sample{40_list_map.bend}{mapで各要素を変えてから合計する}
 
-\exercise{同じ数値列を\code{List}と\code{Array}の両方で表し、要素の変更、走査、複製が必要な場合の選び方を比較してみましょう。}
+\begin{lstlisting}[caption={要素ごとの変換と集計}]
+xs = [1, 2, 3]
+ys = List.map(~U32, ~U32, ~plus_one, xs)
+List.foldl(~&1, ~U32, ~U32, ~add, ys, 0)
+\end{lstlisting}
 
+\code{plus_one}は一つの数値へ1を足す関数です。\code{List.map}はこれを各要素へ適用します。結果のリスト\code{ys}は\code{[2,3,4]}なので、\code{List.foldl}で合計すると\code{9}になります。
 
-\section{どの操作が必要かから選ぶ}
-「列を条件で絞って合計する」ときは、先ほどの\code{17_list_pipeline.bend}のように\code{List.filter}と\code{List.foldl}が自然です。この二つは関数を引数に受け取る\term{高階関数}です。処理を分けることで、どの要素を選び、どのように集計するかが明確になります。自作の再帰が必要になる場面もありますが、標準の機能で素直に書ける場合はそれを使いましょう。
+\begin{lstlisting}[language={},caption={各要素を変換して合計する}]
+bend examples/40_list_map.bend
+\end{lstlisting}
 
-反対に「盤面の7番のマスを書き換える」なら、番号を指定する\code{Array.set}が適しています。「盤面を検査した後も保持する」なら、\code{Array.clone}と\code{Array.to_list}を組み合わせる方法が考えられます。何をしたいかを先に定めれば、必要のない抽象化やデータ構造を増やさずに済みます。
+\code{map}は\textbf{それぞれの要素を別の値へ変換する}ときに使います。標準の\code{map}が目的に合っているなら、同じ再帰を自作する必要はありません。
 
-ここまでの例では、\code{17_list_pipeline.bend}の集計結果は3、\code{18_array_mutations.bend}の読み出し結果は17、\code{30_array_clone.bend}の合計は22でした。この三つの数値を暗記する必要はありません。\textbf{元の値、各操作が変えた値、最後に読み出す値}を順に追えば導けます。
+\section{選んでから合計する}
+今度は0、1、2、3というリストから3未満の値だけを取り出します。値そのものを変更するのではなく、条件に合うものだけを\textbf{選ぶ}仕事なので\code{List.filter}です。
 
-\exercise{\code{17_list_pipeline.bend}で\code{small}の条件を「2未満」にして結果を予想しましょう。次に\code{foldl}の初期値を\code{5n}に変更して再度確かめます。また4×4の盤面16マスを\code{Array.new}で作るにはどの深さが必要でしょうか。理由とともに説明しましょう。}
+\sample{17_list_pipeline.bend}{filterで値を選びfoldlで合計する}
+
+\code{List.range(4n)}で\code{[0,1,2,3]}を作り、\code{small}で3未満の値だけを残します。残るのは\code{[0,1,2]}です。それを\code{List.foldl}で足すと\code{3n}になります。
+
+\begin{lstlisting}[caption={絞り込みと集計を分ける}]
+xs = List.range(4n)
+ys = List.filter(~Nat, ~small, xs)
+List.foldl(~&2, ~Nat, ~Nat, ~sum, ys, 0n)
+\end{lstlisting}
+
+\code{foldl}は、左から順に「途中までの結果」と「次の要素」をまとめていきます。最後の\code{0n}は合計の初期値です。最初の値を5にすれば結果は8になります。これらは関数を引数に受け取る\term{高階関数}です。難しい仕組みだから使うのではなく、必要な操作がはっきりしているから使っています。
+
+\section{並べ替えると最初の値が変わる}
+順位やスコアの一覧を小さい順に見たいなら、\code{List.sort}を使います。
+
+\sample{38_list_sort.bend}{標準のsortで三つの整数を昇順に並べる}
+
+\begin{lstlisting}[caption={比較の関数をsortに渡す}]
+sorted = List.sort(~U32, ~U32.is_le, [7, 2, 4])
+\end{lstlisting}
+
+\code{U32.is_le(a,b)}は「aがb以下なら真」を返す関数です。この比較を使えば、\code{[7,2,4]}は\code{[2,4,7]}の順になります。\code{List.head}で最初の要素を取り出すと\code{2}です。
+
+\code{List.head}は空リストなら値を返せないため、戻り値は\code{Maybe}です。このサンプルでは\code{or_zero}で\code{Some}と\code{None}を場合分けしています。
+
+\begin{lstlisting}[language={},caption={ソートして最初の値を確認する}]
+bend examples/38_list_sort.bend
+\end{lstlisting}
+
+ここでは標準の\code{sort}を使いました。比較関数がどんな順序を表すかを決めれば、ソートのアルゴリズムを毎回実装し直す必要はありません。ただし、比較関数が正しい大小関係を表しているかは、自分で確かめましょう。
+
+\section{Arrayでは番号を直接指定する}
+4×4盤面の16マスを表すなら、番号を指定して読み書きできる\code{Array}が便利です。
+
+\code{Array.new(U32,4n,0)}は16要素の配列を作ります。第二引数の\code{4n}は\textbf{要素数ではなく深さ}であり、要素数は\(2^4=16\)です。深さ3なら8要素です。
+
+\sample{18_array_mutations.bend}{8要素のArrayを更新する}
+
+この例では2番目の値を17、7番目の値を25へ書き換え、2番目の値を読みます。
+
+\begin{lstlisting}[caption={更新された配列を次へ渡す}]
+a = Array.new(U32, 3n, 0)
+b = Array.set(U32, a, 2, 17)
+c = Array.set(U32, b, 7, 25)
+\end{lstlisting}
+
+\code{Array.set}は更新済みの配列を返します。\code{Array.get}は配列と読み出した値の組を返すので、必要に応じて両方を受け取ります。最終結果は\code{17}です。以前の\code{a}を後から勝手に使い回さず、\code{b}、\code{c}と\textbf{更新後の値を受け渡す}ことが、所有権の基本です。
+
+添字が範囲外のときにどうなるかはAPIの実装に依存するため、ゲームからはそのような添字を渡さないようにします。第14章の座標変換と組み合わせれば、画面の外から盤面外の添字を作らないようにできます。
+
+\section{ArrayをListとして集計したいとき}
+配列を更新し終えた後で、全要素を一度集計したい場面です。配列をリストへ変換すれば、先ほどの\code{List.foldl}をそのまま使えます。
+
+\sample{39_array_to_list.bend}{配列をリストに変換して合計する}
+
+\begin{lstlisting}[caption={Array.to_listで変換しfoldlで集計する}]
+xs = Array.new(U32, 2n, 1)
+ys = Array.set(U32, xs, 0, 7)
+items = Array.to_list(~U32, ys)
+List.foldl(~&1, ~U32, ~U32, ~add, items, 0)
+\end{lstlisting}
+
+配列には4要素あり、最初はすべて1です。0番目だけ7へ変えるので、合計は\(7+1+1+1=10\)です。最後の返り値は\code{10}になります。
+
+リストの操作を使いたいから変換したのであって、\textbf{配列のまま扱える処理まで必ず変換する必要はありません}。データをどのように利用するかによって選びます。
+
+\section{cloneとforkを混同しない}
+\sample{30_array_clone.bend}{配列を二つの独立した値に複製する}
+
+\code{Array.clone}は独立した複製を作ります。一方の0番目を17に変えても、もう一方の0番目は5のままです。合計は\code{22}となります。
+
+\code{Array.fork}はこれとは異なり、同じ配列を共有するハンドルを作る操作です。共有した配列への書き込みには競合や原子的操作の問題が伴います。第19章でその違いを扱います。
+
+普通のマインスイーパーで一手ごとに盤面を進めるだけなら、共有更新を導入する必要はありません。最初は一つの状態を受け取り、新しい状態を返す方法で十分です。
+
+\exercise{\code{40_list_map.bend}の\code{plus_one}を「2を足す」関数へ変更し、合計を予想しましょう。次に\code{38_list_sort.bend}で比較を逆向きにしたとき、最初の値がどうなるか試してください。最後に4×4の盤面を\code{Array.new}で用意するには、深さをいくつにする必要があるか説明しましょう。}
 
 \chapter{MapとSetを使う}
 \sectiongoal{「あるかどうか」と「名前から値を取り出す」の違いを理解し、更新後の所有権を正しく渡す。}
