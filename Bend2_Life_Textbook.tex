@@ -11,6 +11,8 @@
 \setCJKsansfont{Noto Sans CJK JP}
 \setCJKmonofont{Noto Sans Mono CJK JP}
 \usepackage{amsmath,amssymb,mathtools,booktabs,tabularx,longtable,multicol}
+\usepackage{ragged2e}
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,calc,fit,shapes.geometric}
 \usepackage[most]{tcolorbox}
@@ -35,6 +37,7 @@
 \hypersetup{colorlinks=true,linkcolor=blue,urlcolor=teal,pdftitle={ライフゲームで学ぶ はじめてのBend2},pdfauthor={Nasu726},pdfsubject={Bend 2 hands-on programming and Game of Life}}
 \setlength{\parskip}{.5em}
 \setlength{\parindent}{0pt}
+\raggedbottom
 \setlist{nosep,leftmargin=2em}
 \fancyhf{}
 \fancyhead[LE,RO]{\sffamily\small\textcolor{muted}{ライフゲームで学ぶ はじめてのBend2}}
@@ -62,7 +65,7 @@
   morestring=[b]",
 }
 \lstset{language=BendTwo,basicstyle=\ttfamily\footnotesize,
- keywordstyle=\color{blue}\bfseries,commentstyle=\color{muted}\itshape,
+ keywordstyle=\color{blue}\bfseries,commentstyle=\color{muted},
  stringstyle=\color{teal},numbers=left,numberstyle=\tiny\color{muted},
  stepnumber=1,numbersep=8pt,breaklines=true,breakatwhitespace=true,
  showstringspaces=false,columns=fullflexible,keepspaces=true,upquote=true,
@@ -138,14 +141,14 @@
 各章の演習では、まず自分で考えてから付属のサンプルを実行してみましょう。分からない用語は直前の解説や用語集を参照できます。
 
 \section*{同梱ファイル}
-\begin{tabularx}{\linewidth}{@{}p{51mm}X@{}}
+\begin{tabularx}{\linewidth}{@{}L{51mm}X@{}}
 \toprule
 ファイル & 内容\\
 \midrule
 \file{src/*.bend} & 型・関数・配列などの入門用例と、ライフゲーム本体、並列呼び出しと証明の例。\\
-\file{src/12\_affine\_probe\_INVALID.bend} & 意図的に型エラーを起こす練習用コード。\\
+\path{src/12_affine_probe_INVALID.bend} & 意図的に型エラーを起こす練習用コード。\\
 \file{scripts/reference.py} & 期待する盤面を独立に生成するPythonプログラム。\\
-\file{scripts/test\_bend\_runtime.py} & Bendコードを実行し、出力の不一致や実行失敗を検出するテスト。\\
+\path{scripts/test_bend_runtime.py} & Bendコードを実行し、出力の不一致や実行失敗を検出するテスト。\\
 \file{tests/} & ライフゲームの参照テストと教材の構成検査。\\
 \file{Bend2\_Life\_Textbook.tex} & 本文のLaTeX原稿。\\
 \bottomrule
@@ -159,7 +162,7 @@
 そのプログラムを人が読んだり編集したりできる文字列が\term{ソースコード（source code）}です。
 難しい言葉をすべて覚える必要はありません。コードに出てきたときに、このページへ戻ってください。
 
-\begin{longtable}{@{}p{47mm}p{103mm}@{}}
+\begin{longtable}{@{}L{47mm}p{103mm}@{}}
 \toprule 用語 & 意味と本書での使い方\\\midrule\endhead
 \term{値（value）} & 数値の\code{3}や文字列の\code{"Life"}など、計算の対象になるものです。\\
 \term{変数（variable）} & 値に付ける名前です。\code{x}や\code{board}などを使います。Bend 2では利用回数に制約がある場合があります。\\
@@ -235,7 +238,8 @@ bend src/01_hello.bend -o build/hello
 
 \section{値と型の対応を読む}
 \term{データ型（data type）}とは、値の種類を定めるものです。例えば\code{42}は数値、\code{"hello"}は文字列です。Bend 2で頻出する型を先に見ておきます。
-\begin{tabularx}{\linewidth}{@{}p{23mm}p{36mm}X@{}}
+
+\begin{tabularx}{\linewidth}{@{}L{23mm}L{36mm}X@{}}
 \toprule 型 & 値の例 & 用途\\\midrule
 \code{Nat} & \code{3n} & 0以上の自然数を表します。\\
 \code{U32} & \code{42} & 0から$2^{32}-1$までの符号なし整数です。\\
@@ -849,14 +853,14 @@ bend src/24_proof_induction.bend --verdict
 \end{tcolorbox}
 
 \section{18ケースの局所規則}
-\begin{tabularx}{\linewidth}{@{}c ccccccccc@{}}
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}c ccccccccc@{}}
 \toprule
 \(n\) & 0&1&2&3&4&5&6&7&8\\
 \midrule
 \(F(0,n)\)&0&0&0&1&0&0&0&0&0\\
 \(F(1,n)\)&0&0&1&1&0&0&0&0&0\\
 \bottomrule
-\end{tabularx}
+\end{tabular*}
 \section{代表的な添字}
 \((0,0)\mapsto0,\ (7,0)\mapsto7,\ (0,7)\mapsto56,\ (7,7)\mapsto63\)。\((2,3)\mapsto26\)。\((7,0)\)の右は\((0,0)\)で、\((0,1)\)ではありません。
 \section{グライダーの変位}
@@ -883,7 +887,7 @@ bend src/24_proof_induction.bend --verdict
 \end{tcolorbox}
 
 \section{コマンド早見表}
-\begin{longtable}{@{}p{59mm}p{89mm}@{}}
+\begin{longtable}{@{}L{59mm}p{89mm}@{}}
 \toprule
 コマンド & 目的\\
 \midrule
