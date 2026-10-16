@@ -13,15 +13,15 @@
 |---|---|---|---|
 | `Nat`, `U32`, `F32`, `Word`, `Cmp` | 第2章・第23章 | 他の例で一部使用 | 変換、丸め、境界値 |
 | `String`, `Char` | 第2章 | `15_string_parse.bend`、Map・Setのキー | `trim`と`U32.read`を検証。split/join、文字境界は追加予定 |
-| `List`, 高階関数と畳み込み | 第3章 | `03_list.bend`、`17_list_pipeline.bend` | filter/foldを実行照合。map/sortと数量指定は追加予定 |
-| `Array` 操作、`fork/join/clone` | 第3章 | `18_array_mutations.bend`、`30_array_clone.bend`、前巻の基本例 | new/set/getとcloneを実行照合。fork/joinと共有時の競合は今後 |
+| `List`, 高階関数と畳み込み | 第3章＋[詳細補稿](manuscript/03_ListとArrayを選ぶ.md)（PDF未統合） | `03_list.bend`、`17_list_pipeline.bend` | filter/foldを実行照合。map/sortと数量指定は追加予定 |
+| `Array` 操作、`fork/join/clone` | 第3章＋[詳細補稿](manuscript/03_ListとArrayを選ぶ.md)（PDF未統合） | `18_array_mutations.bend`、`30_array_clone.bend`、前巻の基本例 | new/set/getとcloneを実行照合。fork/joinと共有時の競合は今後 |
 | `Map`（文字列キー） | 第4章 | `02_map.bend`、`16_map_set_api.bend` | keysの実行照合。get欠落と順序の詳細は今後 |
 | `Set` | 第4章 | `01_set.bend`、`05_marking.bend`、`16_map_set_api.bend` | 追加・重複・削除・サイズを照合 |
 | `Maybe`, `Result`, `Either` | 第5・第6章 | `15_string_parse.bend`、`22_result_and_game.bend`、`25_either_case.bend` | Maybe/Result/Eitherの独立例。失敗と二者択一を区別 |
 | `Pair`, `Sigma`, `Exists`, `Or` | 第5・第16章 | 追加実習 | 依存する値・存在証明 |
 | `Kind`, `Quant`, 消去引数 | 第5・第16章 | 追加実習 | 型エラーとの対比 |
-| `IO`, `IO.try`, `IO.die` | 第6章 | `08_args.bend` | 失敗時の終了コード |
-| `File`（文字列・バイト） | 第7章 | `12_file_write.bend`、`13_file_read.bend` | 保存・読出し・閉鎖を実行検証、bytesは今後 |
+| `IO`, `IO.try`, `IO.die` | 第6章＋[詳細補稿](manuscript/06_IOと失敗を読む.md)（PDF未統合） | `08_args.bend` | 失敗時の終了コード |
+| `File`（文字列・バイト） | 第7章＋[IO章補稿](manuscript/06_IOと失敗を読む.md)（PDF未統合） | `12_file_write.bend`、`13_file_read.bend` | 保存・読出し・閉鎖を実行検証、bytesは今後 |
 | 引数・環境変数・乱数・時刻 | 第8章 | `08_args.bend`、`11_random_io.bend`、`19_environment.bend` | 乱数IO・環境変数の例。now/sleepは今後 |
 | `Process.run` | 第8章 | `20_process_run.bend` | Linuxでの終了コード実行例。stderr・失敗は今後 |
 | `IO.fork/join`, `Chan` | 第9章 | `21_io_fork.bend`、`28_chan_roundtrip.bend` | fork/joinとChan送受信・closeの実行照合。失敗・時間制限の実践は今後 |

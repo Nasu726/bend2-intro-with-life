@@ -40,8 +40,11 @@ bend examples/04_flag_laws.bend --verdict
 ## 制作の進捗と方針
 
 [制作ロードマップ](ROADMAP.md)に計画書から引き継いだ内容と完成条件をまとめています。
-[法則から実装へ進む教材草稿](minesweeper/LESSON.md)も参照できます。
-この草稿はまだPDFへ反映されていません。
+[法則から実装へ進む教材草稿](minesweeper/LESSON.md)に加え、
+[ListとArrayの章別補稿](manuscript/03_ListとArrayを選ぶ.md)と
+[IO・Result・Fileの章別補稿](manuscript/06_IOと失敗を読む.md)を書き進めています。
+[執筆進捗と優先順位](manuscript/STATUS.md)で本文と実行サンプルの対応を管理します。
+これらは校正・統合前の原稿であり、現在の配布PDFにはまだ収録していません。
 
 ## マインスイーパーの法則駆動開発（制作途中）
 
