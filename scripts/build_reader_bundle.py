@@ -39,6 +39,8 @@ INTERMEDIATE_EXAMPLES = (
     "19_environment.bend", "20_process_run.bend", "21_io_fork.bend",
     "22_result_and_game.bend",
     "23_cell_hit_test.bend",
+    "24_bool_proofs.bend", "25_either_case.bend",
+    "26_audio_open.bend", "27_tcp_connect.bend",
 )
 
 def readme(track: str) -> str:
