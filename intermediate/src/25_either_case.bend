@@ -6,7 +6,7 @@ def meaning(choice: Either<&2, &2, U32, String>) -> U32:
     case Inl{number}:
       number
     case Inr{text}:
-      String.length(text) |> Nat.to_u32
+      U32.from_nat(String.length(text))
 
 def main() -> U32:
   meaning(Inl{7})
