@@ -21,21 +21,21 @@ def infer_equal(remaining: U32, unknown: U32, equal: Bool) -> LocalRule:
     case False{}:
       Unknown{}
 
-def infer_zero(remaining: U32, unknown: U32, empty: Bool) -> LocalRule:
+def infer_zero(+remaining: U32, +unknown: U32, empty: Bool) -> LocalRule:
   match empty:
     case True{}:
       AllSafe{}
     case False{}:
       infer_equal(remaining, unknown, U32.is_eq(remaining, unknown))
 
-def infer_limit(remaining: U32, unknown: U32, over: Bool) -> LocalRule:
+def infer_limit(+remaining: U32, +unknown: U32, over: Bool) -> LocalRule:
   match over:
     case True{}:
       Inconsistent{}
     case False{}:
       infer_zero(remaining, unknown, U32.is_eq(remaining, 0))
 
-def infer(remaining: U32, unknown: U32) -> LocalRule:
+def infer(+remaining: U32, +unknown: U32) -> LocalRule:
   infer_limit(remaining, unknown, U32.is_lt(unknown, remaining))
 
 # A small observable numeric output for automated testing.
