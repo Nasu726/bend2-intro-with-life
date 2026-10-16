@@ -846,7 +846,7 @@ law times_zero:
 {==}
 \end{lstlisting}
 
-\code{%times_zero(p)}は一つ小さい値\code{p}についての証明を呼び出します。記号\code{_}は、ここで等式の該当部分の値を推論させるためのものです。最後の\code{{==}}で、現在の等式が成立することを示します。この\textbf{小さな値の証明を使って次の値を示す}という流れが、帰納法の中心です。
+\texttt{\%times\_zero(p)}は一つ小さい値\code{p}についての証明を呼び出します。記号\code{_}は、ここで等式の該当部分の値を推論させるためのものです。最後の\code{{==}}で、現在の等式が成立することを示します。この\textbf{小さな値の証明を使って次の値を示す}という流れが、帰納法の中心です。
 
 \begin{lstlisting}[language={},caption={自然数の帰納法を検査する}]
 bend examples/33_nat_induction.bend --verdict
@@ -859,7 +859,7 @@ bend examples/33_nat_induction.bend --verdict
 
 例えば紙の上で\(a=b\)と\(b=c\)が分かれば、\(a=c\)と結論できます。等式の向きを逆にする操作が\code{Equal.sym}、二つの等式をつなぐ操作が\code{Equal.trans}です。すぐに複雑な証明を書き始める必要はありません。まず「どの中間式が分かれば前へ進めるか」を書き出すと、補題の役割が見えてきます。
 
-\exercise{\code{33_nat_induction.bend}の\code{0n}の場合が何の計算だけで終わるか説明しましょう。次に\code{1n+p}の場合から\code{%times_zero(p)}の行を外し、\code{--verdict}の結果を調べてください。なぜ小さい値についての証明が必要なのでしょうか。}
+\exercise{\code{33_nat_induction.bend}の\code{0n}の場合が何の計算だけで終わるか説明しましょう。次に\code{1n+p}の場合から\texttt{\%times\_zero(p)}の行を外し、\code{--verdict}の結果を調べてください。なぜ小さい値についての証明が必要なのでしょうか。}
 
 \chapter{盤面の不変条件}
 \sectiongoal{一マスの動作に関する法則から、盤面のどこを操作しても変えてはいけない情報へ進む。}
