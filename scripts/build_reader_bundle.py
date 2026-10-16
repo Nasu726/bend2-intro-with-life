@@ -38,6 +38,7 @@ INTERMEDIATE_EXAMPLES = (
     "17_list_pipeline.bend", "18_array_mutations.bend",
     "19_environment.bend", "20_process_run.bend", "21_io_fork.bend",
     "22_result_and_game.bend",
+    "23_cell_hit_test.bend",
 )
 
 def readme(track: str) -> str:
