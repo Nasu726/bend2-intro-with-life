@@ -67,7 +67,7 @@ def click_read(+mines: U32, +index: U32, read: Array<Game.Square> & Game.Square)
     case Game.Open{clue}:
       Session{Board4.State{mines, cells}, Playing{}}
 
-def click_valid(valid: Bool, board: Board4.State, index: U32) -> Session:
+def click_valid(valid: Bool, board: Board4.State, +index: U32) -> Session:
   match valid:
     case False{}:
       Session{board, Playing{}}
