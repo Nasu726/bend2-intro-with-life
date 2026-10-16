@@ -46,6 +46,8 @@ INTERMEDIATE_EXAMPLES = (
     "31_image_quadrants.bend", "32_mouse_events.bend",
     "33_nat_induction.bend",
     "34_mine_mask_law.bend",
+    "35_string_fields.bend", "36_map_missing.bend",
+    "37_u32_dimension.bend",
 )
 
 def readme(track: str) -> str:

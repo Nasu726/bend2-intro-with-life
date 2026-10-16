@@ -34,6 +34,9 @@ EXPECTED = {
     "32_mouse_events.bend": "10",
     "33_nat_induction.bend": "0",
     "34_mine_mask_law.bend": "1",
+    "35_string_fields.bend": "2n",
+    "36_map_missing.bend": "1",
+    "37_u32_dimension.bend": "1",
 }
 
 def run(*args):
