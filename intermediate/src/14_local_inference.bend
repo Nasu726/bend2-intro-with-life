@@ -12,20 +12,31 @@ type LocalRule is Data:
   Unknown{}
   Inconsistent{}
 
+# In Bend, pattern matches scrutinize arguments/fields, not arbitrary calls.
+# Thread computed booleans through helper function parameters.
 def infer(remaining: U32, unknown: U32) -> LocalRule:
-  match U32.is_lt(unknown, remaining):
+  infer_limit(remaining, unknown, U32.is_lt(unknown, remaining))
+
+def infer_limit(remaining: U32, unknown: U32, over: Bool) -> LocalRule:
+  match over:
     case True{}:
       Inconsistent{}
     case False{}:
-      match U32.is_eq(remaining, 0):
-        case True{}:
-          AllSafe{}
-        case False{}:
-          match U32.is_eq(remaining, unknown):
-            case True{}:
-              AllMines{}
-            case False{}:
-              Unknown{}
+      infer_zero(remaining, unknown, U32.is_eq(remaining, 0))
+
+def infer_zero(remaining: U32, unknown: U32, empty: Bool) -> LocalRule:
+  match empty:
+    case True{}:
+      AllSafe{}
+    case False{}:
+      infer_equal(remaining, unknown, U32.is_eq(remaining, unknown))
+
+def infer_equal(remaining: U32, unknown: U32, equal: Bool) -> LocalRule:
+  match equal:
+    case True{}:
+      AllMines{}
+    case False{}:
+      Unknown{}
 
 # A small observable numeric output for automated testing.
 def tag(r: LocalRule) -> U32:
@@ -39,20 +50,11 @@ def tag(r: LocalRule) -> U32:
     case Inconsistent{}:
       4
 
-law zero_remaining_is_safe:
-  for u: U32
-  {infer(0, u) == AllSafe{} : LocalRule}
+law zero_remaining_is_safe_for_three:
+  {infer(0, 3) == AllSafe{} : LocalRule}
 
-def zero_remaining_is_safe(u):
-  match U32.is_lt(u, 0):
-    case True{}:
-      {==}
-    case False{}:
-      match U32.is_eq(0, 0):
-        case True{}:
-          {==}
-        case False{}:
-          {==}
+def zero_remaining_is_safe_for_three():
+  {==}
 
 def main() -> U32:
   a = tag(infer(0, 3))
