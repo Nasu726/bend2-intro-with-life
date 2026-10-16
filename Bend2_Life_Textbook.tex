@@ -119,7 +119,7 @@
   \vfill
   {\sffamily\large 本文・演習・Bendソース・独立テスト付き}\par
   \vspace{5mm}
-  {\sffamily\large 2026年10月16日・第1版 \quad / \quad Bend 2.0.36 基準}\par
+  {\sffamily\large 第1版 \quad / \quad Bend 2.0.36 基準}\par
   \vspace{15mm}
 \end{titlepage}
 \nopagecolor
@@ -127,10 +127,10 @@
 \addcontentsline{toc}{chapter}{本書の読み方と検証状態}
 本書で作るものは、\term{8×8のトーラス型ライフゲーム（B3/S23）を5世代表示するターミナル・シミュレータ}です。
 完成版は\file{src/08\_life\_terminal.bend}に収録しています。ただし、初めから完成版を丸写しするのではありません。
-まず小さな関数で1セルの規則を表し、配列の操作を覚え、盤面と近傍の計算を加えます。最後に1世代の更新と文字表示を組み合わせます。
+まずBend 2の型・関数・配列などを学びます。その後ライフゲームの規則を確認し、1セルの更新、盤面と近傍の計算、世代更新、文字表示を順に組み合わせます。
 
 \begin{pointbox}
-まず\textbf{Part Iで言語の基礎}を学び、\textbf{Part IIでライフゲーム本体}を組み立てます。Part IIIでは入出力（I/O）や画面表示などのアプリケーション基礎を学び、Part IVでは計算量、並列化、証明へ進みます。各章では「出力を予想する $\rightarrow$ 実行する $\rightarrow$ 改造する $\rightarrow$ 結果を記録する」を繰り返しましょう。最後に自分で新しいパターンを追加し、テストで確かめます。
+まず\textbf{Part IでBend 2の基礎}をゲームの設定から独立して学び、\textbf{Part IIでライフゲームのルールと設計}を確認してから本体を組み立てます。Part IIIでは入出力（I/O）や画面表示などのアプリケーション基礎を学び、Part IVでは計算量、並列化、証明へ進みます。各章では「出力を予想する $\rightarrow$ 実行する $\rightarrow$ 改造する $\rightarrow$ 結果を記録する」を繰り返しましょう。最後に自分で新しいパターンを追加し、テストで確かめます。
 \end{pointbox}
 
 \begin{cautionbox}
@@ -145,7 +145,7 @@
 \begin{tabularx}{\linewidth}{@{}p{46mm}X@{}}
 \toprule
 \file{src/01...11.bend} & Life本体、並列・GPU独立例、局所規則の証明例。\\
-\file{src/13...26.bend} & 型、リスト、関数、テンプレート、モジュール、IO、App、Kind、Map、ファイル、帰納法の基本機能補充例。\\
+\file{src/13...30.bend} & 型、リスト、高階関数、クロージャ、モナド、テンプレート、IO、App、Kind、Mapなどの補充例。\\
 \file{src/12\_...INVALID.bend} & アフィン性の違反を観察するための\textbf{意図的な誤り}。通常のビルド対象から外す。\\
 \file{scripts/reference.py} & Python製の独立オラクル。期待盤面を生成します。\\
 \file{scripts/check\_bend.py} & Bend出力をオラクルと比較し、不一致や実行失敗で非ゼロ終了する統合テスト。\\
@@ -167,11 +167,11 @@
 \term{値（value）} & 数値の\code{3}や文字列の\code{"Life"}など、計算の対象になるものです。\\
 \term{変数（variable）} & 値に付ける名前です。\code{x}や\code{board}などを使います。Bend 2では利用回数に制約がある場合があります。\\
 \term{式（expression）} & 計算して値になる記述です。たとえば\code{(2 + 3 : U32)}です。\\
-\term{関数（function）} & 入力を受け取り結果を返す処理です。\code{rule}は一つのセルの次の状態を求めます。\\
-\term{引数（argument）} & 関数に渡す具体的な値です。\code{rule(1,3)}の\code{1}と\code{3}が引数です。関数を宣言するときの\code{alive}などの名前は\term{仮引数（parameter）}と呼びます。\\
-\term{返り値（return value）} & 関数が計算の結果として返す値です。\code{rule(1,3)}の返り値は\code{1}です。\\
+\term{関数（function）} & 入力を受け取り結果を返す処理です。\code{calculate}は整数の計算を行います。\\
+\term{引数（argument）} & 関数に渡す具体的な値です。\code{calculate(2,3)}の\code{2}と\code{3}が引数です。関数を宣言するときの\code{x}などの名前は\term{仮引数（parameter）}と呼びます。\\
+\term{返り値（return value）} & 関数が計算の結果として返す値です。\code{calculate(2,3)}の返り値は\code{13}です。\\
 \term{型（type）} & 値の種類と、可能な操作を表す情報です。\code{U32}は32ビット符号なし整数、\code{String}は文字列の型です。\\
-\term{配列（array）} & 複数の値を順番に並べ、位置を指定してアクセスする構造です。本書では64個のセルを並べて盤面を表します。\\
+\term{配列（array）} & 複数の値を順番に並べ、位置を指定してアクセスする構造です。64要素に固定された仕組みではありません。\\
 \term{添字（index）} & 配列の要素がどの位置にあるかを示す番号です。最初の位置を0として数えます。\\
 \term{再帰（recursion）} & 関数が自分自身を呼ぶ処理です。終わる条件を設ける必要があります。\\
 \term{副作用（side effect）} & 値を返すだけでなく、画面表示やファイル書き込みなど外部へ働きかけることです。\\
@@ -190,7 +190,7 @@
 \part{Bend 2の基本文法を学ぶ}
 \partchaptertoc
 \begin{pointbox}
-このPartでは、Bend 2の言語仕様だけを扱います。プログラムの実行方法、関数と型、場合分け、配列、所有権、ユーザー定義型などを、短い独立した例で学びます。\textbf{具体的な制作物の仕様と実装はPart IIから学びます。}
+このPartでは、\term{Bend 2の言語仕様}を学びます。最初にプログラムの実行方法とデータ型を確認し、関数、場合分け、配列と所有権へ進みます。その後、リスト、関数の再利用、モジュールを学びます。各章では小さな独立したプログラムを実行して、言語機能そのものを理解しましょう。\textbf{具体的な制作物の設計と実装はPart IIから始めます。}
 \end{pointbox}
 \chapter{環境構築と最初の実行}
 \begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
@@ -229,16 +229,43 @@ bend src/01_hello.bend -o build/hello
 
 \exercise{(1) \code{Hello, Bend 2}の文字列を変更して実行してみましょう。(2) \code{bend guide shaders}を実行し見出しを確認してみましょう。(3) 導入版・OS・CPU/GPU・Clangの情報を\file{VERSION\_LOG.md}に保存してみましょう。\textbf{合格条件}: ソースを編集して標準出力を変えられること。}
 
-\chapter{値、関数、数値型を使う}
+\chapter{値とデータ型を理解する}
 \begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
-\small ここから実際に計算を記述します。\term{関数（function）}、\term{引数（argument）}、\term{返り値（return value）}を一つの短い式に結び付けて考えます。
+\small プログラムを書く前に、\term{値（value）}と\term{型（type）}を区別しましょう。Bend 2の型は「どんな値を表し、何をしてよいか」を決めます。
+\end{tcolorbox}
+
+\section{値と型の対応を読む}
+\term{データ型（data type）}とは、値の種類を定めるものです。例えば\code{42}は数値、\code{"hello"}は文字列です。Bend 2で頻出する型を先に見ておきます。
+\begin{tabularx}{\linewidth}{@{}p{23mm}p{36mm}X@{}}
+\toprule 型 & 値の例 & 用途\\\midrule
+\code{Nat} & \code{3n} & 0以上の自然数を表します。\\
+\code{U32} & \code{42} & 0から$2^{32}-1$までの符号なし整数です。\\
+\code{Bool} & \code{True\{\}} & 真または偽を表します。\\
+\code{String} & \code{"hello"} & 文字列を表します。\\
+\code{F32} & 32ビット浮動小数点 & 小数を近似して扱う数値型です。\\
+\bottomrule
+\end{tabularx}
+同じ数字に見えても\code{3n}と\code{3}は異なる型の値です。Bend 2は型の暗黙変換が少ないため、型を意識してコードを読む必要があります。\term{型注釈（type annotation）}は、値や式の型を明示する記法です。例えば\code{(3 + 4 : U32)}は、\code{U32}型の足し算を表します。
+
+\section{選択肢を新しい型として定義する}
+既存の型だけでは表しにくい値は、\term{ユーザー定義型（user-defined type）}を作って表現できます。次の例では、\term{コンストラクタ（constructor）}の\code{Idle\{\}}と\code{Busy\{\}}という二種類だけの状態を定義します。コンストラクタとは、\textbf{その型の値を組み立てるための名前}です。
+\readcode{28_data_types.bend}{二つの状態を持つデータ型（28\_data\_types.bend）}
+最初の\code{type Status is Data:}が型の宣言、続く二行が作れる値の候補です。最後の\code{main}はプログラムの入口で、詳しい関数の書き方は次章で学びます。ここでは、\code{Idle\{\}}が\code{Status}型の値になることを読み取りましょう。
+\begin{pointbox}
+\term{代数的データ型（algebraic data type; ADT）}は、候補を列挙したり、候補ごとに別のデータを持たせたりできる型です。例えば\code{Some\{value\}}と\code{None\{\}}で「値がある／ない」を表す\code{Maybe}もその一例です。\code{is Data}は値を再利用できる分類を表しますが、所有権とあわせて後の章で扱います。
+\end{pointbox}
+\exercise{\code{Status}に\code{Paused\{\}}を追加してみましょう。\code{Idle\{\}}と\code{Busy\{\}}以外の状態を、型を変えずに作れるか考えてみましょう。}
+
+\chapter{関数を定義して数値を計算する}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small \term{関数（function）}、\term{引数（argument）}、\term{返り値（return value）}を短い数値計算で確認します。特定のアプリケーションに依存しない例で、型注釈と式の読み方を身につけましょう。
 \end{tcolorbox}
 
 \section{引数と返り値の型}
 Bendでは\code{def f(x: T) -> R:}の形で関数を宣言します。戻り値は最後の式であり、Pythonのように常に\code{return}が必要なのではありません。\code{U32}は0以上の整数を32ビットに格納する型です。\code{Nat}は0、1、2、……という\term{自然数（natural number）}の型で、再帰や型の添字に使います。\code{3n}は\code{Nat}のリテラルで、\code{3}とは扱いを区別します。
 
 \readcode{02_arithmetic.bend}{整数の乗算と加算（02\_arithmetic.bend）}
-例の関数\code{calculate(x,y)}は\(5x+y\)を計算します。\code{calculate(2,3)}の結果は13です。\code{(x * 5 + y : U32)}は演算の型注釈です。\code{+x}の\code{+}は「値を複数回使える」という使用量の指定です。詳しくは配列とアフィン性の章で扱います。
+例の関数\code{calculate(x,y)}は\(5x+y\)を計算します。\code{calculate(2,3)}の結果は13です。\code{(x * 5 + y : U32)}では、計算式の後ろに型を示しています。\code{+x}の\code{+}は「値を複数回使える」と示す\term{使用量（quantity）}の指定であり、この短い例では必須ではありません。詳しくは配列とアフィン性の章で扱います。
 
 \section{演算でつまずく場所}
 整数加減算の演算子だけを式として書かず、\code{(x + y : U32)}のように型を与える。\code{Nat}と\code{U32}の暗黙変換を当てにしません。\code{U32.to\_nat}・\code{U32.from\_nat}等は\code{bend base}で確認します。\code{U32}には範囲の限界があり、任意精度整数として扱ってはいけません。
@@ -247,16 +274,26 @@ Bendでは\code{def f(x: T) -> R:}の形で関数を宣言します。戻り値�
 数字だけで動作確認する\code{main() -> U32}は、値の正規化と表示が行われる経路になります。大きな仕事量・並列性能の測定では\code{-o}で生成した実行ファイルを用いる。
 \end{pointbox}
 
-\exercise{\code{calculate(0,0)}、\code{calculate(1,2)}、\code{calculate(2,3)}の返り値を予想して実行してみましょう。定数5を別の値に変えるとどうなるでしょうか。また、5を引数\code{factor: U32}に置き換えてみましょう。}
+\exercise{\code{calculate(0,0)}、\code{calculate(1,2)}、\code{calculate(2,3)}の結果を予想してから実行してみましょう。式の5を10に変えると何が変わるでしょうか。また、定数5を引数\code{factor: U32}に変える方法も考えてみましょう。}
 
 \chapter{パターンマッチで場合分けをする}
 \begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
-\small Bend 2では、条件に応じて処理を分けるときに\term{パターンマッチ（pattern matching）}を使います。ここでは、真偽値に応じて二つの数字から一つを選ぶ例で基本形を学びます。
+\small Bend 2では、条件に応じて処理を分けるときに\term{パターンマッチ（pattern matching）}を使います。ここでは、真偽値に応じて二つの数字から一つを選ぶ、一般的な例で基本形を学びます。
 \end{tcolorbox}
+
+\section{データ型の形を見て処理を選ぶ}
+前章で、\code{Status}には\code{Idle\{\}}と\code{Busy\{\}}という値の候補があることを学びました。\term{パターンマッチ（pattern matching）}は、\textbf{値がどの形に当てはまるか}を調べ、形ごとに処理を分ける仕組みです。\code{Bool}の\code{True\{\}}／\code{False\{\}}も同じ考え方で処理できます。
+\readcode{13_status_adt.bend}{ユーザー定義型をパターンマッチする例（13\_status\_adt.bend）}
+\code{case Idle\{\}:}なら0、\code{case Busy\{\}:}なら1を返します。ここでは数値を返していますが、選択肢の種類が増えたら対応する場合分けも追加する必要があります。
+
 \section{条件に応じて処理を分ける方法}
-たとえば「条件が真なら10、偽なら20を返す」という処理には、条件による場合分けが必要です。\code{match}を使うと、それぞれの条件に対応する処理を明確に書けます。Bend 2の公開ガイドには通常の\code{if ... else}構文がなく、\code{match}と\code{True\{\}}／\code{False\{\}}を使います。計算結果を引数として受け取った関数の中で場合分けします。
+たとえば「条件が真なら10、偽なら20を返す」という処理には、条件による場合分けが必要です。\code{match}を使うと、それぞれの条件に対応する処理を明確に書けます。
+
+Bend 2の公開ガイドには通常の\code{if ... else}構文がなく、\code{match}と\code{True\{\}}／\code{False\{\}}を使います。特に\textbf{計算した式を直接matchできない}制限があります。たとえば比較式をそのまま\code{match}せず、計算結果を引数として受け取った関数の中で場合分けします。
+
 \readcode{27_match_basics.bend}{真偽値による場合分け（27\_match\_basics.bend）}
-\code{choose}に渡す真偽値\code{flag}が\code{True\{\}}なら最初の数値、\code{False\{\}}なら次の数値を返します。\code{match}は引数として受け取った値に対して行います。
+\code{choose}に渡す真偽値\code{flag}が\code{True\{\}}なら最初の数値を、\code{False\{\}}なら次の数値を返します。\code{match}は\textbf{引数として受け取った値}に対して行います。条件が何を意味するかは呼び出す側が決めるため、さまざまな処理で再利用できます。
+
 \section{真の場合と偽の場合を追う}
 \begin{tabularx}{\linewidth}{@{}c c c X@{}}
 \toprule
@@ -267,11 +304,12 @@ Bendでは\code{def f(x: T) -> R:}の形で関数を宣言します。戻り値�
 \code{True\{\}} & 5 & 9 & 5\\
 \bottomrule
 \end{tabularx}
-\exercise{\code{choose(True\{\},10,20)}と\code{choose(False\{\},10,20)}の返り値を予想して確かめてみましょう。第1候補と第2候補を変えて結果を比較してみましょう。}
+
+\exercise{\code{choose(True\{\},10,20)}と\code{choose(False\{\},10,20)}の返り値を予想して確かめてみましょう。第1候補と第2候補を変えて結果を比較してみましょう。比較式\code{U32.is\_eq}の結果を\code{choose}へ渡す使い方も試してみましょう。}
 
 \chapter{配列の操作とアフィン性}
 \begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
-\small これまでは数値一つを扱いました。ここでは\term{配列（array）}を学びます。配列は複数の値を順番にまとめ、位置を指定して扱うデータ構造です。Bend独特の\term{アフィン性（affinity）}は「同じ値を何度も使ってよいとは限らない」という性質です。
+\small ここでは\term{配列（array）}を学びます。配列とは、複数の値を順番にまとめ、位置を指定して扱うデータ構造です。あわせて、Bend 2の\term{アフィン性（affinity）}という値の使用方法に関する制約を学びます。
 \end{tcolorbox}
 
 \section{配列から値を取り出す基本操作}
@@ -284,10 +322,10 @@ Bend 2では、通常の配列は所有する値として扱われ、操作に�
 \code{Array<U32>}は、32ビット符号なし整数を格納する配列型です。\term{種類（kind）}とは「型を分類するための分類」で、\code{Type}は値を自由に複製できない種類、\code{Data}は複製を許せる種類を表します。\code{Array<U32>}は\code{Type}に属するため、同じ配列を二つの処理に勝手に渡せません。読み取るときは\code{Array.get}が\term{組（pair）}として「続けて使う配列」と「読み取った値」の両方を返します。こうすることで同じ配列を勝手に何度も使わず、読み取り後の配列を再び明示して処理できます。
 
 \readcode{04_array.bend}{書き換えと読み出し（04\_array.bend）}
-\code{[0 : U32*8n]}は、0を8個並べて作る配列です。\code{Array.set(U32,a,5,42)}は、添字5に42を書き込みます。続く\code{Array.get}は、\code{(a,value)}という組を返します。ただし計算結果をその場で直接分解せず、\code{read\_value}関数の引数\code{r}として受け取り、関数の中で分解しています。最後は\code{value}だけを結果とするので、\code{a}は破棄されます。Bendは\textbf{アフィン}（高々1回の使用）であり、破棄は許されます。後出の「配列操作の糖衣構文」では\code{a[i]}と\code{a[i] <- v}も紹介します。
+\code{[0 : U32*8n]}は、0を8個並べて作る配列です。\textbf{8要素という長さはこのサンプルが選んだ値}であり、Bend 2の配列が8要素に限定されるわけではありません。\code{Array.set(U32,a,5,42)}は、添字5に42を書き込みます。続く\code{Array.get}は、\code{(a,value)}という組を返します。ただし計算結果をその場で直接分解せず、\code{read\_value}関数の引数\code{r}として受け取り、関数の中で分解しています。最後は\code{value}だけを結果とするので、\code{a}は破棄されます。Bendは\textbf{アフィン}（高々1回の使用）であり、破棄は許されます。後出の「配列操作の糖衣構文」では\code{a[i]}と\code{a[i] <- v}も紹介します。
 
 \begin{cautionbox}
-\code{Array}は\code{+board}を宣言して何度も使うことができません。\file{src/12\_affine\_probe\_INVALID.bend}はこの失敗を観察する専用ファイルであり\textbf{正しくないことが正常}。普通の実行対象には含めない。
+\code{Array}は\code{+a}を宣言して何度も使うことができません。\file{src/12\_affine\_probe\_INVALID.bend}はこの失敗を観察する専用ファイルであり\textbf{正しくないことが正常}。普通の実行対象には含めない。
 \end{cautionbox}
 
 \section{値を使える回数を表す記号}
@@ -304,45 +342,46 @@ Bend 2では、通常の配列は所有する値として扱われ、操作に�
 \exercise{\code{Array.get}の\code{(array,value)}を\code{(value,array)}と逆にするとどうなるか。\code{Array.set}した配列を使わず、古い配列を再利用すると何が問題か。エラーの全文を記録し、型エラーと規則違反を区別してみましょう。}
 
 
-\chapter{ユーザー定義型とデータのモデリング}
-\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
-\small ここでは、値の選択肢を限定できる\term{ユーザー定義型（user-defined type）}を学びます。整数をそのまま使う場合との違いを考えましょう。
-\end{tcolorbox}
-\section{選択肢を型で表す}
-\term{代数的データ型（algebraic data type; ADT）}は、許される値の形を\term{コンストラクタ（constructor）}で列挙する型です。\code{Status}型に\code{Idle\{\}}と\code{Busy\{\}}を宣言すると、この二つの状態だけを表せます。Bend 2では\code{type}で宣言し、\code{is Data}なら値を再利用できます。
-\readcode{13_status_adt.bend}{二択の型の導入（13\_status\_adt.bend）}
-\code{match status}はコンストラクタによる場合分けです。フィールドを持つコンストラクタも定義できます。\code{type Task is Type:}のように\code{Type}とする型では、値を自由に複製できません。
-\section{整数のまま扱う場合との違い}
-\code{U32}は0や1以外も表しますが、\code{Status}型では状態を二択に限定できます。これにより、意図しない値を渡す間違いを減らせます。\code{Array<Status>}のように要素型としても利用できます。
-\exercise{\code{Status}に\code{Unknown\{\}}を追加してみましょう。各状態に数字を対応させる関数を作り、整数だけで状態を表す場合との違いを説明してみましょう。}
-
 \chapter{ListとMaybe：再帰的データと失敗を扱う}
 \begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
 \small 配列以外のデータの表し方を学びます。\term{リスト（list）}は要素を先頭からつなぐ構造で、\code{Maybe}は「結果があるかどうか」を型に含める仕組みです。
 \end{tcolorbox}
 
 \section{配列とリストを区別する}
-\code{Array}は長さが2の冪などの制約を持つ所有権付き領域であり、\code{List<A>}は\code{Nil\{\}}または\code{Con\{h,t\}}で構成される帰納的な鎖です。数値の並びや、順番に発生する処理の記録などをリストで表現できます。
+\code{Array}は長さが2の冪などの制約を持つ所有権付き領域であり、\code{List<A>}は\code{Nil\{\}}または\code{Con\{h,t\}}で構成される帰納的な鎖です。処理する数値の並びや、順番に発生するイベントはリストで表現できます。
 \readcode{14_list_basics.bend}{リストを構造再帰で処理する（14\_list\_basics.bend）}
 \section{MaybeとResultの違い}
-\code{Maybe<A>}は値が\code{Some\{value\}}か\code{None\{\}}かを表します。\code{Result}は成功または失敗の情報を保持する用途に適します。文字列から数値を読み取る場合は、0を「解析失敗」と兼用せず、失敗を型で表す方が安全です。\code{Maybe}の正確な量パラメータは\code{bend base Maybe}で確認します。
+\code{Maybe<A>}は値が\code{Some\{value\}}か\code{None\{\}}かを表します。\code{Result}は成功または失敗の情報を保持する用途に適します。文字列を数値に変換する場面では、0を「解析失敗」の印と兼用せず、失敗を型で表す方が安全になります。\code{Maybe}の正確な量パラメータは\code{bend base Maybe}で確認します。
 \begin{pointbox}
 再帰関数は\term{停止性を証明できる構造的な減少}が重要です。\code{List}では\code{Con}のtail、\code{Nat}では\code{1n+p}のpが自然な減少引数になります。
 \end{pointbox}
-\exercise{(1) \code{List<U32>}に入れた数値の個数を数えてみましょう。(2) 空リストの場合は0になることを確かめてみましょう。(3) 数値の解析に失敗した場合を\code{Maybe}で表す方法を考えてみましょう。}
+\exercise{(1) 整数を数個並べた\code{List<U32>}の長さを数えてみましょう。(2) 空リストでは長さが0になることを確かめてみましょう。(3) 数値の解析に失敗した場合を\code{Maybe}で表現する方法を考えてみましょう。}
 
-\chapter{クロージャと高階関数}
+\chapter{高階関数とクロージャを使う}
 \begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
-\small \term{クロージャ（closure）}は関数と、その関数が外側から覚えた値をまとめたものです。関数を引数として渡す\term{高階関数（higher-order function）}への入り口です。
+\small 手続き型言語では、関数を「処理を呼び出す手段」と考えることが多いでしょう。ここでは、\textbf{関数そのものを値として受け渡す}考え方を学びます。その際に必要になる\term{高階関数（higher-order function）}と\term{クロージャ（closure）}を区別します。
 \end{tcolorbox}
 
-\section{関数も値になる}
-クロージャは関数本体と、そこに捕捉された値をまとめたものです。\code{x => e}で無名関数を作れるが、Bendでは\term{クロージャ自体がアフィン}なので、捕捉した値が\code{Data}であっても呼び出しは高々1回になります。
+\section{関数も引数にできる}
+\term{高階関数}とは、\textbf{関数を引数として受け取るか、結果として関数を返す関数}です。例えば\code{apply}は「どの処理をするか」を引数\code{f}として受け取り、入力\code{x}に適用します。\code{U32 -> U32}は、\code{U32}を受け取り\code{U32}を返す\term{関数型（function type）}です。
+\readcode{29_higher_order.bend}{関数を引数に渡す（29\_higher\_order.bend）}
+\code{x => (x + 2 : U32)}は\term{無名関数（anonymous function）}です。名前を付けずにその場で関数を作ります。この例では40を受け取り42を返します。手続き型言語の「処理の分岐を増やす」設計とは異なり、\textbf{共通の処理手順を残したまま、実際の計算だけを差し替える}ことができます。
+
+\section{クロージャは外側の値を覚えている}
+無名関数が外側の変数を使う場合、関数本体だけでは結果を決められません。そこで、\term{クロージャ}は\textbf{関数と、その関数が利用する外側の値（捕捉した値）をまとめたもの}として動きます。
 \readcode{15_closure.bend}{異なる値を捕捉する二つのクロージャ（15\_closure.bend）}
-\code{U32.add(2)}のような部分適用もクロージャ。対照的に\term{トップレベル定義}は再利用できます。何度も呼ぶ変換関数を関数値として受け渡すときには、次章のテンプレートが選択肢になります。
-\section{関数の使い回しを考える}
-関数を別の関数の引数として渡すと、処理内容を差し替える設計ができます。ただし同じアフィン・クロージャは何度も呼び出せません。一度だけ使う関数値と、同じ処理を繰り返し埋め込むテンプレートを区別しましょう。
-\exercise{(1) \code{adder(3)}と\code{adder(5)}を作って返り値を予想してみましょう。(2) 一つの\code{add2}を二度呼ぶプログラムを試し、量の制約のエラーを観察してみましょう。(3) 同じ計算を繰り返すときにテンプレートが役立つ理由を考えてみましょう。}
+\code{adder(2)}の結果である\code{add2}は、\code{k=2}を覚えた関数です。\code{add2(1)}は3になり、\code{add5(3)}は8になるので、全体では8を返します。\code{adder}は\textbf{関数を返す高階関数}にもなっています。\code{U32.add(2)}のように一部の引数を先に与える\term{部分適用（partial application）}もクロージャの一例です。
+
+\begin{cautionbox}
+Bend 2では、\textbf{クロージャはアフィン}です。つまり、同じクロージャを呼べるのは高々1回です。捕捉した\code{U32}が複製可能でも、クロージャ自体を何度も呼ぶことはできません。一方、\code{adder}のようなトップレベルの関数定義は繰り返し呼び出せます。これはPythonやJavaScriptの一般的なクロージャとは重要な違いです。
+\end{cautionbox}
+
+\section{一度使う関数と、何度も適用する処理を区別する}
+\code{apply(f, x)}は\code{f}を一度使うので、通常の高階関数として書けます。しかし、同じ\code{f}を二度使う\code{f(f(x))}は、一般のアフィンな関数引数では書けません。次章では、\textbf{コンパイル時にコードを埋め込むテンプレート}を学び、この違いを確かめます。
+\begin{pointbox}
+\term{高階関数}は「関数を受け取る／返す」という\textbf{役割}の名前です。\term{クロージャ}は「関数と捕捉した値」を一体として扱う\textbf{値}の名前です。同じものを指す言葉ではありません。
+\end{pointbox}
+\exercise{\code{29\_higher\_order.bend}で無名関数を\code{x => (x * 2 : U32)}に変えて結果を予想してみましょう。続いて\code{adder(3)}を作り、捕捉する値によって結果がどう変わるか確認してみましょう。同じクロージャを二度呼ぶ例は別ファイルにして、型検査が拒否する理由も考えてみましょう。}
 
 \chapter{テンプレートとコンパイル時の引数}
 \begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
@@ -354,7 +393,7 @@ Bend 2では、通常の配列は所有する値として扱われ、操作に�
 \readcode{16_template.bend}{同じ処理を2度行うテンプレート（16\_template.bend）}
 \code{\textasciitilde{}(x => (x + 1 : U32))}は\term{呼び出し元の局所変数を捕捉しない閉じた構文}でなければなりません。テンプレートの宣言順序にも制約があります。\code{List.map}などBaseの定義を\code{bend base}で読むと利用例が分かります。
 \section{コンパイル時に処理を選択する}
-処理がコンパイル時に決まってよい場合は、テンプレートにすると同じ変換を繰り返し使えます。実行時に切り替えたい場合とどう違うか整理しましょう。
+処理\code{f}を通常の引数にするか、\code{\textasciitilde{}f}としてテンプレート引数にするかは、実行時に選ぶ必要があるか、コンパイル時に決まってよいかで判断します。型と使い回しの制約も比較してみましょう。
 \exercise{\code{twice}を\code{thrice}へ拡張してみましょう。テンプレートと普通のクロージャの寿命・生成コードの違いを、実行時とコンパイル時に分けて説明してみましょう。}
 
 \chapter{数値・文字列・演算子と標準ライブラリ}
@@ -368,9 +407,9 @@ Bend 2の基本的な数値型は\code{Nat}、\code{U32}、\code{F32}です。\c
 \section{演算子の型付けとビット演算}
 \code{(a + b : U32)}のように、型注釈は\term{その演算を囲う式自身}に置きます。\code{\&\&}・\code{||}はBool、\code{++}はString。\code{.\&.}、\code{.|.}、\code{.\^{}.}や\code{<<}などは\code{U32}のビット演算で、一般の数学的な等式と区別します。\code{F32}のビット精度を形式的に証明できると期待しません。
 \section{Baseを読む}
-\code{bend base --types}は型、\code{bend base U32}は整数、\code{bend base String}は文字列、\code{bend base Map}は連想写像のAPIを調べる手段となります。\code{Map}は文字列キーの辞書、\code{Set}は集合。学習では\term{新しい名前を勝手に推測せず、インストール版のBaseで引数・返却型を確認する}。
+\code{bend base --types}は型、\code{bend base U32}は整数、\code{bend base String}は文字列、\code{bend base Map}は連想写像のAPIを調べる手段となります。\code{Map}は文字列キーの辞書、\code{Set}は集合です。学習では\term{新しい名前を勝手に推測せず、インストール版のBaseで引数・返却型を確認する}。
 \readcode{25_map_basics.bend}{Mapの所有権付きアクセス（25\_map\_basics.bend）}
-\exercise{(1) \code{Nat}と\code{U32}が自動変換されない例を探してみましょう。(2) \code{U32}のAND・OR・XORと比較の違いを小さい入力で表にまとめてみましょう。(3) 数値を文字列へ変換するときに使える関数を標準ライブラリから探してみましょう。}
+\exercise{(1) \code{Nat}と\code{U32}が自動変換されない例を探してみましょう。(2) \code{U32}のAND・OR・XORと比較の違いを小さい入力で表にまとめてみましょう。(3) 数値を文字列へ変換するときに使用できる関数を調べてみましょう。}
 
 \chapter{モジュールと複数ファイルのプログラム}
 \begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
@@ -387,15 +426,15 @@ bend src/19_module_main.bend
 \end{lstlisting}
 \section{パッケージ配布と名前の扱い}
 BendHubには内容ハッシュ指定や名前とバージョンによるimportと、\code{--publish}があります。公開は外部送信で取り消しの難しい操作なので、教材をGitHubに置くことと\term{BendHubにpublishすること}は分けて判断します。ライセンスやAPIバージョン管理も重要です。
-\exercise{数値計算関数を別の\code{.bend}へ切り出してみましょう。\code{import}を通して呼べることを確かめ、ファイル同士の循環依存を避ける構成を考えてみましょう。}
+\exercise{\code{square}だけを別の\code{.bend}へ切り出し、\code{import}を通して呼べることを確認してみましょう。また、ファイル同士が相互に取り込まない構成を考えてみましょう。}
 
 \clearpage
 \part{ライフゲームを設計して組み立てる}
 \partchaptertoc
 \begin{pointbox}
-ここでは、最初に\textbf{ライフゲームの規則と受け入れ条件}を決めます。次にPart Iで学んだ関数と配列を使って、盤面を動かしていきます。盤面の大きさは作品の設定であり、Bend 2の配列の制約ではありません。
+このPartでは、まず\textbf{ライフゲームの規則と完成条件}を整理します。その後、Part Iで学んだ関数・配列・場合分けを使って、初期配置、近傍計算、世代更新、表示、テストを順に実装します。\textbf{ここで選ぶ盤面の大きさと規則は作品の仕様であり、Bend 2という言語の制約ではありません。}
 \end{pointbox}
-\chapter{ライフゲームのしくみと制作するもの}
+\chapter{ライフゲームのしくみと制作するもの}\label{ch:life-spec}
 \begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
 \small 本章では、ライフゲームの規則を日本語と数式で整理します。\term{仕様（specification）}とは「完成したプログラムが何をするべきか」を定めた約束です。まず仕様を決めると、後で正しさを確認しやすくなります。
 \end{tcolorbox}
@@ -435,20 +474,16 @@ a&n=2\quad\text{（現状維持）}\\0&\text{その他}
 \end{enumerate}
 \exercise{上の規則から、現在0/1の各場合について近傍数0～8の真理値表（\(2\times9\)個）を作ってみましょう。なぜ「3なら1、2なら現状、それ以外0」の3分岐で全部を処理できるのかを説明してみましょう。}
 
-
 \chapter{一次元配列で8×8盤面を表す}
-\begin{pointbox}
-この章から作品のコードを書きます。まず、生死規則を関数にします。次に、二次元の盤面を一次元配列に並べる方法を学びます。
-\end{pointbox}
-\section{生死規則を関数で表す}
-直前の章で決めた\textbf{B3/S23}はライフゲームの規則です。\code{match}はBend 2の文法です。ゲームの規則と言語の機能は分けて考えましょう。
-\readcode{03_rule.bend}{生死規則の関数（03\_rule.bend）}
-\code{rule(alive,neighbors)}は、近傍の生存数が3なら1、2なら現在の状態、その他なら0を返します。全18通りをテストで確認します。
-\exercise{生存状態0/1、近傍数0～8の全18ケースについて、期待値の表を作ってみましょう。}
-
 \begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
-\small ここからライフゲーム本体を作ります。2次元の盤面を1次元の配列に変換する方法を、実例と図で確かめましょう。
+\small 前章で決めたライフゲームの規則を関数にし、続いて二次元の盤面を一次元の配列に並べます。ここから実際のシミュレータを組み立てます。
 \end{tcolorbox}
+
+\section{生死規則を関数で表す}
+前章で定めた\textbf{B3/S23}は、この作品で採用するライフゲームの規則です。一方、条件分岐を表す\code{match}はBend 2の文法です。\textbf{ゲームの規則とプログラミング言語の仕様は別物}であることを意識しましょう。
+\readcode{03_rule.bend}{ライフゲームの生死規則（03\_rule.bend）}
+\code{rule(alive,neighbors)}では、\code{neighbors}が3なら1、2なら\code{alive}、それ以外なら0を返します。\code{choose}の内部では、Part Iで学んだ\code{match}を使っています。\code{+neighbors}は同じ数値を複数回比較するための使用量指定です。生死規則は前章で決めた\textbf{作品固有の仕様}であり、Bend 2の構文がこの規則を要求しているわけではありません。
+\exercise{\code{rule(0,3)}、\code{rule(1,2)}、\code{rule(1,4)}の返り値を確認してみましょう。現在の状態0/1と近傍数0～8の全18通りを表にして、期待値と一致するかを調べてみましょう。}
 
 \section{二次元の盤面を一次元配列に並べる}
 ボードを二重配列にするのではなく、長さ64の一次元\code{Array<U32>}とします。変換は\(i=8y+x\)、逆変換は\(x=i\bmod8,\ y=\lfloor i/8\rfloor\)。範囲は\(0\leq x,y<8\)、\(0\leq i<64\)です。配列アクセスに用いる\code{U32}添字は固定幅として扱います。
@@ -671,6 +706,49 @@ python3 scripts/check_bend.py --native
 \clearpage
 \part{アプリケーション基礎を広げる}
 \partchaptertoc
+\chapter{モナドと\code{do}構文を理解する}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small この章では、手続き型言語の「一行ずつ処理する」書き方と、関数型言語で\textbf{計算の文脈をつなぐ}書き方の違いを学びます。特に、失敗するかもしれない数値変換を例に\term{モナド（monad）}を理解します。
+\end{tcolorbox}
+
+\section{値を返す計算と、失敗し得る計算の違い}
+\code{(2 + 3 : U32)}は必ず\code{U32}を返す計算です。一方、文字列を整数に変える\code{U32.read("42")}は成功するとは限りません。\code{"abc"}を渡した場合、返すべき整数がありません。
+\term{Maybe}はこの違いを型で示します。成功なら\code{Some\{42\}}、失敗なら\code{None\{\}}です。\code{Maybe<\&2, U32>}という型は、\textbf{U32が得られるかもしれない計算結果}を表します。先頭の\code{\&2}は値の再利用可能性に関するBend 2固有の量指定です。ここでは「値があるかないか」と別の役割であることを押さえてください。
+
+\section{手続き型の失敗判定を\code{Maybe}に置き換える}
+従来の言語では、整数を読み取った後に成否を調べ、失敗ならそこで処理を止める\code{if}文を何度も書くことがあります。\code{Maybe}なら\term{失敗の伝播（failure propagation）}を共通の仕組みに任せられます。
+\readcode{21_monadic_maybe.bend}{二つの文字列を安全に加算する（21\_monadic\_maybe.bend）}
+実行例は\code{add\_strs("40", "2")}が\code{Some\{42\}}、\code{add\_strs("abc", "2")}が\code{None\{\}}です。\textbf{最初の解析に失敗した場合、次の解析と加算へ進みません。}失敗を表すために0や負数などの「特別な数値」を予約する必要もありません。
+
+\section{モナドとは何を共通化した仕組みか}
+\term{モナド}は、値を包む型の仕組みと、\textbf{その型を保ったまま複数の計算をつなぐ規則}を組にした抽象化です。Bend 2では、例えば\code{Maybe}に次の二つの操作があります。
+
+\begin{tabularx}{\linewidth}{@{}p{28mm}X@{}}
+\toprule 操作 & 役割\\\midrule
+\code{M.pure} & 普通の値を\code{M}の計算結果として包みます。\code{Maybe}なら\code{Some\{x\}}に相当します。\\
+\code{M.bind} & 包まれた値を次の関数へ渡し、次の計算も\code{M}の形で返します。\code{Maybe}なら\code{None\{\}}を次へ進めず、そのまま返します。\\
+\bottomrule
+\end{tabularx}
+
+ここで\code{M}は\code{Maybe}や\code{IO}などの型を表す仮の名前です。「モナド＝入出力」でも「モナド＝副作用」でもありません。\code{Maybe}は失敗、\code{Result}は失敗の理由、\code{IO}は外部とのやり取りという\textbf{異なる文脈}を扱います。
+
+\section{\code{bind}を直接書いてみる}
+\code{do}は新しい種類の計算を実行する命令ではなく、\code{bind}と\code{pure}を読みやすく書くための\term{構文糖（syntactic sugar）}です。次のコードでは、解析に失敗したときの処理を\code{Maybe.bind}へ任せています。
+\readcode{30_monad_explicit.bend}{\code{Maybe.bind}を直接使う（30\_monad\_explicit.bend）}
+このプログラムと、前節の\code{do Maybe<\&2, U32>:}を使ったプログラムは同じ結果を返す設計です。\code{x : U32 <- U32.read(a)}は「成功した値を\code{x}へ受け渡して続行する」という意味であり、\textbf{通常の変数代入（\code{x = ...}）とは違います}。
+
+\begin{pointbox}
+\code{do M<..., R>:}の\code{x : A <- m}は、\code{M.bind(..., A, R, m, x => ...)}を使う形へ展開されます。\code{return e}は\code{M.pure(..., R, e)}を使う形へ展開されます。ここでの\code{return}は、C言語の\code{return}のような「命令的な早期脱出」と混同しないでください。
+\end{pointbox}
+
+\section{モナドの規則と\code{Result}への発展}
+一般にモナドとして使う\code{pure}と\code{bind}は、計算を一貫してつなぐために\textbf{左単位律・右単位律・結合律}と呼ばれる規則を満たすように設計します。初めは数式を暗記する必要はありません。「普通の値を包んでから続ける操作」と「そのまま続ける操作」が同じ結果になること、つなぐ場所の括り方を変えても意味が変わらないことが要点です。なお、\textbf{\code{pure}と\code{bind}という名前だけを持つ型が、必ずこの規則を満たすわけではありません}。規則が成り立つかは実装側の責任です。
+\code{Result}は\code{Done\{value\}}と\code{Fail\{error\}}を使い、失敗の理由を残せます。\code{Maybe}は単に失敗したことだけを知らせればよいとき、\code{Result}は\textbf{何が間違っていたかを説明したいとき}に向いています。
+
+\section{同じ\code{do}で入出力をつなぐ}
+以降の章では\code{do IO<Unit>:}を使います。\code{IO.print}は「文字列を表示するという\term{効果（effect）}」を記述します。\code{do}内に順番に並べることで、表示の順序を明示できます。\textbf{\code{Maybe}では失敗を、\code{IO}では効果の順序を扱いますが、つなぎ方の構文は共通}です。この違いを確認してからファイル操作に進みましょう。
+\exercise{\code{add\_strs("12", "30")}と\code{add\_strs("abc", "30")}の結果を予想し、実行してみましょう。\code{do}版と\code{bind}版の結果を比較してみましょう。さらに、三つの文字列を足す関数を作り、途中で失敗した場合の返り値を確かめてみましょう。}
+
 \chapter{画面出力とファイル操作を扱う}
 \begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
 \small プログラムがファイルや画面へ作用する場面を扱います。Bendでは、入出力（I/O: input/output）を型で明示し、純粋な計算と区別します。
@@ -705,18 +783,6 @@ cd ..
 \section{キャンセル・タイムアウト・共有状態}
 \code{IO.within}は期限を過ぎた操作に\code{None}を返すが、\term{負けた処理を自動キャンセルするとは限らない}。\code{Chan.send/recv/close}などによる待ち合わせでは、相手を失うとデッドロックになり得ます。Lifeではフレーム描画とイベント受付を効果として分け、世代更新だけを純粋に保つことが安全な境界になります。
 \exercise{(1) \code{IO.sleep}を入れて二つの処理の進行を観察してみましょう。(2) CPU上での純粋関数の並列呼び出しと、IO.forkを比較表にまとめてみましょう。(3) タイムアウト時に完了しなかった処理が残る可能性を説明してみましょう。}
-
-\chapter{失敗する計算を順番につなぐ}
-\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
-\small 入力値を読み取れなかったときも、安全に処理したいものです。\code{Maybe}と\code{Result}、そして\code{do}構文の関係を順に見ます。
-\end{tcolorbox}
-
-\section{doはIO専用ではない}
-\code{do Maybe<...>:}は、途中で失敗が起きたら残りの計算を行わず失敗を返す記述法で、\code{M.bind}と\code{M.pure}に展開できます。\code{Maybe}、\code{Result}、\code{IO}など\term{戻り値を持つ計算の文脈}を統一した記法で扱える。
-\readcode{21_monadic_maybe.bend}{数字を安全に読み足すdoブロック（21\_monadic\_maybe.bend）}
-\section{ライフゲームの設定パーサ}
-外部設定では\code{width}や\code{height}を文字列から読む処理に失敗があり得る。\code{do Maybe}なら途中に\code{None}が出たら次へ進まない。\code{Result}は\term{どの入力が原因で失敗したか}を返したいときに向いています。具体的な量指定\code{\&2}はデータが再利用可能な場合を示します。
-\exercise{(1) \code{add\_strs("12", "30")}と\code{add\_strs("abc", "30")}を試してみましょう。(2) 三つの数値の和へ拡張してみましょう。(3) 解析失敗時にサイズ0で盤面生成を始めないようにする設計を考えてみましょう。}
 
 \chapter{ライフゲームを画面に表示する準備}
 \begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
