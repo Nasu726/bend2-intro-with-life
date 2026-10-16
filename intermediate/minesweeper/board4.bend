@@ -99,3 +99,24 @@ def clue(+mines: U32, +x: U32, +y: U32) -> U32:
 
 def main() -> U32:
   clue(33, 1, 0)
+
+# Public entry points: do not allow Array.get's index wraparound.
+def toggle_if_valid(valid: Bool, state: State, index: U32) -> State:
+  match valid:
+    case False{}:
+      state
+    case True{}:
+      toggle_at(state, index)
+
+def toggle_checked(state: State, +index: U32) -> State:
+  toggle_if_valid(U32.is_lt(index, 16), state, index)
+
+def reveal_if_valid(valid: Bool, state: State, index: U32, clue: U32) -> State:
+  match valid:
+    case False{}:
+      state
+    case True{}:
+      reveal_at(state, index, clue)
+
+def reveal_checked(state: State, +index: U32, clue: U32) -> State:
+  reveal_if_valid(U32.is_lt(index, 16), state, index, clue)

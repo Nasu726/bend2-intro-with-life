@@ -27,6 +27,8 @@ NAMES = (
     "board4_own_mine_not_counted",
     "board4_diagonal_clue",
     "board4_two_mines_clue",
+    "board4_rejects_invalid_flag_index",
+    "board4_rejects_invalid_reveal_index",
 )
 
 class LawDrivenContractTests(unittest.TestCase):

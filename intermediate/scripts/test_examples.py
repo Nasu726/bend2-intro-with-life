@@ -83,6 +83,74 @@ def verify_full_neighbor_table(game_dir):
             raise AssertionError(f"4x4 nonwrapping adjacency table failed: {result}")
         print("PASS all 256 ordered 4x4 cell pairs against independent oracle", flush=True)
 
+
+def verify_dense_board(game_dir):
+    """Independent clues, all valid indices, and invalid-index regression checks."""
+    def neighbors(mask, x, y):
+        return sum(
+            (mask >> (4*v+u)) & 1
+            for v in range(4) for u in range(4)
+            if (u, v) != (x, y) and abs(x-u) <= 1 and abs(y-v) <= 1
+        )
+    expressions = []
+    for mask in (0, 1, 33, 32768, 21845, 65535):
+        for y in range(4):
+            for x in range(4):
+                expressions.append(
+                    f"bit(U32.is_eq(Board4.clue({mask}, {x}, {y}), {neighbors(mask,x,y)}))"
+                )
+    for mine_index in range(16):
+        mask = 1 << mine_index
+        x, y = mine_index % 4, mine_index // 4
+        expressions.append(f"bit(U32.is_eq(Board4.clue({mask}, {x}, {y}), 0))")
+    for i in range(16):
+        expressions.append(
+            f"bit(U32.is_eq(show(Board4.visible_at("
+            f"Board4.toggle_checked(Board4.new_state(0), {i}), {i})), 1))"
+        )
+        expressions.append(
+            f"bit(U32.is_eq(show(Board4.visible_at("
+            f"Board4.reveal_checked(Board4.new_state(0), {i}, 3), {i})), 13))"
+        )
+    for i in (16, 17, 31, 32, 65535):
+        expressions.append(
+            f"bit(U32.is_eq(show(Board4.visible_at("
+            f"Board4.toggle_checked(Board4.new_state(0), {i}), 0)), 0))"
+        )
+        expressions.append(
+            f"bit(U32.is_eq(show(Board4.visible_at("
+            f"Board4.reveal_checked(Board4.new_state(0), {i}, 3), 0)), 0))"
+        )
+    expected = len(expressions)
+    program = (
+        "import Base\nimport ./game.bend as Game\n"
+        "import ./board.bend as Board\nimport ./board4.bend as Board4\n"
+        "def bit(b: Bool) -> U32:\n"
+        "  match b:\n    case True{}:\n      1\n    case False{}:\n      0\n"
+        "def show(s: Game.Square) -> U32:\n"
+        "  match s:\n    case Game.Hidden{}:\n      0\n"
+        "    case Game.Flag{}:\n      1\n"
+        "    case Game.Open{clue}:\n      (10 + clue : U32)\n\n"
+        + "\n\n".join(
+            f"def check_{i}() -> U32:\n  ("
+            + " + ".join(expressions[i:i+8]) + " : U32)"
+            for i in range(0, len(expressions), 8)
+        )
+        + "\n\ndef main() -> U32:\n  ("
+        + " + ".join(f"check_{i}()" for i in range(0, len(expressions), 8))
+        + " : U32)\n"
+    )
+    with tempfile.TemporaryDirectory() as td:
+        out = pathlib.Path(td)
+        for name in ("game.bend", "board.bend", "board4.bend"):
+            shutil.copyfile(game_dir / name, out / name)
+        f = out / "dense_oracle.bend"
+        f.write_text(program, encoding="utf-8")
+        found = run("bend", str(f)).splitlines()[-1]
+        if found != str(expected):
+            raise AssertionError(f"Full-board oracle expected {expected}; got {found}")
+        print(f"PASS dense board oracle: {expected} clue/index checks", flush=True)
+
 def main():
     if not shutil.which("bend"):
         print("ERROR: bend not on PATH", file=sys.stderr)
@@ -141,8 +209,9 @@ def main():
     game_verdict = run("bend", str(game / "PROOF.bend"), "--verdict")
     if "ALL PROOFS CHECK" not in game_verdict:
         raise AssertionError(f"Minesweeper law proof gate failed:\n{game_verdict}")
-    print("PASS Minesweeper law proof gate (22 laws, including whole-board mine invariants and clues)", flush=True)
+    print("PASS Minesweeper law proof gate (24 laws, including whole-board mine invariants and clues)", flush=True)
     verify_full_neighbor_table(game)
+    verify_dense_board(game)
 
     # Mutation test: keeping the function well-typed must not suffice when
     # it violates an independently declared requirement.

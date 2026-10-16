@@ -94,3 +94,9 @@ def Laws.board4_diagonal_clue():
 
 def Laws.board4_two_mines_clue():
   {==}
+
+def Laws.board4_rejects_invalid_flag_index(mines, cells):
+  {==}
+
+def Laws.board4_rejects_invalid_reveal_index(mines, cells, clue):
+  {==}
