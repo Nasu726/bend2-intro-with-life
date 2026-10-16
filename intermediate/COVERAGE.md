@@ -17,7 +17,7 @@
 | `Array` 操作、`fork/join/clone` | 第3章 | `18_array_mutations.bend`、前巻の基本例 | new/set/getの実行照合。fork/join/cloneは今後 |
 | `Map`（文字列キー） | 第4章 | `02_map.bend`、`16_map_set_api.bend` | keysの実行照合。get欠落と順序の詳細は今後 |
 | `Set` | 第4章 | `01_set.bend`、`05_marking.bend`、`16_map_set_api.bend` | 追加・重複・削除・サイズを照合 |
-| `Maybe`, `Result`, `Either` | 第5・第6章 | `15_string_parse.bend`、`22_result_and_game.bend` | Maybe変換・Resultゲームエラーの動作・局所lawを検査。Eitherは今後 |
+| `Maybe`, `Result`, `Either` | 第5・第6章 | `15_string_parse.bend`、`22_result_and_game.bend`、`25_either_case.bend` | Maybe/Result/Eitherの独立例。失敗と二者択一を区別 |
 | `Pair`, `Sigma`, `Exists`, `Or` | 第5・第16章 | 追加実習 | 依存する値・存在証明 |
 | `Kind`, `Quant`, 消去引数 | 第5・第16章 | 追加実習 | 型エラーとの対比 |
 | `IO`, `IO.try`, `IO.die` | 第6章 | `08_args.bend` | 失敗時の終了コード |
@@ -26,11 +26,11 @@
 | `Process.run` | 第8章 | `20_process_run.bend` | Linuxでの終了コード実行例。stderr・失敗は今後 |
 | `IO.fork/join`, `Chan` | 第9章 | `21_io_fork.bend` | fork/joinの実行照合。Chan送受信・終了は今後 |
 | `IO.within`, `Poll` | 第9章 | 追加実習 | タイムアウト |
-| TCP/UDP/Socket/Listener | 第10章 | 追加実習 | ループバックテスト |
+| TCP/UDP/Socket/Listener | 第10章 | `27_tcp_connect.bend` | TCP接続の型・成功失敗分岐例。送受信・UDPループバックは今後 |
 | `Image`, `Pix`, `Qua` | 第11章 | `07_gui_hello.bend` | 描画関数テスト |
 | `App`, `Event`, `Window` | 第12–14章 | `07_gui_hello.bend`、`23_cell_hit_test.bend` | GUIの基本型検査・純粋な座標変換。実機入力・Windowは今後 |
-| `Audio` | 第14・第20章 | 追加実習 | 出力デバイス確認 |
-| `law`, `Equal`, 帰納法 | 第15–18章・第22章 | `04_flag_laws.bend`、`14_local_inference.bend` | 局所法則のLean検査。帰納法・補題の追加例は今後 |
+| `Audio` | 第20章 | `26_audio_open.bend` | open/write/closeの型検査。実機での再生確認は今後 |
+| `law`, `Equal`, 帰納法 | 第15–18章・第22章 | `04_flag_laws.bend`、`14_local_inference.bend`、`22_result_and_game.bend`、`24_bool_proofs.bend` | 全Boolについての法則と具体例を検査。依存型・補題は今後 |
 | `@unsafe`, 外部信頼境界 | 第18・20章 | 追加実習 | 証明検査の境界 |
 | CPU並列、GPU指定 | 第19章 | `06_parallel.bend` | GPUターゲット別検査 |
 | `Array.atomic` | 第19章 | 追加実習 | 使用制約と対応環境 |
