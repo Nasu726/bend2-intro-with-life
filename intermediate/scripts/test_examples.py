@@ -18,6 +18,10 @@ EXPECTED = {
     "09_minesweeper_status.bend": "1",
     "10_board_neighbors.bend": "2",
     "14_local_inference.bend": "10",
+    "15_string_parse.bend": "42",
+    "16_map_set_api.bend": "3n",
+    "17_list_pipeline.bend": "3n",
+    "18_array_mutations.bend": "17",
 }
 
 def run(*args):
@@ -68,9 +72,18 @@ def main():
             raise AssertionError(f"Unexpected read content: {read.stdout!r}")
         print("PASS file read/open/close", flush=True)
 
+    env_output = run("bend", str(SAMPLES / "19_environment.bend"))
+    if not env_output.splitlines()[-1].isdigit():
+        raise AssertionError(f"Environment example did not return a numeric length: {env_output!r}")
+    print("PASS environment variable Result example", flush=True)
+
     verdict = run("bend", str(SAMPLES / "04_flag_laws.bend"), "--verdict")
     if "ALL PROOFS CHECK" not in verdict:
         raise AssertionError(f"Proof checker did not accept laws:\n{verdict}")
+    local_verdict = run("bend", str(SAMPLES / "14_local_inference.bend"), "--verdict")
+    if "ALL PROOFS CHECK" not in local_verdict:
+        raise AssertionError(f"Local inference proof not accepted:\n{local_verdict}")
+    print("PASS local inference law verdict", flush=True)
     print("PASS law verdict", flush=True)
     return 0
 
