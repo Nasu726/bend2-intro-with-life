@@ -5,7 +5,11 @@ They do not certify game completion or GUI execution.
 """
 from pathlib import Path
 import re
+import sys
 import unittest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+from build_reader_bundle import INTERMEDIATE_EXAMPLES
 
 ROOT = Path(__file__).resolve().parents[1]
 BOOK = ROOT / "Intermediate_Textbook.tex"
@@ -30,6 +34,9 @@ class BookStructure(unittest.TestCase):
         self.assertGreaterEqual(len(samples), 8)
         missing = [s for s in samples if not (SRC / s).is_file()]
         self.assertFalse(missing, f"Missing Bend files: {missing}")
+        self.assertEqual(len(samples), len(set(samples)), "Duplicate full source listings waste reader pages")
+        self.assertEqual(set(samples), set(INTERMEDIATE_EXAMPLES),
+                         "Every bundled exercise must be introduced once in the textbook")
 
     def test_coverage_present(self):
         ledger = (ROOT / "COVERAGE.md").read_text(encoding="utf-8")

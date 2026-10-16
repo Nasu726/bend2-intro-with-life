@@ -76,6 +76,7 @@ PDFを読み、examples/ 内のコードを実行してください。
 例: bend examples/01_set.bend
 07_gui_hello.bend はウィンドウ表示が可能な環境が必要です。
 証明例: bend examples/04_flag_laws.bend --verdict
+帰納法: bend examples/33_nat_induction.bend --verdict
 （Leanのインストールが別途必要です）
 
 進捗・参考実装はリポジトリを参照してください:

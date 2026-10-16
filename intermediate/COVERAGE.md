@@ -30,7 +30,7 @@
 | `Image`, `Pix`, `Qua` | 第11章を改稿（図・最小コード・出力・演習） | `31_image_quadrants.bend`、`07_gui_hello.bend` | 四分木の左上色を実行検査。ウィンドウ実機表示は別検査 |
 | `App`, `Event`, `Window` | 第12章を改稿（view/tickとMouseイベント）、第14章 | `07_gui_hello.bend`、`23_cell_hit_test.bend`、`32_mouse_events.bend` | Image/Viewの型検査、マウス押下と画素位置の純粋な実行検査。実機入力・Windowは今後 |
 | `Audio` | 第20章 | `26_audio_open.bend` | open/write/closeの型検査。実機での再生確認は今後 |
-| `law`, `Equal`, 帰納法 | 第15–18章・第22章 | `04_flag_laws.bend`、`14_local_inference.bend`、`22_result_and_game.bend`、`24_bool_proofs.bend` | 全Boolについての法則と具体例を検査。依存型・補題は今後 |
+| `law`, `Equal`, 帰納法 | 第15〜18章を再構成（入門的な法則→Boolの全称証明→Nat帰納法→盤面不変条件） | `04_flag_laws.bend`、`14_local_inference.bend`、`22_result_and_game.bend`、`24_bool_proofs.bend`、`33_nat_induction.bend` | Natについての帰納法を `--verdict` で新たに検査。依存型・一般の補題は今後 |
 | `@unsafe`, 外部信頼境界 | 第18・20章 | 追加実習 | 証明検査の境界 |
 | CPU並列、GPU指定 | 第19章を増補（CPU並列・GPU指定・IO並行の比較） | `06_parallel.bend`・`21_io_fork.bend` | CPU並列の実行確認、GPU・他ターゲットでの性能と実機挙動は未検証 |
 | `Array.atomic` | 第19章を増補（標準Baseの型と使用条件を説明） | 追加実習 | 呼出しコード・実機共有更新の検査は今後 |
