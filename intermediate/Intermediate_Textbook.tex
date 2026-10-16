@@ -1,0 +1,307 @@
+\documentclass[11pt,a4paper,oneside]{report}
+\usepackage[a4paper,margin=24mm,headheight=14pt]{geometry}
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setmainfont{TeX Gyre Pagella}
+\setCJKmainfont{Noto Serif CJK JP}
+\setCJKsansfont{Noto Sans CJK JP}
+\usepackage{amsmath,amssymb,booktabs,longtable,tabularx,array,hyperref}
+\usepackage{enumitem,xcolor,listings,fancyhdr}
+\hypersetup{colorlinks=true,linkcolor=blue!45!black,urlcolor=blue!55!black}
+\definecolor{shade}{RGB}{246,248,251}
+\lstset{basicstyle=\ttfamily\footnotesize,backgroundcolor=\color{shade},frame=single,framerule=.2pt,rulecolor=\color{black!25},numbers=none,breaklines=true,breakatwhitespace=true,columns=fullflexible,keepspaces=true,showstringspaces=false,xleftmargin=1em,xrightmargin=1em,aboveskip=8pt,belowskip=8pt}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\exercise}[1]{\par\medskip\noindent\textbf{演習}\quad #1\par\medskip}
+\newcommand{\note}[1]{\par\medskip\noindent\colorbox{shade}{\parbox{\dimexpr\linewidth-2\fboxsep\relax}{#1}}\par\medskip}
+\newcommand{\sample}[2]{\par\noindent\textbf{サンプル：#2}\par\nobreak\lstinputlisting{intermediate/src/#1}\par}
+\newcommand{\sectiongoal}[1]{\noindent\textbf{この章で学ぶこと：}#1\par\medskip}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{Bend 2 中級}\fancyhead[R]{マインスイーパーで学ぶ}\fancyfoot[C]{\thepage}
+\setlength{\parindent}{1em}\setlength{\parskip}{.45em}
+\setlength{\emergencystretch}{2em}
+\begin{document}
+\begin{titlepage}
+\centering\vspace*{38mm}
+{\Huge\bfseries マインスイーパーで学ぶ\par}
+\vspace{5mm}{\Huge\bfseries Bend 2 中級\par}
+\vspace{15mm}{\Large 標準ライブラリ・入出力・GUI・仕様と証明\par}
+\vspace{23mm}{\Large レビュー用初稿（第1版準備）\par}
+\vfill
+\begin{minipage}{.82\linewidth}
+本書の目的は、入門編では十分に扱わなかったBend 2の機能を、型、引数、返り値、所有権、失敗時の挙動まで理解し、実際に使えるようになることです。マインスイーパーは学習を支える共通の題材です。本文で扱う一部の高度な機能は、GUIや外部環境が必要なため、動作条件を明示しています。
+\end{minipage}
+\vfill
+{\large 2026年10月・初稿}\par
+\end{titlepage}
+\pagenumbering{roman}
+\chapter*{はじめに}
+\addcontentsline{toc}{chapter}{はじめに}
+この本は『ライフゲームで学ぶ はじめてのBend2』を読んだ人を対象とします。関数、パターンマッチ、再帰、アフィン性、\code{do}の基本は既習とします。難しいテクニックを身につけるよりも、\textbf{使える道具の一覧を把握し、必要な場面で正しい使い方を選べること}を重視します。
+
+本書には、マインスイーパーとは直接関係のない独立したプログラムもあります。たとえばネットワーク通信や音声出力をゲームに無理に組み込むと、それらの本来の使用方法が分かりにくくなるためです。掲載予定の全機能は別ファイル\code{COVERAGE.md}で管理します。
+
+\textbf{注意：}これはレビュー用の初稿です。サンプルごとの型検査や実行の成功はCIにより判定し、GUIのウィンドウ表示、GPUの高速化、ファイルやネットワークの実機動作などを未検証のまま保証しません。マインスイーパーの完成アプリと「運ゲー無し」生成は今後統合します。
+\tableofcontents
+\clearpage\pagenumbering{arabic}
+
+\part{標準ライブラリとデータ構造}
+\chapter{Baseを調べる}
+\sectiongoal{APIの宣言、型、数量指定、結果を返す形を読み取る。}
+入門編では\code{import Base}を使いました。ここでは、\code{bend base}と\code{bend base Array}を使い、提供されている関数を自分で調べます。最新情報は\url{https://github.com/bendlang/bend/blob/main/bend2/base.bend}も参照してください。
+
+例えば\code{Set.has}の戻り値は単なる\code{Bool}ではなく\code{Set() & Bool}です。「所属を調べる際に集合が消費され、再利用するには返された集合を受け取る」という設計を、この型だけから読み取れます。\code{Map.get}も元の辞書と値を組で返します。型名、消費する引数、戻ってくる所有物を最初に確認する習慣が重要です。
+
+\begin{lstlisting}
+bend base
+bend base Set
+bend base Map
+bend guide
+\end{lstlisting}
+すべての定義が通常のユーザー向けAPIとは限りません。\code{.go}や\code{.fin}など実装上のヘルパーも混在しています。最初は外側の公開操作を学び、実装を読む必要が生じたときに内部関数へ進みます。
+\exercise{\code{Array.get}、\code{Set.has}、\code{File.open}を調べ、各関数について「入力」「結果」「失敗の有無」を記録してみましょう。}
+
+\chapter{数値、文字、比較を正しく選ぶ}
+\sectiongoal{整数と浮動小数点、文字列、変換時の失敗を整理する。}
+\code{Nat}は非負の自然数、\code{U32}は固定幅の非負整数、\code{F32}は近似的な浮動小数点数です。サイズの上限、演算結果、オーバーフロー、丸めが同じではありません。型が違う数をそのまま加算できるとは限らず、\code{U32.to_nat}など明示的な変換を使います。
+
+\code{String}には\code{split}、\code{join}、\code{trim}、\code{starts_with}、\code{to_upper}などがあり、\code{Char}には文字に関する操作があります。単純な文字列の切り分けと、符号化や文字境界の意味を伴う操作は区別します。文字列を整数として読む\code{U32.read}は失敗し得るため、返り値の\code{Maybe}を確認します。
+
+\code{Cmp}は大小の比較結果を表し、\code{Bool}は真偽を表します。「大小の三種類」と「条件式の二種類」を使い分けると、ソートや検索のAPIを読みやすくなります。
+\exercise{文字列\code{"42"}と\code{"x"}を数値として読む例を作り、成功・失敗の結果の型と中身を説明してみましょう。}
+
+\chapter{ListとArrayの詳しい使い方}
+\sectiongoal{構造の違いと、関数の選択が所有権に与える影響を理解する。}
+\code{List}は\code{Nil}と\code{Con}からなる再帰的な鎖です。\code{map}、\code{filter}、\code{foldl}、\code{foldr}、\code{sort}などが用意されています。変換したリストを作るとき、入力要素の型が\code{Type}か\code{Data}かによって、要素を何度も使えるかが変わります。
+\sample{03_list.bend}{リストを作り要素数を求める}
+このプログラムは3要素の長さを返します。\code{<>}はリストの先頭に要素を付ける記法です。\code{List.length}の引数には、数量と要素型が必要です。
+
+\code{Array}はインデックスを使う構造です。\code{get}と\code{set}のほか、\code{swap}、\code{clone}、\code{fork}、\code{join}、\code{to_list}、\code{map}などがあります。「読むだけ」のつもりでも所有権付き配列を消費するので、返された配列を引き継ぎます。複製やフォークは処理・メモリのコストを伴います。
+\exercise{同じ数値列を\code{List}と\code{Array}の両方で表し、要素の変更、走査、複製が必要な場合の選び方を比較してみましょう。}
+
+\chapter{MapとSetを使う}
+\sectiongoal{辞書と集合の操作、キーの制約、更新後の所有権を理解する。}
+\code{Map}は\textbf{文字列をキーとする辞書}です。\code{new}、\code{set}、\code{get}、\code{has}、\code{del}、\code{keys}、\code{size}などがあり、値の型と数量を指定します。位置を表すキーを\code{"2,3"}のように構成すれば、盤面の座標を覚えることもできます。
+\sample{02_map.bend}{Mapに記録を保存して読み取る}
+\code{Map.get}には存在しないキーに対して使う既定値が渡されます。欠落と既定値を区別したい場合は\code{has}や別のAPIを組み合わせます。
+
+\code{Set}は重複を持たない文字列キーの集合です。\code{add}、\code{has}、\code{del}、\code{size}、\code{to_list}などを使います。\code{Set.has}の結果に集合が含まれるのは、アフィン性に従って同じ集合を勝手に二度使わないためです。
+\sample{01_set.bend}{集合への追加と所属検査}
+\sample{05_marking.bend}{同じ座標の旗を二度切り替える}
+後半の例は、旗を置く場所の集合を表します。旗操作は\code{Set.has}で確認し、存在すれば削除、なければ追加します。マインスイーパー本体の盤面管理に使える小さな部品です。
+\exercise{存在しないキーを\code{Map.get}したときの結果、同じ座標を\code{Set.add}したときのサイズを確かめましょう。}
+
+\chapter{失敗、選択肢、依存する値}
+\sectiongoal{Maybe、Result、Either、Pair、Sigmaなどの役割を分ける。}
+\code{Maybe<T>}は値がない可能性を表します。\code{Result<E,T>}は失敗理由を含めて返す際に使います。\code{Either}は二つの異なる型のいずれかを表し、\code{Pair}は二つの値を一緒に返します。\code{Sigma}は二番目の値の型が一番目の値に依存する組を表すときに登場します。
+
+単に\code{0}を失敗扱いする設計だと、0が正常な結果である場合に曖昧になります。見つからない座標を表すなら\code{Maybe}、保存ファイルの読み込みに失敗するならエラー理由を持つ\code{Result}が適切です。
+
+\code{Kind}と\code{Quant}は、型の値を複製できるか、引数を消去できるかなどを制約します。配列・ファイルハンドル・関数・値の複製を同じように考えないことが重要です。次のPartではファイルハンドルを例に確認します。
+\exercise{「座標が存在しない」「ファイルを開けない」「2つの集計値を返す」に、それぞれどの結果型がふさわしいか説明してみましょう。}
+
+\part{入出力と並行処理}
+\chapter{IOを読む}
+\sectiongoal{純粋な計算と外部への作用を分け、失敗を安全に伝える。}
+\code{IO<A>}は、外部とのやり取りを行って\code{A}型の結果を得る計算を表します。\code{IO.print}は画面出力、\code{IO.args}は起動引数、\code{IO.get_env}は環境変数を扱います。\code{do IO<...>}では処理の順序を明示できます。
+
+\code{IO.try}は\code{Result}として返された成功値を取り出し、失敗をIOの失敗へ伝えます。\code{IO.die}は失敗終了を表します。どこで失敗し得るのかを把握し、入力の不正と環境の失敗を区別するのが目標です。
+
+マインスイーパーでは「地雷をクリックした」は正常なゲーム上の結果ですが、「保存先へ書けない」はIO上の失敗です。両者を同じ種類の例外として扱わない設計が読みやすくなります。
+\exercise{ファイルがないことと、ゲームに負けたことを別の型で表す理由を説明してみましょう。}
+
+\chapter{Fileとリソースの受け渡し}
+\sectiongoal{ファイルの開閉、文字・バイト列、失敗後の扱いを学ぶ。}
+\code{File.open(path,mode)}は\code{IO(Result<...,File>)}を返します。開けないときはハンドルがありません。\code{File.read(file,max)}は、\textbf{継続して使うFileと読み込み結果の組}を返します。書き込み操作も同様に結果を確認します。最後に\code{File.close}を呼びます。
+
+\begin{lstlisting}
+File.open(path, "r")
+File.read(file, 4096)
+File.write(file, text)
+File.close(file)
+\end{lstlisting}
+上記は関数の名前を確認するための\textbf{呼び出し例}であり、ファイルを開いて受け取る前後の所有権処理を省略しています。このまま一つの完全なプログラムではありません。
+
+保存形式には、まず単純な行単位のテキストを使うとよいでしょう。地雷位置、開いたマス、旗位置、盤面サイズ、版番号を別々に記録し、読み込み時に入力の妥当性をチェックします。任意の外部ファイルを信頼してはいけません。
+\exercise{「存在しないファイル」「空ファイル」「項目が欠けたファイル」の三種類を用意し、それぞれどう扱うべきか設計してみましょう。}
+
+\chapter{引数、時刻、乱数、プロセス}
+\sectiongoal{外部情報を受け取る方法と、再現できるテストの作り方を学ぶ。}
+\code{IO.args}は起動時の引数をリストとして受け取ります。設定ファイルの位置や盤面のサイズを指定する例で使えます。\code{IO.get_env}は環境変数を読みます。
+\sample{08_args.bend}{引数の個数を表示する}
+\code{IO.now}は現在時刻、\code{IO.sleep}は時間待ち、\code{IO.random_u32}は乱数を扱います。乱数を使ったテストは、実際の乱数に依存させず、固定した地雷配置を入力にする方法と分けて実施します。
+
+\code{Process.run}は外部プログラムを呼び出し、終了コードと出力を受け取ります。プログラムの存在、タイムアウト、終了コード、標準エラー出力を無視してはいけません。
+\exercise{引数が不足するときは既定の盤面を使うか、理由を表示して終了するか、用途に応じて選んでみましょう。}
+
+\chapter{IO.fork、Chanとタイムアウト}
+\sectiongoal{独立した仕事を非同期に実行し、結果の受信と終了処理を理解する。}
+CPUの二つの関数呼び出しを並列に実行する記法と、IO処理を並行させる操作は別です。\code{IO.fork}はIOを開始して結果を受け取るチャネルを返し、\code{IO.join}が結果を待ちます。\code{Chan.new}、\code{Chan.send}、\code{Chan.recv}はメッセージの受け渡しに使います。
+
+\code{Chan.recv}は閉じられたチャネルから値が得られない場合、\code{None}を返すことがあります。\code{IO.within}など時間制限を扱うAPIは、時間内に完了しなかった場合の結果を確認して使います。待ち手だけを途中で止めたとき、仕事がどうなるかも仕様と実装で確認する必要があります。
+
+この章では操作の型と意味を独立例で学び、マインスイーパーでは自動保存やタイマーの用途と結び付けます。最初から複雑なワーカープールを作る必要はありません。
+\exercise{送る側が終了したとき、受信する側はいつ処理を終えるべきか、短い手順を書いてみましょう。}
+
+\chapter{TCP、UDPと外部環境}
+\sectiongoal{接続の確立、失敗、リソース開放を理解する。}
+\code{TCP.listen}、\code{TCP.accept}、\code{TCP.connect}、\code{TCP.send}、\code{TCP.recv}は接続型の通信です。\code{UDP.bind}、\code{UDP.send_to}、\code{UDP.recv_from}はデータグラムをやり取りします。通信には相手が応答しない場合や、受信データが途中で切れる場合があります。
+
+どちらも\code{Result}を調べ、\code{Socket}や\code{Listener}の所有権を返り値で受け渡します。ローカルホストの最小例から始め、外部ネットワークへの接続は別途許可を得た環境で行います。\code{Process.run}や音声・ファイルIOと同様、ホストOSで使用できる機能に影響されます。
+
+通信はマインスイーパーへ必須ではありません。本書では「何ができ、どの型を返し、どこで失敗するか」を独立した学習事項とします。
+\exercise{TCPとUDPで「送信成功」の意味が異なるのはなぜか、通信が届かない場合を考えて説明してみましょう。}
+
+\part{Image・App・GUI}
+\chapter{Imageと四分木}
+\sectiongoal{PixとQuaによる画像表現を理解する。}
+Bend 2の\code{Image}は再帰的な画像型です。\code{Pix}は一色の正方形、\code{Qua}は左上・右上・左下・右下に画像を配置して大きな正方形を作ります。小さな画素を一個ずつ描く方法だけでなく、同じ色の領域をまとめて表現できます。
+
+\begin{lstlisting}
+Pix{0x002244}
+Qua{Pix{0}, Pix{0xffffff}, Pix{0xffffff}, Pix{0}}
+\end{lstlisting}
+上記は画像値の構成例です。RGB値の解釈や、表示するウィンドウのサイズと四分木の深さの関係は、実行環境で確かめます。マインスイーパーでは、閉じたマス、開いたマス、旗、地雷を別々の色・形で描画します。
+\exercise{同じ色が広く続く背景を\code{Pix}一個で表す利点を説明してみましょう。}
+
+\chapter{Appとイベントの処理}
+\sectiongoal{viewとtickを分離し、状態を画面へ描く。}
+\code{App}は\code{view}と\code{tick}の組です。\code{view}は現在の状態を受け取り、状態と画像の組を返します。\code{tick}は\code{List<Event>}を受け取り、次の状態を\code{Maybe}で返します。\code{None}は終了を意味します。\code{Event}にはマウス・キー・スクロール・閉じる操作などがあります。
+\sample{07_gui_hello.bend}{イベントで色を切り替える最小GUI}
+この例は公式ガイドの構成に沿ったものです。画面を開ける環境で動かしてください。CIによる型検査とウィンドウの表示成功は別の確認です。
+
+GUIアプリで重要なのは、入力イベントを受けたときに\textbf{純粋な状態更新関数を先に呼び、その結果を描画する}ことです。そうすればイベントそのものを再現しなくても、更新の正しさをテストできます。
+\exercise{\code{Close}が来たらアプリを終了する処理と、それ以外の入力を受けたときの処理を区別してみましょう。}
+
+\chapter{マインスイーパーの状態}
+\sectiongoal{地雷配置、表示状態、操作を独立させる。}
+マインスイーパーのマスには「まだ開いていない」「旗が付いている」「開いていて周囲の地雷数が分かる」といった状態があります。内部の地雷の有無と、プレイヤーに見える状態は分ける必要があります。
+\sample{09_minesweeper_status.bend}{セル状態と旗の切替}
+このプログラムでは、旗を付ける・外すという操作の入口を実装しました。本格的な盤面では、盤面の大きさ、地雷集合、公開済み集合、旗集合、ゲーム終了状態が必要です。
+
+最初のクリックで地雷を踏まない規則、0のマスの周囲を自動で開く規則、勝敗条件は、ゲームの状態遷移として定義します。\code{law}で検査する性質と、GUIで操作して確かめる性質を区別します。
+\exercise{公開済みのマスに旗を立ててよいかどうか、先にゲームの仕様として決めてから関数を設計してみましょう。}
+
+\chapter{表示と入力をテストする}
+\sectiongoal{GUIがなくても検証できる部分を特定する。}
+描画結果を生成する関数は、同じ盤面から同じ\code{Image}を構成すべきです。マウスの座標から盤面のインデックスを求める関数も純粋にできます。入力範囲外、ウィンドウ端、境界上などをテストします。
+
+一方、マウス装置が実際に動くか、ウィンドウを作成できるか、描画した色が正しく表示されるかは環境に依存します。CIでは純粋関数の型検査・実行テストを行い、GUIの実機確認は別の検査結果を記録します。\code{Window}の直接操作や\code{Audio}の使用も、基本の\code{App}を理解した後の独立演習にします。
+\exercise{マスの幅を32画素、盤面を8列としたとき、マウス座標とマス座標の変換式を求めてみましょう。}
+
+\part{仕様駆動開発と形式的証明}
+\chapter{lawを先に書く}
+\sectiongoal{満たしたい性質を文章と式で定義し、実装と証明を区別する。}
+例えば旗の切替は「閉じたマスは旗付きになる」「旗付きは閉じたマスに戻る」「開いたマスはそのまま」という仕様です。これに加え「二回切り替えると元に戻る」という法則を作れます。
+\sample{04_flag_laws.bend}{旗操作に関する法則と証明}
+\code{law}は普遍的に成り立つと主張する命題、同名の\code{def}はその証明です。\code{for}は対象となる値の範囲を指定します。\code{match}を使う場合、取り得るコンストラクタごとに証明します。
+
+\textbf{重要：}「二回で戻る」だけだと、何もしない関数も満たしてしまいます。仕様は弱すぎてもいけません。期待する振る舞いを漏れなく命題として表す必要があります。
+\exercise{旗を付けた後の状態が\code{Marked}になる性質を別の\code{law}で定義してみましょう。}
+
+\chapter{等式、帰納法、補題と書き換え}
+\sectiongoal{法則を小さく分割し、複数の命題を組み合わせる。}
+\code{Equal.sym}は等式の向きを入れ替え、\code{Equal.trans}は等式をつなぎます。帰納的なデータに対しては、空のケースと再帰的なケースを分けて証明します。再帰の停止性が必要なのは、停止しない「証明」を受け入れると矛盾する命題まで証明できてしまうためです。
+
+\code{Sigma}・\code{Exists}などは、値の存在とその性質を一緒に表すのに使えます。\code{@unsafe}や外部実装を含む関数は、純粋な範囲と同じ保証を持つわけではありません。型が通った、サンプルが動いた、定理が証明できた、という三つの主張は常に分けてください。
+
+\begin{lstlisting}
+bend intermediate/src/04_flag_laws.bend --verdict
+\end{lstlisting}
+上の命令で証明検査の結果を確認できます。\code{?TODO}などの穴を残したものを、証明完了として採用してはいけません。
+\exercise{二つの等式を順番につなぐ場合、何を中間式として選ぶか考えてみましょう。}
+
+\chapter{盤面の不変条件}
+\sectiongoal{局所的な操作の法則から盤面全体の仕様へ進む。}
+盤面全体の仕様を考えるとき、地雷位置の集合は操作によって変化しない、公開済み集合は通常の公開操作では減らない、表示する数字は周囲8マスの地雷数に等しい、などを区別します。
+
+\[
+ \operatorname{mines}(\operatorname{reveal}(b,p))
+ = \operatorname{mines}(b),\qquad
+ \operatorname{open}(b)\subseteq
+ \operatorname{open}(\operatorname{reveal}(b,p)).
+\]
+これらは\textbf{目指す仕様}であり、この初稿で盤面全体を証明済みという意味ではありません。実装後、座標変換、隣接位置の列挙、公開操作、勝敗判定のそれぞれの補題を作る必要があります。
+
+仕様を\code{LAWS.bend}、実装を別ファイル、証明を\code{PROOF.bend}に分けると、どこが要求でどこが検証かを整理できます。最初は同じファイルで小さな法則を試し、慣れてから分離します。
+\exercise{一手目が安全であることを命題として書くとき、どんな入力と結果が必要か説明してみましょう。}
+
+\chapter{証明の範囲と信頼境界}
+\sectiongoal{保証できた性質と保証できなかった性質を正確に報告する。}
+地雷数の局所規則を証明しても、GUIが正しいマスを選ぶ保証や、保存データが必ず復元できる保証にはなりません。ファイル・ネットワーク・乱数・GPU・FFIなど外部環境を含む部分は、純粋計算の形式的証明と別の検証が必要です。
+
+依存型は入力に関する性質を型で表現する助けになりますが、「型注釈があるから必ず正しい」わけではありません。\code{law}で何を主張し、証明がどの仮定を使ったのかを確認します。断定できる範囲だけを読者へ伝えることが重要です。
+\exercise{「盤面の地雷数が一定」と「ファイルへの保存が必ず成功する」が異なる種類の性質である理由を説明してみましょう。}
+
+\part{並列実行とその他の応用}
+\chapter{CPU、GPU、Array.atomic}
+\sectiongoal{計算並列と入出力の並行を区別し、データの共有条件を理解する。}
+Bendの並列呼び出しでは、二つの独立した処理を同時に始める記法を使います。負荷が片方に偏ると待ち時間が増えます。
+\sample{06_parallel.bend}{均等な二分木での並列呼び出し}
+一方、関数呼び出しに\code{!}を付ける方法はGPU側の実行指定です。環境によってはCPUで実行されます。必ず高速化するという意味ではありません。
+
+\code{Array.atomic.add}、\code{Array.atomic.cas}などは共有されるデータの原子的更新に関わるAPIです。戻り値、対応する要素型、対象実行環境を公式\code{Base}で確認してから使います。高速化の必要がないコードに無理に原子的操作を追加しません。
+\exercise{独立した複数の盤面を並列に解析する場合、どの入力を分離する必要があるか考えてみましょう。}
+
+\chapter{C・JavaScriptと外部連携}
+\sectiongoal{生成するプログラムとホスト環境の境界を知る。}
+Bend 2はCのネイティブ実行ターゲットとJavaScriptの実行ターゲットを持ちます。GPUやスレッドの振る舞い、使用できる外部機能はターゲット間で同じとは限りません。外部のC・JavaScript実装を読み込む仕組みを使えば、Bendだけでは用意されていない操作を追加できます。
+
+ただし、外部関数が返す結果や副作用はBend内の純粋な証明だけで保証できません。\code{@unsafe}などの安全性に関する境界とともに理解します。モジュールやパッケージの整理、ライセンス、BendHub等を使った配布は、まず公式の最新ガイドで対応状況を確かめて進めます。
+
+\code{Audio.open}、\code{Audio.write}、\code{Audio.close}も独立例としてAPIの型を確認し、実際の音声出力は環境対応を確かめた場合だけ成功と記録します。
+\exercise{同じサンプルをCターゲットとJavaScriptターゲットで動かす際、何を別々に検証する必要があるか列挙してみましょう。}
+
+\part{マインスイーパー統合と発展}
+\chapter{一人で遊べるアプリにする}
+\sectiongoal{仕様、データ、画面、保存、テストを順番に統合する。}
+完成する通常版は、地雷配置、左クリックでの公開、右クリックでの旗の切替、0マスの連鎖公開、勝敗判定、経過時間、再スタートを備えます。一手目が安全である条件も明示します。
+
+\begin{enumerate}[leftmargin=*]
+\item 地雷配置と公開情報を別の型で保持する。
+\item 公開、旗、勝敗判定を純粋関数で実装し、局所法則を書く。
+\item \code{Image}へ盤面を描画し、\code{Event}から操作へ変換する。
+\item 設定・戦績を\code{File}へ保存し、復元時は妥当性を検査する。
+\item CLIの独立した期待値テストで規則を検証し、実機GUIテストを追加する。
+\end{enumerate}
+これは実装計画です。この初稿の付属コードには状態操作とGUIの最小例までがあり、通常版ゲームの統合実装は未完了です。
+\exercise{最初のクリック前の盤面と、地雷を配置した後の盤面を別の型として扱う利点を考えてみましょう。}
+
+\chapter{発展：運ゲー無しマインスイーパー}
+\sectiongoal{非公開情報を使わずに確実な手を選ぶソルバーを設計する。}
+普通のマインスイーパーには、表示された数字だけでは安全な手が決まらない局面があります。運ゲー無し版では、初手から最後まで、公開された数字と総地雷数などの情報から\textbf{論理的に安全と分かる操作}だけでクリアできる盤面を目標にします。
+
+候補となる地雷配置の集合を\(\mathcal{C}(V)\)とします。これは公開情報\(V\)と矛盾しないすべての配置です。未公開マス\(p\)が確実に安全とは、
+\[
+ \forall M\in\mathcal{C}(V),\quad p\notin M
+\]
+が成り立つことです。ソルバーには真の地雷配置を渡さず、見えている状態だけを渡します。検証用オラクルが真の配置で安全性を確認することとは区別します。
+
+実装の順序は、残り地雷数が0なら周囲の未公開マスは安全、残り地雷数が未確定マス数と同じならすべて地雷、という基本則から始めます。候補盤面を生成し、ソルバーが推測なしで勝てたものだけを採用します。試行回数には上限を設け、失敗時は事前に検証した盤面に切り替えます。
+
+\textbf{「解が一意」と「情報だけで確定手を繰り返せる」は同じではありません。} また、特定のソルバーが行き詰まったことは、人間が論理的に解けないことの証明にはなりません。ここでは「このソルバーで無推測クリア可能」を検査可能な目標とします。
+\exercise{ソルバーの入力に地雷配置を渡してはいけない理由を説明し、公開情報だけを保持する型を設計してみましょう。}
+
+\chapter{API索引と次の学習}
+\sectiongoal{使い方が分からない機能を自分で調べ、検証できるようにする。}
+標準ライブラリは機能名を列挙するだけでは使いこなせません。必要な操作について\textbf{引数・戻り値・所有権・失敗・対象ターゲット}を調べる方法を繰り返しましょう。
+
+\begin{longtable}{@{}p{32mm}p{42mm}p{65mm}@{}}
+\toprule
+分類 & 主な名前 & 確認すること\\\midrule
+\endfirsthead
+\toprule 分類 & 主な名前 & 確認すること\\\midrule\endhead
+数値 & Nat, U32, F32, Word & 変換と丸め、上限\\
+文字 & Char, String & 分割、解析、文字境界\\
+列・配列 & List, Array & 走査、複製、所有権\\
+辞書・集合 & Map, Set & 文字列キー、検索結果\\
+結果型 & Maybe, Result, Either & 失敗の情報\\
+入出力 & IO, File, Process & ハンドル、終了コード\\
+通信 & TCP, UDP, Socket & 接続と切断\\
+並行処理 & Chan, IO.fork, IO.join & 同期とタイムアウト\\
+GUI & Image, App, Window, Event & 画面・イベントの環境\\
+音声 & Audio & デバイスと書込み\\
+証明 & law, Equal, Sigma & 仮定と結論、カーネル\\
+\bottomrule
+\end{longtable}
+\noindent 公式資料：\url{https://github.com/bendlang/bend/blob/main/guide/GUIDE.md}、\url{https://github.com/bendlang/bend/blob/main/bend2/base.bend}。
+\exercise{初めて見る\code{Base}の関数を一つ選び、最小サンプルを作って型検査し、成功時と失敗時の振る舞いを確かめましょう。}
+\end{document}
