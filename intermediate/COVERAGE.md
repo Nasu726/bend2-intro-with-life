@@ -28,7 +28,7 @@
 | `IO.within`, `Poll` | 第9章 | 追加実習 | タイムアウト |
 | TCP/UDP/Socket/Listener | 第10章 | 追加実習 | ループバックテスト |
 | `Image`, `Pix`, `Qua` | 第11章 | `07_gui_hello.bend` | 描画関数テスト |
-| `App`, `Event`, `Window` | 第12–14章 | `07_gui_hello.bend` | GUI実機・入力イベント |
+| `App`, `Event`, `Window` | 第12–14章 | `07_gui_hello.bend`、`23_cell_hit_test.bend` | GUIの基本型検査・純粋な座標変換。実機入力・Windowは今後 |
 | `Audio` | 第14・第20章 | 追加実習 | 出力デバイス確認 |
 | `law`, `Equal`, 帰納法 | 第15–18章・第22章 | `04_flag_laws.bend`、`14_local_inference.bend` | 局所法則のLean検査。帰納法・補題の追加例は今後 |
 | `@unsafe`, 外部信頼境界 | 第18・20章 | 追加実習 | 証明検査の境界 |
