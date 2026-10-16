@@ -294,6 +294,10 @@ bend guide
 \sectiongoal{「値がない」と「操作を受け付けない」を区別し、型を選べるようになる。}
 
 \section{0を返せば十分だろうか}
+\begin{pointbox}
+「値が見つからない」という情報まで消して0にしてしまうと、本当に0という値を返す場合と区別できません。\code{Some{0}}と\code{None{}}を区別する\code{Maybe}なら、この二つを正しく扱えます。
+\end{pointbox}
+
 座標を調べる関数が0を返したとします。これは「周囲の地雷数が0」なのか、「その座標が見つからなかった」のか、関数の外からは判断できません。値そのものと、値を得られなかったという状況を別々に表す必要があります。
 
 前巻で学んだ\code{Maybe}は、\code{Some{value}}と\code{None{}}を区別します。存在しなかった理由までは必要ない場合に便利です。例えば数値として読めない文字列を\code{U32.read}へ渡すと\code{None{}}になり得ます。既出の\code{15_string_parse.bend}をもう一度見て、成功と失敗でどの分岐を通るか確認しましょう。
@@ -301,6 +305,17 @@ bend guide
 \section{失敗の理由を知りたいときはResult}
 マインスイーパーでは「すでに開いたマスには旗を付けられない」という操作を考えます。失敗したことだけでなく、なぜ操作できないかを伝えたいとき、\code{Result}を使います。
 \sample{22_result_and_game.bend}{旗を付ける操作の成功と失敗}
+\begin{lstlisting}[caption={結果をDoneまたはFailとして返す}]
+def flag(s: Cell) -> Result<&2, &2, String, Cell>:
+  match s:
+    case Hidden{}:
+      Done{Flag{}}
+    case Flag{}:
+      Done{Flag{}}
+    case Open{}:
+      Fail{"an open square cannot be flagged"}
+\end{lstlisting}
+
 \code{flag}は、閉じたマスなら\code{Done{Flag{}}}を、開いたマスなら\code{Fail{...}}を返します。これは\textbf{純粋関数で判定したゲームの規則}です。ファイルへの書き込み失敗のようなIOエラーとは分けて考えます。コードの\code{success}は成功なら1、失敗なら0に変えているため、\code{main}は\code{1}を返します。
 
 \code{Result}を読む際は、\textbf{成功の値の型}と\textbf{失敗の理由の型}を別々に確かめましょう。この例では成功の値は\code{Cell}で、失敗の理由は\code{String}です。\code{Result}の宣言には数量引数も含まれているため、型を記すときは\code{Result<&2, &2, String, Cell>}のようになります。こうした追加の型引数を適当に省略すると、型検査で失敗することがあります。
@@ -314,6 +329,14 @@ bend guide
 「設定ファイルに数値がある場合」と「説明文をそのまま扱う場合」の二種類を一つの値として持ちたいとします。二つが\textbf{同時にある}わけではないので、普通の組とは違います。\code{Either}は左側の\code{Inl}または右側の\code{Inr}で、異なる二種類の値を受け取れる型です。
 
 \sample{25_either_case.bend}{Eitherの二種類を場合分けする}
+\begin{lstlisting}[caption={Eitherの左右の値の使い分け}]
+match choice:
+  case Inl{number}:
+    number
+  case Inr{text}:
+    U32.from_nat(String.length(text))
+\end{lstlisting}
+
 この例では左側に\code{U32}、右側に\code{String}を入れられます。\code{meaning}は\code{Inl}なら数値をそのまま返し、\code{Inr}なら文字列の長さを\code{U32}に変換して返します。\code{main}は\code{Inl{7}}を渡すため、結果は7です。
 
 ここで\code{Result}との違いを整理しましょう。\code{Either}の左右には、成功・失敗という意味は最初から付いていません。\code{Result}はその区別を明確にしたいときに選びます。型を選ぶ際は、\textbf{値が二つ必要なのか、二者択一なのか、失敗の理由を表したいのか}を考えます。
@@ -321,6 +344,13 @@ bend guide
 \exercise{\code{main}から右側の\code{Inr}に短い文字列を渡し、返り値を予想してから実行しましょう。}
 
 \section{Kindと数量指定は何を制限しているのか}
+一見難しい型を暗記するより先に、\code{bend base Result}などで公開された型の引数を確認しましょう。たとえば\code{Result}の数量は失敗側と成功側でそれぞれ指定されます。型の名前だけから勝手に省略しないことが大切です。
+\begin{lstlisting}[language={},caption={型と数量指定を調べる}]
+bend base Result
+bend base Either
+bend base List.foldl
+\end{lstlisting}
+
 ここまでの\code{Map.get}や\code{List.filter}では、\code{&1}・\code{&2}・\code{Type}・\code{Data}などを見ました。これらは装飾ではありません。ある値を複数回使ってよいか、使った後に戻す必要があるかに関係します。\code{Kind}はそうした型の分類を表し、\code{Quant}は数量を指定する仕組みです。
 
 最初に覚えるべき手順は三つです。関数の引数の型を読むこと、返り値で所有権が戻るかを見ること、複製が必要なら適切な数量指定を使うことです。すべての種類の数量を暗記するより、\code{Set.has}と\code{File.read}のような実例で意味を確認すると混乱しません。
@@ -337,6 +367,14 @@ bend guide
 \code{IO.print("hello")}は\code{IO(Unit)}です。文章を表示する仕事を表し、特に返す値がないことを\code{Unit}で表現しています。対して\code{IO.args()}は\code{IO(List<String>)}です。起動時の引数をリストとして受け取ります。\textbf{IOの括弧の中身は、作用の結果として得る値の型}です。
 
 \section{どうしてdoの中で順番を書くのか}
+\begin{lstlisting}[caption={IOで受け取ったListをそのまま集計する}]
+def main() -> IO(Unit):
+  do IO<Unit>:
+    xs: List<String> <- IO.args()
+    IO.print(Nat.show(List.length(&1, String, xs)))
+\end{lstlisting}
+第8章の\code{08_args.bend}がこのコードです。\code{IO.args}は起動対象のパスも含むため、利用者が追加した引数の個数とリスト全体の長さを区別しましょう。ここでは値を得る処理はIO、長さを数える処理は純粋関数です。
+
 マインスイーパーの設定を保存するなら、まずファイルを開き、次に書き込み、最後に閉じます。順番を入れ替えると意味が変わる処理です。\code{do IO<Unit>:}は、こうした順序を読みやすく書くためにあります。
 
 すでに使った\code{08_args.bend}を見直すと、\code{<-}の左側で得た値を、次の行へ渡しています。これが「外部の処理が返した結果を受け取り、次の処理を続ける」という流れです。\code{IO.pure}は、外へ作用せず値を\code{IO}の結果として返すための操作で、後の\code{IO.fork}の実例にも登場します。
@@ -352,6 +390,8 @@ bend guide
 \exercise{「マスを開いた後に地雷数を調べる」「戦績をファイルへ保存する」「マウスクリックを待つ」の三つを、純粋な部分とIOが必要な部分に分けてみましょう。}
 
 \section{IOの中で取り出し、純粋関数で加工する}
+\textbf{ここまでの例で見たとおり}、IOで取得した値でも、その後の加工まですべてIOにする必要はありません。同じ値に対する計算は普通の関数で書き、環境依存の取得や表示をIOに任せましょう。
+
 入門編で学んだ\code{do}は、副作用のある操作を順番に書くための構文です。一方、取り出した値の長さを数える操作までIOにする必要はありません。\code{08_args.bend}では\code{IO.args}が起動時の引数を取得し、\code{List.length}がその長さを計算して、\code{IO.print}が結果を表示します。効果のある取得と、純粋な加工が並んでいることを確認してください。
 
 \section{IOとResultは異なる役割を持つ}
@@ -377,6 +417,10 @@ bend guide
 
 \section{ファイルを開き、書き込んで閉じる}
 \sample{12_file_write.bend}{ファイルへ盤面の設定を書き込む}
+\begin{lstlisting}[language={},caption={書き込み用のサンプルを実行する}]
+bend examples/12_file_write.bend
+\end{lstlisting}
+
 この例を実行すると、作業フォルダーに\code{sample_board.txt}が作られます。まず\code{File.open}で書き込み用に開き、\code{File.write}で二行の文字列を書きます。最後に\code{File.close}で閉じます。
 
 ここで\term{ファイルハンドル（file handle）}に注目しましょう。ハンドルは「いま開いているファイルを操作するための値」です。Bend 2では、書き込みへ渡したハンドルを、その後も同じ変数から勝手に使い続けることはできません。\code{File.write}は\textbf{継続して使うハンドルと書き込み結果}を組で返します。成功時も失敗時も、返されたハンドルを受け取り、最後に閉じます。
@@ -393,6 +437,10 @@ bend guide
 \section{読み戻せたら保存を確認できる}
 ファイルに文字列を書いたとしても、保存した内容を本当に使えるかはまだ分かりません。今度は読み込みを試します。
 \sample{13_file_read.bend}{保存した文字列を読み戻す}
+\begin{lstlisting}[language={},caption={続けて読み戻しを試す}]
+bend examples/13_file_read.bend
+\end{lstlisting}
+
 まず\code{12_file_write.bend}を実行し、次に\code{13_file_read.bend}を実行してみましょう。読み込んだ文字列が保存した二行と同じであることを確認します。このように\textbf{書き込みから読み込みまで一組として確かめること}をラウンドトリップテストと呼びます。
 
 \code{File.read(file,4096)}の数値は、一度に読み取る最大量です。大きなファイルを読んだときに、一度の呼び出しで必ず全体が戻ると思ってはいけません。終端まで繰り返す必要がある場合もあります。また、\code{File.read_bytes}と\code{File.write_bytes}は、文字列ではなくバイト列を扱うAPIです。
@@ -408,6 +456,14 @@ bend guide
 \section{環境変数は常に存在するとは限らない}
 環境変数はOSや起動方法によって変化します。\code{IO.get_env("PATH")}はパス検索の設定を読む例ですが、必ず値があると仮定してはいけません。
 \sample{19_environment.bend}{環境変数を読み取り長さを表示する}
+\begin{lstlisting}[caption={環境変数がない場合にも備える}]
+match value:
+  case Done{s}:
+    String.length(s)
+  case Fail{problem}:
+    0n
+\end{lstlisting}
+
 \code{IO.get_env}の結果は\code{Result}です。\code{Done}の場合は文字列を受け取り、\code{Fail}の場合は例のように既定動作へ分岐できます。エラー内容が必要なら、\code{Fail}の値を捨てずに利用します。環境変数の中身をそのままログに出すと、パスワードなどの機密情報を漏らす可能性があります。この例では値そのものではなく長さだけを出力します。
 
 \code{IO.now}は現在時刻、\code{IO.sleep}は時間待ち、\code{IO.random_u32}は乱数を扱います。乱数を使ったテストは、実際の乱数に依存させず、固定した地雷配置を入力にする方法と分けて実施します。
@@ -415,6 +471,11 @@ bend guide
 \section{乱数の取得と失敗の伝播}
 \code{IO.random_u32()}の型は\code{IO(Result<..., U32>)}であり、単に\code{U32}が返るわけではありません。外部機能が失敗する可能性を明示するためです。\code{IO.try}を使うと成功した\code{U32}を取り出せますが、失敗したときは後続の\code{IO.print}へは進みません。
 \sample{11_random_io.bend}{乱数を取得して表示する}
+\begin{lstlisting}[caption={成功した乱数だけを取り出す}]
+random_value: U32 <- IO.try(U32, IO.random_u32())
+IO.print(U32.show(random_value))
+\end{lstlisting}
+
 この例は毎回値が変化するため、数値そのものを固定して比較するテストには不向きです。ソルバーの正しさは固定した盤面でテストし、ランダム盤面の生成はその後に確認しましょう。
 
 \section{外部プログラムを起動する}
@@ -433,6 +494,12 @@ bend guide
 
 Bend 2の\code{IO.fork}はIO計算を開始し、その結果を受け取るための\code{Chan}を返します。\code{IO.join}はそのチャネルから結果を待ちます。まずは複雑な並行処理ではなく、確実に7が返ってくる小さな仕事で型を確認します。
 \sample{21_io_fork.bend}{IO計算を開始し結果を受け取る}
+\begin{lstlisting}[caption={結果を受け取るチャネルを使う}]
+chan: Chan(U32) <- IO.fork(U32, IO.pure(U32, 7))
+value: U32 <- IO.join(U32, chan)
+IO.print(U32.show(value))
+\end{lstlisting}
+
 
 実行結果は7です。\code{IO.pure(U32,7)}は外部に作用せず7を返すIO計算です。ここで分かるのは、\textbf{計算を開始して結果を受け取れること}です。複数のCPUコアを使ったとか、処理時間が短くなったとまでは言えません。
 
@@ -444,6 +511,10 @@ Bend 2の\code{IO.fork}はIO計算を開始し、その結果を受け取るた�
 \section{送る側と受け取る側を一つの例で確認する}
 \code{IO.fork}では結果を受け取るチャネルが内部的に用意されますが、チャネル自体を直接使うこともできます。
 \sample{28_chan_roundtrip.bend}{チャネルへ9を送り、受け取り、閉じる}
+\begin{lstlisting}[language={},caption={送信してから受信を試す}]
+bend examples/28_chan_roundtrip.bend
+\end{lstlisting}
+
 \code{Chan.new(U32,1)}の第二引数はバッファの容量です。この例は容量1のチャネルへ9を送ります。受信結果は\code{Maybe}なので、\code{Some}の場合だけ値を取り出します。受信後に\code{Chan.close}を呼びます。
 
 この例では\code{+chan}を使って、送信、受信、終了処理で同じチャネルを参照しています。これは\code{Chan}の特性を使った例です。他のアフィンな値が同様に共有できるとは限りません。また、バッファがない、送受信の相手が現れないといった場合には待機することがあるため、実際のプログラムでは\textbf{誰が送るか、誰が受け取るか、いつ閉じるか}を先に設計します。
@@ -474,6 +545,14 @@ Bend 2の\code{IO.fork}はIO計算を開始し、その結果を受け取るた�
 Bend 2の\code{Base}には\code{TCP}と\code{UDP}のAPIがあります。ネットワーク通信をマインスイーパーへ無理に組み込む必要はありません。この章では、通信する相手がいるときにどの操作を選び、どんな失敗が起こるかを学びます。
 
 \section{TCPは接続を作ってから使う}
+\begin{center}
+\begin{tikzpicture}[node distance=13mm]
+\node[draw=blue!50,fill=blue!4,rounded corners,minimum width=34mm,minimum height=12mm] (a) {\sffamily 接続：connect};
+\node[draw=warm!50,fill=warm!4,rounded corners,minimum width=34mm,minimum height=12mm,right=of a] (b) {\sffamily 待機：listen};
+\draw[-{Latex[length=2mm]},thick,teal] (a) -- node[above,font=\small]{TCP} (b);
+\end{tikzpicture}
+\end{center}
+
 TCPでは、受け取る側が\code{TCP.listen}で待ち受け、\code{TCP.accept}で接続を受け取ります。接続する側は\code{TCP.connect}を使います。接続して得た\code{Socket}を\code{TCP.send}や\code{TCP.recv}へ渡してデータを送受信します。
 
 \code{TCP.listen}や\code{TCP.connect}は\code{IO(Result<...>)}を返します。利用するアドレスやポートが正しくても、相手が起動していなかったり、アクセスが拒否されたりすることがあります。この場合はハンドルが得られません。接続できた後も、送信と受信には失敗の可能性があり、\code{Socket}を次の操作へ渡します。
@@ -491,7 +570,15 @@ UDPでは、接続を確立してから使う方法ではなく、送信先を�
 相手が用意されていない環境でも、\textbf{接続の失敗を受け取る}練習はできます。次のコードはローカルのアドレスへ接続を試み、成功した場合はソケットを閉じ、失敗した場合はその旨を表示します。
 
 \sample{27_tcp_connect.bend}{TCP接続の成功と失敗を区別する}
-\code{TCP.connect}が返す\code{Result}を\code{match}で処理します。\code{Done}には利用できる\code{Socket}が、\code{Fail}にはエラー情報が入ります。接続に成功した分岐では\code{Socket.close}を呼びます。これは\textbf{失敗する接続の実例}であり、送受信まで行う通信プログラムではありません。接続できる相手が別に起動している場合、実行結果は異なります。
+\begin{lstlisting}[caption={成功なら閉じ、失敗なら理由を表示する}]
+match r:
+  case Done{socket}:
+    Socket.close(socket)
+  case Fail{reason}:
+    IO.print("No TCP listener at this address")
+\end{lstlisting}
+
+\code{TCP.connect}が返す\code{Result}を\code{match}で処理します。\code{Done}には利用できる\code{Socket}が、\code{Fail}にはエラー情報が入ります。接続に成功した分岐では\code{Socket.close}を呼びます。これは\textbf{失敗する接続の実例}であり、送受信まで行う通信プログラムではありません。接続できる相手が別に起動している場合、実行結果は異なります。 \textbf{接続が必ず失敗することを保証する例ではありません。} また送受信までの実装ではなく、接続の成否を確認する最小例です。
 
 \section{安全に試すには}
 最初の通信実験では外部のサービスへ接続せず、同じコンピュータの\term{ループバック（loopback）}を使いましょう。受信側を開始し、送信側を起動し、届いた内容を表示する順番です。ただし、この節ではAPIの基本的な意味を説明する段階です。TCP・UDPの送受信を一通り動かす独立実習は、続く改訂で追加します。
