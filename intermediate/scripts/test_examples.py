@@ -30,6 +30,8 @@ EXPECTED = {
     "25_either_case.bend": "7",
     "28_chan_roundtrip.bend": "9",
     "30_array_clone.bend": "22",
+    "31_image_quadrants.bend": "16711680",
+    "32_mouse_events.bend": "10",
 }
 
 def run(*args):

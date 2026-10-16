@@ -43,6 +43,7 @@ INTERMEDIATE_EXAMPLES = (
     "26_audio_open.bend", "27_tcp_connect.bend",
     "28_chan_roundtrip.bend",
     "29_io_within.bend", "30_array_clone.bend",
+    "31_image_quadrants.bend", "32_mouse_events.bend",
 )
 
 def readme(track: str) -> str:
