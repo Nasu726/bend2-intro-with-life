@@ -12,17 +12,14 @@ type LocalRule is Data:
   Unknown{}
   Inconsistent{}
 
-# In Bend, pattern matches scrutinize arguments/fields, not arbitrary calls.
-# Thread computed booleans through helper function parameters.
-def infer(remaining: U32, unknown: U32) -> LocalRule:
-  infer_limit(remaining, unknown, U32.is_lt(unknown, remaining))
-
-def infer_limit(remaining: U32, unknown: U32, over: Bool) -> LocalRule:
-  match over:
+# Definition order matters: each helper is available to those below it.
+# Computed conditions are passed as function parameters to pattern matches.
+def infer_equal(remaining: U32, unknown: U32, equal: Bool) -> LocalRule:
+  match equal:
     case True{}:
-      Inconsistent{}
+      AllMines{}
     case False{}:
-      infer_zero(remaining, unknown, U32.is_eq(remaining, 0))
+      Unknown{}
 
 def infer_zero(remaining: U32, unknown: U32, empty: Bool) -> LocalRule:
   match empty:
@@ -31,12 +28,15 @@ def infer_zero(remaining: U32, unknown: U32, empty: Bool) -> LocalRule:
     case False{}:
       infer_equal(remaining, unknown, U32.is_eq(remaining, unknown))
 
-def infer_equal(remaining: U32, unknown: U32, equal: Bool) -> LocalRule:
-  match equal:
+def infer_limit(remaining: U32, unknown: U32, over: Bool) -> LocalRule:
+  match over:
     case True{}:
-      AllMines{}
+      Inconsistent{}
     case False{}:
-      Unknown{}
+      infer_zero(remaining, unknown, U32.is_eq(remaining, 0))
+
+def infer(remaining: U32, unknown: U32) -> LocalRule:
+  infer_limit(remaining, unknown, U32.is_lt(unknown, remaining))
 
 # A small observable numeric output for automated testing.
 def tag(r: LocalRule) -> U32:
