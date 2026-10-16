@@ -21,7 +21,7 @@
 | `Pair`, `Sigma`, `Exists`, `Or` | 第5・第16章 | 追加実習 | 依存する値・存在証明 |
 | `Kind`, `Quant`, 消去引数 | 第5・第16章 | 追加実習 | 型エラーとの対比 |
 | `IO`, `IO.try`, `IO.die` | 第6章 | `08_args.bend` | 失敗時の終了コード |
-| `File`（文字列・バイト） | 第7章 | 追加実習 | open/read/write/closeの全経路 |
+| `File`（文字列・バイト） | 第7章 | `12_file_write.bend` | 文字の保存とハンドル閉鎖を実行検証済、read/bytesは今後 |
 | 引数・環境変数・乱数・時刻 | 第8章 | `08_args.bend` | get_env/random/nowの実行例 |
 | `Process.run` | 第8章 | 追加実習 | 出力、終了コード、タイムアウト |
 | `IO.fork/join`, `Chan` | 第9章 | 追加実習 | 通信・終了・失敗 |
