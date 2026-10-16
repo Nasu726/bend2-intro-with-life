@@ -214,17 +214,33 @@ bend base
 \code{bend version}の値と表示されたパスを\file{VERSION\_LOG.md}へ記録します。インストール用シェルを内容確認せず実行しません。\code{bend update}がある環境では勝手に更新した後の資料と旧コードを混ぜず、バージョンを記録してから学習します。
 
 \section{Bendのプログラムを実行する}
+まず、画面に短い文章を表示するプログラムを動かします。次の例を見てください。分からない記号があっても、今はすべて暗記する必要はありません。
 \readcode{01_hello.bend}{はじめてのBend 2（01\_hello.bend）}
 
-\code{import Base}は標準ライブラリの参照であり、\code{def main() -> IO(Unit):}は端末表示という副作用を伴う入口を宣言します。\code{do IO<Unit>:}で順番に効果を行い、\code{IO.print}を実行します。「純粋な値を返す関数」と「外界へ働きかける関数」は区別されます。
+このコードが行うのは、\textbf{画面に「Hello, Bend 2」と表示すること}だけです。上から一行ずつ見ていきましょう。
+\begin{enumerate}
+\item \code{import Base}は、Bendに用意されている基本的な機能を使えるようにします。ここでは文字を表示するために使います。
+\item \code{def main() -> IO(Unit):}は、プログラムの開始点となる\code{main}という名前の処理を定義します。\code{def}は処理を定義するための言葉です。\code{->}以降は処理の結果に関する型の指定ですが、詳しい読み方は後の章で学びます。
+\item \code{do IO<Unit>:}は、画面への表示などを順に実行する部分の始まりです。前の行より右に字下げされた行が、この部分に含まれます。
+\item \code{IO.print("Hello, Bend 2")}が、括弧の中の文章を画面に表示します。ダブルクォーテーション\code{"}で囲んだ部分が表示する文字列です。
+\end{enumerate}
 
-\begin{lstlisting}[language={},caption={確認からネイティブ生成まで}]
+\term{IO（入出力）}とは、画面への表示やキーボードからの入力など、プログラムの外とのやり取りです。\code{Unit}は「特に返す値がない」ことを表す型です。どちらも後の章で詳しく学びます。
+
+ターミナルで、このリポジトリのフォルダーを開き、次の一行を入力してください。
+\begin{lstlisting}[language={},caption={最初のプログラムを実行する}]
 bend src/01_hello.bend
-bend src/01_hello.bend --check-only
-bend src/01_hello.bend -o build/hello
-./build/hello
 \end{lstlisting}
-コンパイルして実行する場合は、対応するClangなどの開発ツールが必要です。まず\code{bend}コマンドで実行結果を確認しましょう。
+\code{bend}はプログラムを動かすコマンド、\code{src/01\_hello.bend}は実行するファイルの場所です。成功すると、次のように表示されます。
+\begin{lstlisting}[language={},caption={画面に表示される内容}]
+Hello, Bend 2
+\end{lstlisting}
+
+ここまでできたら、\file{src/01\_hello.bend}の\code{"Hello, Bend 2"}を好きな文章に変えて保存し、もう一度同じコマンドを実行してみましょう。表示が変われば成功です。
+
+\begin{pointbox}
+実行せずにプログラムの書き方を確認したいときは、\code{bend src/01\_hello.bend --check-only}を使えます。ネイティブ実行ファイルを作る方法もありますが、最初は上の\code{bend}コマンドだけで十分です。
+\end{pointbox}
 
 \section{型エラーの表示を確認する}
 \code{IO.print}の文字列を数値に変えてみましょう。次に型注釈を消してみます。さらに返り値の型を\code{U32}にして表示命令を残し、どのエラーが出るか観察します。エラーメッセージのうち\term{expected}と\term{observed}がどの式を指しているかを説明します。
