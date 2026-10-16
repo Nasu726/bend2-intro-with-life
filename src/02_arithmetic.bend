@@ -1,8 +1,8 @@
 import Base
 
-# A cell index in an 8x8 row-major board.
+# General arithmetic example independent of any application.
 def index(+x: U32, y: U32) -> U32:
-  (y * 8 + x : U32)
+  (x * 5 + y : U32)
 
 def main() -> U32:
   index(2, 3)
