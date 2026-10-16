@@ -19,15 +19,21 @@ def mine_mask(s: State) -> U32:
 
 # Array.get wraps invalid indices, so the UI/game-controller must validate
 # index <16 before using these low-level functions.
+def square_from_read(read: Array<Game.Square> & Game.Square) -> Game.Square:
+  (cells, square) = read
+  square
+
 def visible_at(s: State, index: U32) -> Game.Square:
   match s:
     case State{mines, cells}:
-      (cells, square) = Array.get(Game.Square, cells, index)
-      square
+      square_from_read(Array.get(Game.Square, cells, index))
+
+def toggle_from_read(index: U32, read: Array<Game.Square> & Game.Square) -> Array<Game.Square>:
+  (cells, square) = read
+  Array.set(Game.Square, cells, index, Game.toggle_flag(square))
 
 def toggle_cells(cells: Array<Game.Square>, index: U32) -> Array<Game.Square>:
-  (cells, square) = Array.get(Game.Square, cells, index)
-  Array.set(Game.Square, cells, index, Game.toggle_flag(square))
+  toggle_from_read(index, Array.get(Game.Square, cells, index))
 
 def toggle_at(s: State, index: U32) -> State:
   match s:
@@ -35,9 +41,12 @@ def toggle_at(s: State, index: U32) -> State:
       State{mines, toggle_cells(cells, index)}
 
 # PRECONDITION: caller has already checked mine_mask and in-bounds index.
-def reveal_cells(cells: Array<Game.Square>, index: U32, clue: U32) -> Array<Game.Square>:
-  (cells, square) = Array.get(Game.Square, cells, index)
+def reveal_from_read(index: U32, clue: U32, read: Array<Game.Square> & Game.Square) -> Array<Game.Square>:
+  (cells, square) = read
   Array.set(Game.Square, cells, index, Game.reveal_safe(square, clue))
+
+def reveal_cells(cells: Array<Game.Square>, index: U32, clue: U32) -> Array<Game.Square>:
+  reveal_from_read(index, clue, Array.get(Game.Square, cells, index))
 
 def reveal_at(s: State, index: U32, clue: U32) -> State:
   match s:
