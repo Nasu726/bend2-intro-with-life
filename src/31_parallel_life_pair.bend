@@ -1,5 +1,5 @@
 import Base
-import ./07_life_core.bend as Life
+import ./life_core.bend as Life
 
 # Two independent simulations may run at the same time.
 # This is batch parallelism; each Life.step remains sequential.

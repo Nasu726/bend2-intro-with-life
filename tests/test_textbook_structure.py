@@ -56,6 +56,10 @@ class TextbookStructureTests(unittest.TestCase):
         for code in ("09_parallel_tree.bend", "10_gpu_tree.bend", "11_rule_proofs.bend", "24_proof_induction.bend", "31_parallel_life_pair.bend", "32_gpu_life_call.bend"):
             self.assertTrue((ROOT / "src" / code).exists())
 
+    def test_importable_life_core_matches_chapter_sample(self):
+        self.assertEqual((ROOT / "src" / "life_core.bend").read_bytes(),
+                         (ROOT / "src" / "07_life_core.bend").read_bytes())
+
     def test_example_paths_exist(self):
         for basename in re.findall(r"\\readcode\{([^}]+)\}", self.source):
             with self.subTest(basename=basename):
