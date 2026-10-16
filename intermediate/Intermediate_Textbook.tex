@@ -186,35 +186,140 @@ VI & マインスイーパーへの統合と運ゲー無し盤面の発展課題
 \part{標準ライブラリとデータ構造}
 \partchaptertoc
 \chapter{Baseを調べる}
-\sectiongoal{APIの宣言、型、数量指定、結果を返す形を読み取る。}
-入門編では\code{import Base}を使いました。ここでは、\code{bend base}と\code{bend base Array}を使い、提供されている関数を自分で調べます。最新情報は\url{https://github.com/bendlang/bend/blob/main/bend2/base.bend}も参照してください。
+\sectiongoal{必要な標準機能を自分で見つけ、入力・返り値・所有権を読んで使えるようになる。}
 
-例えば\code{Set.has}の戻り値は単なる\code{Bool}ではなく\code{Set() & Bool}です。「所属を調べる際に集合が消費され、再利用するには返された集合を受け取る」という設計を、この型だけから読み取れます。\code{Map.get}も元の辞書と値を組で返します。型名、消費する引数、戻ってくる所有物を最初に確認する習慣が重要です。
+\section{同じ処理を自分で書く前に}
+入門編では\code{import Base}を使い、\code{List}や\code{Array}の基本を学びました。中級編では「使いたい処理があるとき、どこから調べればよいか」から始めましょう。
 
-\begin{lstlisting}
+例えば、マインスイーパーで「(2,3)に旗があるか」を調べたいとします。旗を置いた場所を全部並べ、一つずつ比較する関数を自作することもできます。しかしBend 2には、文字列をキーにする\code{Set}が用意されています。\code{Set.has}で存在を調べれば、やりたいことをそのままコードにできます。
+
+\begin{lstlisting}[caption={集合に座標を追加し、存在を調べる}]
+s0 = Set.new()
+s1 = Set.add(s0, "2,3")
+result = Set.has(s1, "2,3")
+\end{lstlisting}
+
+ここで気になるのは、\code{result}の型です。単に\code{Bool}でしょうか。実際には\code{Set() \& Bool}という\textbf{組}です。所属判定の後も集合を使えるように、集合も一緒に返します。第4章で実行例を見ますが、まずは「戻り値には何が入っているか」が重要です。
+
+\section{bend baseで関数の定義を探す}
+\code{bend base}は、Bend 2が提供するBaseライブラリを調べるためのコマンドです。使い方を知りたい型や関数の名前を指定できます。
+
+\begin{lstlisting}[language={},caption={標準ライブラリを手元で調べる}]
 bend base
 bend base Set
-bend base Map
+bend base Set.has
+bend base Array.get
 bend guide
 \end{lstlisting}
-すべての定義が通常のユーザー向けAPIとは限りません。\code{.go}や\code{.fin}など実装上のヘルパーも混在しています。最初は外側の公開操作を学び、実装を読む必要が生じたときに内部関数へ進みます。
-\exercise{\code{Array.get}、\code{Set.has}、\code{File.open}を調べ、各関数について「入力」「結果」「失敗の有無」を記録してみましょう。}
+
+\code{bend base Set.has}を調べると、返り値に集合と真偽値が並んでいることが分かります。次に\code{Array.get}を見てみましょう。こちらも「配列と取得した値」を返します。両方とも、\textbf{値を読み出した後に元の構造をどう扱うか}という共通点があります。
+
+関数を探すときは、次の順序で読むと迷いにくくなります。
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{関数名}：目的の操作と合っていますか。
+\item \textbf{引数}：どの型を、いくつ受け取りますか。数量指定はありますか。
+\item \textbf{返り値}：実際に欲しい値だけですか。元の構造も返しますか。
+\item \textbf{失敗の表現}：\code{Maybe}や\code{Result}、あるいは既定値がありますか。
+\item \textbf{実行環境}：IO、GUI、GPUなど、特別な環境が必要ですか。
+\end{enumerate}
+
+最初からBaseの関数をすべて暗記する必要はありません。この五つを自分で調べられることが、中級編の出発点です。
+
+\section{返された構造を受け取る理由}
+アフィン性のある値を使う場合、「読み取るだけ」の操作でも、その後の利用に注意が必要です。例えば\code{Set.has}の返り値は、次のように二つの変数へ分けられます。
+
+\begin{lstlisting}[caption={調べた後にも集合を使う場合}]
+(again, exists) = Set.has(s1, "2,3")
+s2 = Set.add(again, "1,1")
+\end{lstlisting}
+
+\code{exists}は所属判定の結果、\code{again}は後続の操作へ渡す集合です。元の\code{s1}を勝手に再利用せず、返った値を使うことが大切です。
+
+ただし、どの関数も同じ形で返るわけではありません。数値の\code{U32.is_lt}は\code{Bool}を返し、\code{String.split}は文字列のリストを返します。名前だけから想像せず、必要な型を確かめましょう。
+
+\section{Baseの内部関数に迷い込んだら}
+Baseのソースには、実装を小さな処理へ分割するための\code{.go}や\code{.fin}といった補助関数もあります。一般的な使い方を学ぶ段階では、まず\code{Set.has}や\code{String.split}など\textbf{公開された外側の操作}を試してください。内部の再帰や分岐は、実装方法を詳しく学びたいときに読むとよいでしょう。
+
+最新の関数宣言は\href{https://github.com/bendlang/bend/blob/main/bend2/base.bend}{公式Base}、言語の基本は\href{https://github.com/bendlang/bend/blob/main/guide/GUIDE.md}{公式GUIDE}で確認できます。本文のサンプルは検証したBend環境を基準としているため、実行して型が一致しない場合は現在使っているバージョンも確認しましょう。
+
+\exercise{\code{bend base Set.has}と\code{bend base Map.get}を実行し、返り値の構成を比較してみましょう。次に\code{Array.get}について「どの値が返るか」「配列をその後も使うにはどうするか」を一文ずつ書いてみましょう。}
 
 \chapter{数値、文字、比較を正しく選ぶ}
-\sectiongoal{整数と浮動小数点、文字列、変換時の失敗を整理する。}
-\code{Nat}は非負の自然数、\code{U32}は固定幅の非負整数、\code{F32}は近似的な浮動小数点数です。サイズの上限、演算結果、オーバーフロー、丸めが同じではありません。型が違う数をそのまま加算できるとは限らず、\code{U32.to_nat}など明示的な変換を使います。
+\sectiongoal{目的に合う数値型を選び、文字列から安全に値を取り出せるようになる。}
 
-\code{String}には\code{split}、\code{join}、\code{trim}、\code{starts_with}、\code{to_upper}などがあり、\code{Char}には文字に関する操作があります。単純な文字列の切り分けと、符号化や文字境界の意味を伴う操作は区別します。文字列を整数として読む\code{U32.read}は失敗し得るため、返り値の\code{Maybe}を確認します。
+\section{4×4の盤面サイズは何型で表す？}
+マインスイーパーの幅が4、高さが4の盤面を考えます。「4」という同じ値でも、Bend 2には\code{Nat}、\code{U32}、\code{F32}などの型があります。どれを使っても意味が同じ、というわけではありません。
 
-\section{文字列の前処理と安全な変換}
-ユーザーが入力した文字列には、前後に空白が付いていることがあります。最初に\code{String.trim}で前後の空白を取り除き、次に\code{U32.read}で非負整数に変換する例を動かしましょう。
-\sample{15_string_parse.bend}{空白を除去して文字列を数値に変換する}
-\code{U32.read}は\code{Maybe}型を返します。成功は\code{Some}、失敗は\code{None}です。このサンプルでは挙動を確認しやすいよう、失敗時に0を返しますが、\textbf{実際のアプリでは「失敗した0」と「入力された0」を混同しない設計}にしましょう。変換結果を\code{Maybe}のまま呼び出し元へ渡す方が明確です。
+\begin{center}
+\begin{tabularx}{\linewidth}{@{}L{20mm}X L{38mm}@{}}
+\toprule
+型 & 特徴 & 使う場面\\\midrule
+\code{Nat} & 0から始まる自然数。再帰的な構造 & 個数、構造に沿った再帰\\
+\code{U32} & 32ビットの符号なし整数 & 添字、ビットマスク、座標\\
+\code{F32} & 近似的な浮動小数点数 & 割合、近似値の計算\\
+\bottomrule
+\end{tabularx}
+\end{center}
 
-\code{String.split}は区切り文字を\code{Char}一文字で受け取り、文字列のリストを返します。\code{String.join}はその逆方向の処理です。\code{split}と\code{join}の名前だけを覚えるのではなく、\textbf{区切り文字の型と、空入力のときの結果}をAPIと実行例で確認してください。保存ファイルの1行を\code{String.split}で分解する場合も、項目数と数値変換の失敗を調べる必要があります。
+盤面の添字や地雷位置のビットマスクには\code{U32}が便利です。一方、リストの長さなどを返す関数には\code{Nat}があります。型が異なるなら、必要に応じて明示的に変換します。\code{F32}は丸めのある近似値を扱うため、盤面の正確な番号には適しません。
 
-\code{Cmp}は大小の比較結果を表し、\code{Bool}は真偽を表します。「大小の三種類」と「条件式の二種類」を使い分けると、ソートや検索のAPIを読みやすくなります。
-\exercise{文字列\code{"42"}と\code{"x"}を数値として読む例を作り、成功・失敗の結果の型と中身を説明してみましょう。}
+\section{NatをU32へ変換して比較する}
+\sample{37_u32_dimension.bend}{盤面サイズを変換して範囲を調べる}
+
+コードの\code{U32.from_nat(4n)}は、自然数の4を\code{U32}へ変換します。続く\code{U32.is_lt(width,16)}は、幅が16より小さいかを\code{Bool}として返します。
+
+\begin{lstlisting}[caption={型の変換と大小比較}]
+width: U32 = U32.from_nat(4n)
+safe: Bool = U32.is_lt(width, 16)
+\end{lstlisting}
+
+\code{main}は真なら1、偽なら0を返すので、実行すると\code{1}になります。この例では確実に小さい値だけを変換しています。\code{U32}には表せる最大値があり、\code{Nat}の任意の大きな値を変換しても元の値が保たれるとは限りません。必要な範囲を先に確認しましょう。
+
+\begin{lstlisting}[language={},caption={数値変換の実行}]
+bend examples/37_u32_dimension.bend
+\end{lstlisting}
+
+比較は\code{U32.is_lt}のように真偽値を返すものだけではありません。\code{Cmp}には大小と等しさを表す複数の結果があり、並べ替えのAPIなどで使われます。「条件を満たすか」という二択なら\code{Bool}、「小さい・等しい・大きい」という三択が必要なら\code{Cmp}です。
+
+\section{文字列から数値を読み取る}
+ユーザーが「42」と入力しても、最初から数値型として得られるとは限りません。受け取った文字列を整数に変換する必要があります。
+
+\sample{15_string_parse.bend}{文字列の空白を除去して数値にする}
+
+\code{String.trim(" 42 ")}は前後の空白を除いた\code{"42"}を作ります。続く\code{U32.read}は変換を試み、成功なら\code{Some{42}}、失敗なら\code{None{}}を返します。\code{main}の返り値は\code{42}です。
+
+\begin{lstlisting}[caption={失敗する可能性のある数値変換}]
+cleaned = String.trim(" 42 ")
+parsed = U32.read(cleaned)
+\end{lstlisting}
+
+ここで\code{U32.read("abc")}を試したらどうなるでしょうか。文字列を数値として読めないので\code{None{}}になります。サンプルは失敗時に0を返しますが、本当に0が入力された場合との区別は失われます。次の章の\code{Maybe}を読むときはこの例を思い出してください。
+
+\section{設定の一行を区切ってみる}
+ゲームの保存ファイルに\code{board-size=4}という一行が入っているとします。「項目名」と「値」の二つに分けるにはどうすればよいでしょうか。Bend 2の\code{String.split}が使えます。
+
+\sample{35_string_fields.bend}{設定行をイコール記号で分割する}
+
+\code{Chr{61}}は\code{=}に対応する文字を表します。\code{String.split("board-size=4", Chr{61})}は、二つの文字列からなるリストを返します。そのため\code{List.length}の結果は\code{2n}です。
+
+\begin{lstlisting}[caption={文字列を区切って個数を調べる}]
+fields = String.split("board-size=4", Chr{61})
+List.length(&2, String, fields)
+\end{lstlisting}
+
+\begin{lstlisting}[language={},caption={文字列を分割するサンプルを実行する}]
+bend examples/35_string_fields.bend
+\end{lstlisting}
+
+実行結果が2でも、これだけで\textbf{保存形式が正しいと分かったわけではありません}。例えば\code{board-size=abc}も二つに分かれます。値が数値であるかを\code{U32.read}で確かめ、さらに盤面として許される大きさか検査する必要があります。
+
+\code{String.join}は文字列のリストを区切り文字でつなぐ操作です。文字列操作を手動の再帰で毎回作るのではなく、必要に合う標準APIを使いましょう。
+
+\section{文字の長さと見た目は必ずしも同じではない}
+Bendの\code{String}は文字の列です。ただし、一つの文字として見えるものが内部で複数の文字から構成されることもあります。文字数や文字コードの扱いを、画面上の表示幅と同じだと決め付けてはいけません。固定幅のゲーム画面を作る場合は、文字列の要素数と描画する幅を分けて考えましょう。
+
+\exercise{\code{37_u32_dimension.bend}の幅を16に変更して結果を予想し、確かめましょう。\code{35_string_fields.bend}の設定行を\code{"board-size=4=extra"}へ変更すると分割後の個数はいくつになるでしょうか。次に\code{15_string_parse.bend}で\code{" abc "}を与え、\code{Some}と\code{None}のどちらになるか調べてみましょう。}
 
 \chapter{ListとArrayの詳しい使い方}
 \sectiongoal{構造の違いと、関数の選択が所有権に与える影響を理解する。}
@@ -256,40 +361,83 @@ bend guide
 \exercise{\code{17_list_pipeline.bend}で\code{small}の条件を「2未満」にして結果を予想しましょう。次に\code{foldl}の初期値を\code{5n}に変更して再度確かめます。また4×4の盤面16マスを\code{Array.new}で作るにはどの深さが必要でしょうか。理由とともに説明しましょう。}
 
 \chapter{MapとSetを使う}
-\sectiongoal{どのデータを記録したいかから、MapとSetを選び、更新後の所有権まで扱う。}
+\sectiongoal{「あるかどうか」と「名前から値を取り出す」の違いを理解し、更新後の所有権を正しく渡す。}
 
-\section{「マスに何かを覚えておく」には何が必要か}
-前巻のライフゲームでは、各マスの状態を配列に入れました。マインスイーパーでも配列は使えますが、例えば\textbf{旗を立てた場所だけを記録する}なら、すべてのマスに値を用意する必要はありません。座標\code{"2,3"}が旗の集合に含まれるかだけ分かれば十分です。
+\section{旗の場所だけを記録したい}
+4×4の盤面で、プレイヤーが旗を置いた場所を覚えるとします。16個のマスすべてを調べる方法もありますが、旗のある場所の集合を持てば「この場所に旗があるか」をそのまま表せます。
 
-一方、\textbf{マスごとの数字や戦績を対応付ける}ときには、場所と値の組を覚えたいはずです。前者には\code{Set}、後者には\code{Map}が向いています。どちらも\code{Base}にあるため、独自の探索用データ構造を作る前に使い方を確認します。Bend 2の両方の構造は文字列をキーとして使います。
+Bend 2には文字列キーの\code{Set}があります。例えば座標を\code{"2,3"}という文字列にして記録できます。座標の文字列化はあくまでこの小例の方法であり、実際の4×4エンジンでは\code{Array}やビットマスクを選ぶこともできます。
 
-\section{まずSetで、旗の有無を表す}
-\sample{01_set.bend}{集合へ座標を追加して調べる}
-この例では\code{"2,3"}を追加し、\code{Set.has}が真を返すことを確かめています。実行結果は\code{1}です。読者がまず注目したいのは「どうして所属判定の結果が単なる\code{Bool}ではないのか」という点です。
+\sample{01_set.bend}{座標をSetへ入れて存在を調べる}
 
-\code{Set.has}の結果は\code{Set() & Bool}です。\textbf{調べた後も集合を引き続き使えるよう、集合自体が返ってくる}のです。コード内で返り値を\code{(again, exists)}に分け、今回使わない\code{again}を捨てています。続けて旗を更新したいなら、その返された集合を次の操作に渡します。
+この例は\code{Set.new}で空集合を作り、\code{Set.add}で\code{"2,3"}を追加してから\code{Set.has}で調べます。所属判定が真なので、結果は\code{1}です。
 
-次の例は、調べた結果に応じて追加と削除を選びます。
-\sample{05_marking.bend}{同じ場所の旗を二回切り替える}
-一回目の操作で\code{"2,3"}に旗が付き、二回目で取り除かれるため、最後の集合の要素数は\code{0n}になります。\code{0n}は\code{Nat}型の0です。結果を実行してから追うのではなく、\textbf{一行ごとにどの集合が次の行へ渡されるか}を紙に書いてみるとアフィン性が理解しやすくなります。
+\begin{lstlisting}[caption={所属判定は集合とBoolを返す}]
+s0 = Set.new()
+s1 = Set.add(s0, "2,3")
+result = Set.has(s1, "2,3")
+\end{lstlisting}
 
-\section{同じ操作をMapで考える}
-\code{Set}に記録できるのはキーの存在です。\code{Map}ではキーに値を割り当てます。例えばキー\code{"wins"}に値\code{7}を保存できます。
-\sample{02_map.bend}{辞書に値を保存して取り出す}
-\code{Map.new}では値の型と数量を指定します。\code{Map.set}は更新された辞書を返し、\code{Map.get}は\textbf{辞書と取り出した値の組}を返します。この例の実行結果は\code{7}です。
+第1章で確認したとおり、\code{Set.has}は\code{Set() \& Bool}を返します。「調べた後の集合」と「含まれるか」を受け取り、次の操作へ進めます。なぜ単純に\code{Bool}だけではないのか、返り値の型をもう一度確認しましょう。
 
-ここで気になるのは、辞書に存在しないキーを読んだときの振る舞いでしょう。\code{Map.get}には\textbf{既定値}を渡す引数があり、見つからなければその値が返ります。例えば既定値が0なら、戻り値の0が「登録済みの0」なのか「未登録」なのか、この結果だけでは分かりません。\code{Map.has}で存在を確かめるか、値自体を\code{Maybe}等にする設計を選びます。この違いは、保存データの欠落をエラーにするかどうかに直結します。
+\section{旗を一度押すと立ち、二度押すと消える}
+\sample{05_marking.bend}{同じマスの旗を二度切り替える}
 
-\section{重複、削除、キーの一覧}
-\sample{16_map_set_api.bend}{重複を除くSetと、キーを列挙するMap}
-同じキーを集合へ二度追加しても、要素数は増えません。一方、辞書の\code{Map.keys}は、格納されたキーのリストを返します。例の最後の結果は、集合の要素数1と辞書のキー数2を合わせた\code{3n}です。
+この例では\code{toggle_mark}を使います。キーが集合にあれば\code{Set.del}、なければ\code{Set.add}します。最初に空集合を渡し、\code{"2,3"}を二回操作するので、最後の要素数は\code{0n}です。
 
-ただし、\code{Map.keys}の返す順番が登録順だとは仮定しないでください。順番に意味がある画面を作る場合は、別のリストで順番を管理するか、明示的に並べ替えます。
+\begin{lstlisting}[language={},caption={旗の操作を確かめる}]
+bend examples/05_marking.bend
+\end{lstlisting}
 
-\section{使う構造を選ぶ}
-今回の題材では、地雷の位置と旗の位置は\code{Set}、名前付き設定や戦績は\code{Map}、盤面全体のマスの並びは\code{Array}という選び方が考えられます。必ずこの組合せにしなければならないわけではありません。\textbf{何を検索したいか、更新した後どの値が戻るか}を基準に選べば、構造の名前だけを覚えるより応用が利きます。
+途中の\code{s0}、\code{s1}、\code{s2}は別々に扱われる値です。集合を操作した結果として返ってきた値を次の行へ渡し、すでに消費した集合を再び使うことはしません。これがBendの所有権に沿った使い方です。
 
-\exercise{\code{16_map_set_api.bend}で削除の行を一つ外した場合、最後の値はいくつになりますか。実行前に予想し、変更後の値と一致するか確かめましょう。}
+\section{戦績を名前と数値で記録する}
+今度は\code{"wins"}という名前から勝利回数を取り出したいとします。「キーがあるか」だけではなく、キーに対応する数値が必要なので\code{Map}を選びます。
+
+\sample{02_map.bend}{辞書から勝利回数を読み出す}
+
+この例は\code{Map.new}で辞書を作り、\code{Map.set}で\code{"wins"}に7を保存し、\code{Map.get}で取り出します。結果は\code{7}です。ここでも\code{Map.get}は辞書と値の組を返します。
+
+\begin{lstlisting}[caption={Map.getには既定値を渡す}]
+m0 = Map.new(&2, U32)
+m1 = Map.set(&2, U32, m0, "wins", 7)
+result = Map.get(U32, 0, m1, "wins")
+\end{lstlisting}
+
+\code{Map.get}へ渡した0は\term{既定値（default value）}です。キーがないときは0を取り出せます。しかし、それだけでは「保存されていた0」と「キーがなかったので返した0」を区別できません。この違いを次の例で確かめます。
+
+\section{登録済みの0と、存在しないキーを分ける}
+\sample{36_map_missing.bend}{Map.hasとMap.getの役割を比べる}
+
+このプログラムは、\code{"wins"}というキーに0を保存します。\code{"losses"}は保存しません。その後、両方のキーについて\code{Map.has}で存在を確かめ、\code{Map.get}で値を読みます。
+
+\begin{lstlisting}[caption={キーがあるかを先に確認する}]
+(m2, has_wins) = Map.has(&2, U32, m1, "wins")
+(m3, has_losses) = Map.has(&2, U32, m2, "losses")
+\end{lstlisting}
+
+結果は\code{1}です。\code{has_wins}は真で1、\code{has_losses}は偽で0です。両方の\code{Map.get}は0になりますが、それらを足しても結果は変わりません。これは\textbf{値を取り出すことと、キーの存在を確かめることが違う}と示す小さな実習です。
+
+\begin{lstlisting}[language={},caption={未登録キーの例を実行する}]
+bend examples/36_map_missing.bend
+\end{lstlisting}
+
+これを保存データに応用するとき、登録されていなければ0回と扱ってよい設定なのか、未登録をエラーにすべき項目なのかを先に決めます。後者なら\code{Map.has}などで区別する必要があります。
+
+\section{重複する座標を追加したら？}
+\sample{16_map_set_api.bend}{Setの重複とMapのキー一覧}
+
+同じ\code{"0,0"}を二度\code{Set.add}しても、重複したキーは一つとして扱います。その後\code{"0,0"}を削除し、残る集合は\code{"1,1"}の一要素です。別の\code{Map}には二つのキーがあり、\code{Map.keys}で一覧を取り出します。両方の個数を足すので結果は\code{3n}です。
+
+\code{Map.keys}の順序が追加した順番と同じだと仮定してはいけません。順番も必要な画面なら、並べ替えの操作や別の順序管理を使います。
+
+\section{Map・Set・Arrayは何を基準に選ぶ？}
+「旗があるか」なら\code{Set}、「設定名から値を取り出す」なら\code{Map}、「盤面の何番のマスを更新する」なら\code{Array}が候補になります。ただし、小さい4×4の盤面ならビットマスクで状態を記録する方法もあります。
+
+使う方が難しくなる構造を無理に導入する必要はありません。データを何回読み書きするか、何を検索したいか、既存のどのAPIで目的を直接表せるかを考えて選びます。
+
+\exercise{\code{36_map_missing.bend}で\code{"losses"}にも0を登録し、\code{Map.has}の結果がどう変わるか確かめてみましょう。次に\code{16_map_set_api.bend}の\code{Set.del}を外すと結果はいくつになるか、実行前に予想しましょう。}
+
 \chapter{失敗、選択肢、依存する値}
 \sectiongoal{「値がない」と「操作を受け付けない」を区別し、型を選べるようになる。}
 
@@ -1337,9 +1485,14 @@ r=c-f
 \exercise{公開状態と真の地雷配置を別の型で定義してみましょう。また、局所推論しか使わないソルバーが行き詰まるが、集合の差分を使えば先に進める例を考えてみましょう。}
 
 \chapter{API索引と次の学習}
-\sectiongoal{使い方が分からない機能を自分で調べ、検証できるようにする。}
-標準ライブラリは機能名を列挙するだけでは使いこなせません。必要な操作について\textbf{引数・戻り値・所有権・失敗・対象ターゲット}を調べる方法を繰り返しましょう。
+\sectiongoal{知らない機能に出会っても、標準ライブラリを探し、最小例で確かめ、使いどころを判断できる。}
 
+\section{答えを暗記するより、調べ方を身につけよう}
+本書では、\code{List}と\code{Array}の使い分けから始め、\code{Map}、\code{Set}、\code{IO}、\code{File}、\code{App}、形式的な\code{law}まで見てきました。一度にすべての関数を覚える必要はありません。これまでと同じように、\textbf{何が必要かを決め、関数の型を読み、小さく試す}習慣を身につけましょう。
+
+例えば「保存先のファイルが開けるか確かめたい」場合、\code{bend base File.open}を調べます。戻り値に\code{IO}と\code{Result}があるので、外部の操作であり、失敗もあり得ることが分かります。さらに開いた\code{File}を後で閉じる必要があります。型を読むだけでも、使い方の大切な部分が見えてきます。
+
+\section{機能から探すための索引}
 \begin{longtable}{@{}p{28mm}p{57mm}p{54mm}@{}}
 \toprule
 分類 & 主な名前 & 確認すること\\\midrule
@@ -1358,6 +1511,24 @@ GUI & Image, App, Window, Event & 画面・イベントの環境\\
 証明 & law, Equal, Sigma & 仮定と結論、カーネル\\
 \bottomrule
 \end{longtable}
-\noindent 公式資料：\href{https://github.com/bendlang/bend/blob/main/guide/GUIDE.md}{Bend 2公式ガイド}、\href{https://github.com/bendlang/bend/blob/main/bend2/base.bend}{公式Baseライブラリ}。
-\exercise{初めて見る\code{Base}の関数を一つ選び、最小サンプルを作って型検査し、成功時と失敗時の振る舞いを確かめましょう。}
+
+\section{三つの確認を一緒にしない}
+読者が自分のプログラムを確かめるとき、\textbf{型検査}・\textbf{実行テスト}・\textbf{形式的証明}を区別しましょう。
+
+\begin{itemize}[leftmargin=*]
+\item 型検査は、引数の型や数量制約などに違反していないかを調べます。
+\item 実行テストは、指定した入力に対して期待する結果が得られるかを調べます。
+\item 形式的証明は、宣言した\code{law}がその量化範囲で成り立つかを検査します。
+\end{itemize}
+
+法則の証明が一つ通ったからといって、GUIの表示が正しいことや保存時のOSエラーが解決されるわけではありません。結果を使う場所と、何を検査したかを意識して説明しましょう。
+
+\section{これから一人で学ぶときの順序}
+知らない操作が必要になったら、まず\code{bend base}で公開APIの形を調べます。次に、必要な入力だけを持つ10〜20行ほどの最小例を作ります。期待する結果を先に予想し、実行して照合します。失敗し得るAPIなら、その失敗も検討します。動作を理解できたら、マインスイーパーなどの大きなプログラムに組み込みます。
+
+\textbf{標準の機能で十分な処理は、標準の機能を使ってください。} 特別な型や並列処理を使うこと自体は目標ではありません。必要になったとき、適切に選べることが目標です。
+
+公式の\href{https://github.com/bendlang/bend/blob/main/guide/GUIDE.md}{Bend 2 GUIDE}と\href{https://github.com/bendlang/bend/blob/main/bend2/base.bend}{Baseライブラリ}も手元に置いておきましょう。
+
+\exercise{本書でまだ使っていないBaseの公開関数を一つ選び、引数・返り値・所有権・失敗条件を調べてみましょう。次に、実行できる最小プログラムを作り、期待した結果と一致するか確かめてみましょう。}
 \end{document}
