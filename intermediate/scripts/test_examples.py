@@ -5,6 +5,7 @@ import pathlib
 import shutil
 import subprocess
 import sys
+import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SAMPLES = ROOT / "src"
@@ -47,6 +48,16 @@ def main():
         if value != result:
             raise AssertionError(f"{file} expected {result}; got {value}")
         print(f"PASS value {file} = {value}", flush=True)
+    with tempfile.TemporaryDirectory() as td:
+        p = subprocess.run(["bend", str(SAMPLES / "12_file_write.bend")],
+                           text=True, capture_output=True, timeout=180, cwd=td,
+                           env=dict(os.environ, BEND_NO_TELEMETRY="1"))
+        if p.returncode != 0:
+            raise AssertionError(f"File sample failed: {p.stdout}\n{p.stderr}")
+        saved = pathlib.Path(td) / "sample_board.txt"
+        if saved.read_text() != "board-size=4\nmines=1,1\n":
+            raise AssertionError("File sample wrote unexpected content")
+        print("PASS file write/open/close", flush=True)
     verdict = run("bend", str(SAMPLES / "04_flag_laws.bend"), "--verdict")
     if "ALL PROOFS CHECK" not in verdict:
         raise AssertionError(f"Proof checker did not accept laws:\n{verdict}")
