@@ -120,3 +120,17 @@ law board4_diagonal_clue:
 
 law board4_two_mines_clue:
   {Board4.clue(33, 1, 0) == 2 : U32}
+
+# B-05: the public checked editing API rejects indices beyond 0..15.
+# Unchecked Array.get/set wraps indices; the game must never expose those
+# operations directly to a user click or a solver move.
+law board4_rejects_invalid_flag_index:
+  for mines: U32
+  for cells: Array<Game.Square>
+  {Board4.toggle_checked(Board4.State{mines, cells}, 16) == Board4.State{mines, cells} : Board4.State}
+
+law board4_rejects_invalid_reveal_index:
+  for mines: U32
+  for cells: Array<Game.Square>
+  for clue: U32
+  {Board4.reveal_checked(Board4.State{mines, cells}, 16, clue) == Board4.State{mines, cells} : Board4.State}
