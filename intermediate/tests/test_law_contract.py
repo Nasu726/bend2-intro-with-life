@@ -1,4 +1,4 @@
-"""Require an explicit, separately maintained law/proof/engine boundary."""
+"""Check law/proof/engine boundaries, including the finite board milestone."""
 from pathlib import Path
 import re
 import unittest
@@ -12,6 +12,15 @@ NAMES = (
     "reveal_hidden",
     "reveal_flagged",
     "reveal_opened",
+    "board_top_edge_adjacent",
+    "board_corner_diagonal",
+    "board_no_wrap",
+    "board_no_self_neighbor",
+    "board_outside_x",
+    "board_toggle_keeps_mine",
+    "board_safe_reveal_keeps_mine",
+    "board_reveal_monotone_on_open",
+    "board_safe_reveal_keeps_flag",
 )
 
 class LawDrivenContractTests(unittest.TestCase):
@@ -19,6 +28,7 @@ class LawDrivenContractTests(unittest.TestCase):
         law_text = (HERE / "LAWS.bend").read_text(encoding="utf-8")
         proof_text = (HERE / "PROOF.bend").read_text(encoding="utf-8")
         self.assertIn("import ./game.bend as Game", law_text)
+        self.assertIn("import ./board.bend as Board", law_text)
         self.assertIn("import ./LAWS.bend as Laws", proof_text)
         actual_laws = re.findall(r"^law (\w+):", law_text, re.M)
         actual_proofs = re.findall(r"^def Laws\.(\w+)\(", proof_text, re.M)
@@ -26,11 +36,13 @@ class LawDrivenContractTests(unittest.TestCase):
         self.assertEqual(actual_proofs, list(NAMES))
 
     def test_proof_gate_cannot_be_short_circuited(self):
-        for name in ("LAWS.bend", "game.bend", "PROOF.bend"):
+        for name in ("LAWS.bend", "game.bend", "board.bend", "PROOF.bend"):
             content = (HERE / name).read_text(encoding="utf-8")
             self.assertNotIn("@unsafe", content)
             self.assertNotIn("?TODO", content)
-        self.assertIn("B-02", (HERE / "REQUIREMENTS.md").read_text(encoding="utf-8"))
+        ledger = (HERE / "REQUIREMENTS.md").read_text(encoding="utf-8")
+        self.assertIn("B-02", ledger)
+        self.assertIn("B-04", ledger)
 
 if __name__ == "__main__":
     unittest.main()
