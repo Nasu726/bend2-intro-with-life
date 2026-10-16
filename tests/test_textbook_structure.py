@@ -43,11 +43,18 @@ class TextbookStructureTests(unittest.TestCase):
                 self.assertNotIn(term, self.source)
 
     def test_intro_only_sections(self):
-        self.assertEqual(self.source.count(r"\chapter{"), 21)
+        self.assertEqual(self.source.count(r"\chapter{"), 24)
         self.assertEqual(self.source.count(r"\part{"), 3)
         self.assertEqual(self.source.count("\\partchaptertoc\n"), 3)
-        for chapter in ("CPU並列", "GPU呼び出し", "型を使って条件を表す", "法則の正しさを証明", "ライフゲームを画面に表示する準備"):
+        for chapter in ("ライフゲームを画面に表示する準備",):
             self.assertNotIn(r"\chapter{" + chapter, self.source)
+
+    def test_bend_signature_features_included(self):
+        for title in ("独立した計算をCPUで並列に実行する", "GPUで計算を実行する", "ライフゲームの規則を形式的に証明する"):
+            with self.subTest(title=title):
+                self.assertIn(r"\chapter{" + title + "}", self.part2)
+        for code in ("09_parallel_tree.bend", "10_gpu_tree.bend", "11_rule_proofs.bend", "24_proof_induction.bend", "31_parallel_life_pair.bend", "32_gpu_life_call.bend"):
+            self.assertTrue((ROOT / "src" / code).exists())
 
     def test_example_paths_exist(self):
         for basename in re.findall(r"\\readcode\{([^}]+)\}", self.source):

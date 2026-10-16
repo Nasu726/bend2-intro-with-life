@@ -18,3 +18,11 @@
 **検証:** GitHub Actions上のBend 2.0.37で型検査、18件の生死規則、5世代の盤面照合、高階関数とモナドの実行結果を検査する構成です。Pythonの参照テストと教材構成テストもCIで実行します。未実行の版では結果を保証しません。
 
 全ての標準ライブラリAPIや外部パッケージの網羅を意味する資料ではありません。
+
+## 本編に復帰させた中核機能
+
+- CPU並列呼び出し：`src/09_parallel_tree.bend`, `src/31_parallel_life_pair.bend`
+- GPU呼び出し：`src/10_gpu_tree.bend`, `src/32_gpu_life_call.bend`
+- `law`、証明用の`def`、数学的帰納法：`src/11_rule_proofs.bend`, `src/24_proof_induction.bend`
+
+形式的証明の対象は局所規則などの明示された命題のみです。盤面全体について証明したという主張はしません。

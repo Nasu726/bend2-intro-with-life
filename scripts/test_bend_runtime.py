@@ -111,32 +111,46 @@ def test_life_transcript() -> None:
 
 
 def test_higher_order_result() -> None:
-    """Check actual output, not just the function's type."""
+    """A higher-order function must execute the supplied function."""
     actual = run(["bend", str(SOURCE / "29_higher_order.bend")]).strip()
     if actual.splitlines()[-1] != "42":
         raise AssertionError(f"Higher-order function expected 42, got {actual!r}")
-    print("PASS: higher-order apply(lambda, 40) = 42")
+    print("PASS: high-order apply(lambda, 40) = 42")
 
 
 def test_monad_bind_equivalence() -> None:
-    """Both do-notation and explicit bind handle success and failure alike."""
+    """Compare do and explicit bind with both success and failure cases."""
     for path, fn in (("21_monadic_maybe.bend", "add_strs"),
                      ("30_monad_explicit.bend", "add_strs_explicit")):
         original = (SOURCE / path).read_text(encoding="utf-8")
-        head, separator, _main = original.partition("def main() ->")
-        if not separator:
-            raise AssertionError(f"Missing main definition in {path}")
+        head, sep, _ = original.partition("def main() ->")
+        if not sep:
+            raise AssertionError(f"No main found in {path}")
         for a, b, expected in (("40", "2", 42), ("bad", "2", 999)):
-            program = (head + "def main() -> U32:\n"
-                       + f'  Maybe.default(&2, U32, {fn}("{a}", "{b}"), 999)\n')
+            program = head + (
+                "def main() -> U32:\n"
+                f'  Maybe.default(&2, U32, {fn}("{a}", "{b}"), 999)\n'
+            )
             with tempfile.TemporaryDirectory(prefix="bend-monad-") as td:
-                tmp = Path(td) / "main.bend"
-                tmp.write_text(program, encoding="utf-8")
-                observed = run(["bend", str(tmp)]).strip()
-            if observed.splitlines()[-1] != str(expected):
-                raise AssertionError(f"{path}({a!r},{b!r}) expected {expected}, got {observed!r}")
-    print("PASS: do and explicit bind match on success and failure")
+                temporary = Path(td) / "main.bend"
+                temporary.write_text(program, encoding="utf-8")
+                got = run(["bend", str(temporary)]).strip()
+            if got.splitlines()[-1] != str(expected):
+                raise AssertionError(
+                    f"{path}({a!r},{b!r}) expected {expected}, got {got!r}"
+                )
+    print("PASS: do and explicit bind agree on success and failure")
 
+def test_parallel_and_proofs() -> None:
+    for name, expected in (("09_parallel_tree.bend", "4096"), ("10_gpu_tree.bend", "4096")):
+        got = run(["bend", str(SOURCE / name)], timeout=180).strip().splitlines()[-1]
+        if got != expected:
+            raise AssertionError(f"{name}: expected {expected}, got {got}")
+    for name in ("11_rule_proofs.bend", "24_proof_induction.bend"):
+        out = run(["bend", str(SOURCE / name), "--verdict"], timeout=180)
+        if "ALL PROOFS CHECK" not in out:
+            raise AssertionError(f"Proof verdict did not certify {name}:\n{out}")
+    print("PASS: parallel CPU/GPU-call syntax and proof verdict")
 
 
 def main() -> int:
@@ -147,7 +161,7 @@ def main() -> int:
         print("ERROR: Bend is not installed; tests must not silently skip", file=sys.stderr)
         return 2
     print("Installed Bend:", run(["bend", "version"]).strip(), flush=True)
-    tests = [test_rule_table, test_life_transcript, test_higher_order_result, test_monad_bind_equivalence]
+    tests = [test_rule_table, test_life_transcript, test_higher_order_result, test_monad_bind_equivalence, test_parallel_and_proofs]
     if not args.no_typecheck:
         tests[:0] = [test_all_sources, test_expected_failure]
     errors = []
