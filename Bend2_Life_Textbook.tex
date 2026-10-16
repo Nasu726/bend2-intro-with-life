@@ -141,7 +141,7 @@
 各章の演習では、まず自分で考えてから付属のサンプルを実行してみましょう。分からない用語は直前の解説や用語集を参照できます。
 
 \section*{同梱ファイル}
-\begin{tabularx}{\linewidth}{@{}L{51mm}X@{}}
+\begin{tabularx}{\linewidth}{@{}L{65mm}X@{}}
 \toprule
 ファイル & 内容\\
 \midrule
@@ -239,7 +239,7 @@ bend src/01_hello.bend -o build/hello
 \section{値と型の対応を読む}
 \term{データ型（data type）}とは、値の種類を定めるものです。例えば\code{42}は数値、\code{"hello"}は文字列です。Bend 2で頻出する型を先に見ておきます。
 
-\begin{tabularx}{\linewidth}{@{}L{23mm}L{36mm}X@{}}
+\begin{tabularx}{\linewidth}{@{}L{23mm}L{42mm}X@{}}
 \toprule 型 & 値の例 & 用途\\\midrule
 \code{Nat} & \code{3n} & 0以上の自然数を表します。\\
 \code{U32} & \code{42} & 0から$2^{32}-1$までの符号なし整数です。\\
@@ -868,7 +868,7 @@ bend src/24_proof_induction.bend --verdict
 \section{近傍読み出し回数}
 1世代で\(N=WH\)個のセルを更新するなら、現行の各セルは\code{neighbors}の8回と現在セルの1回で、合計\(9N\)回の\code{Array.get}を使います。\code{Array.set}は\(N\)回。計算量の章の「8方向参照」と現在セルの読取りを区別すること。
 \section{典型的なバグ}
-\begin{tabularx}{\linewidth}{@{}p{42mm}X@{}}
+\begin{tabularx}{\linewidth}{@{}L{55mm}X@{}}
 \toprule
 症状 & 疑う箇所\\
 \midrule
