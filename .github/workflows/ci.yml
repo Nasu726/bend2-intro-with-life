@@ -29,7 +29,7 @@ jobs:
       - name: Print Bend version
         run: bend version
       - name: Python reference tests (assertions enabled)
-        run: python3 -m unittest discover -s tests -p 'test_reference.py' -v
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
       - name: Bend typecheck, invalid example, rule table and 5 generations
         run: python3 scripts/test_bend_runtime.py
       - name: Test failure propagation
