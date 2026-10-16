@@ -1,0 +1,87 @@
+name: Intermediate textbook
+on:
+  pull_request:
+    paths:
+      - 'intermediate/**'
+      - '.github/workflows/intermediate.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'intermediate/**'
+      - '.github/workflows/intermediate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bend-examples:
+    name: Intermediate Bend examples
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      BEND_NO_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check structural coverage
+        run: python3 -m unittest discover -s intermediate/tests -v
+      - name: Install Bend 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://bend-lang.com/install.sh -o /tmp/install-bend.sh
+          sh /tmp/install-bend.sh
+          echo "$HOME/.bend/bin" >> "$GITHUB_PATH"
+      - name: Check Bend compiler version
+        run: bend version
+      - name: Typecheck, run and verify proof examples
+        run: python3 intermediate/scripts/test_examples.py
+
+  intermediate-pdf:
+    name: Intermediate XeLaTeX PDF
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+      - name: Compile the intermediate textbook
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: intermediate/Intermediate_Textbook.tex
+          latexmk_use_xelatex: true
+          texlive_version: '2025'
+          os: debian
+          extra_system_packages: fonts-noto-cjk fonts-noto-core
+      - name: Check TeX layout and font warnings
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s intermediate/Intermediate_Textbook.log
+          if grep -nE 'Overfull|Underfull|LaTeX Font Warning|LaTeX Warning' intermediate/Intermediate_Textbook.log; then
+            echo 'TeX layout/compatibility warnings detected' >&2
+            exit 1
+          fi
+      - name: Prepare intermediate PDF
+        run: cp intermediate/Intermediate_Textbook.pdf 'intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: intermediate-pdf
+          path: 'intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf'
+      - name: Publish PDF to proposal branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 'intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf'
+          if ! git diff --cached --quiet; then
+            git commit -m 'docs(intermediate): add compiled review PDF'
+            git push origin "HEAD:refs/heads/${BRANCH_NAME}"
+          fi
