@@ -27,8 +27,8 @@
 | `IO.fork/join`, `Chan` | 第9章 | `21_io_fork.bend`、`28_chan_roundtrip.bend` | fork/joinとChan送受信・closeの実行照合。失敗・時間制限の実践は今後 |
 | `IO.within`, `Poll` | 第9章 | `29_io_within.bend` | withinのSome/None処理を型検査。時間制限の実機挙動とPollは今後 |
 | TCP/UDP/Socket/Listener | 第10章 | `27_tcp_connect.bend` | TCP接続の型・成功失敗分岐例。送受信・UDPループバックは今後 |
-| `Image`, `Pix`, `Qua` | 第11章 | `07_gui_hello.bend` | 描画関数テスト |
-| `App`, `Event`, `Window` | 第12–14章 | `07_gui_hello.bend`、`23_cell_hit_test.bend` | GUIの基本型検査・純粋な座標変換。実機入力・Windowは今後 |
+| `Image`, `Pix`, `Qua` | 第11章を改稿（図・最小コード・出力・演習） | `31_image_quadrants.bend`、`07_gui_hello.bend` | 四分木の左上色を実行検査。ウィンドウ実機表示は別検査 |
+| `App`, `Event`, `Window` | 第12章を改稿（view/tickとMouseイベント）、第14章 | `07_gui_hello.bend`、`23_cell_hit_test.bend`、`32_mouse_events.bend` | Image/Viewの型検査、マウス押下と画素位置の純粋な実行検査。実機入力・Windowは今後 |
 | `Audio` | 第20章 | `26_audio_open.bend` | open/write/closeの型検査。実機での再生確認は今後 |
 | `law`, `Equal`, 帰納法 | 第15–18章・第22章 | `04_flag_laws.bend`、`14_local_inference.bend`、`22_result_and_game.bend`、`24_bool_proofs.bend` | 全Boolについての法則と具体例を検査。依存型・補題は今後 |
 | `@unsafe`, 外部信頼境界 | 第18・20章 | 追加実習 | 証明検査の境界 |
