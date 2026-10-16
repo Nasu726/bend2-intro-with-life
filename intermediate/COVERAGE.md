@@ -32,9 +32,9 @@
 | `Audio` | 第20章 | `26_audio_open.bend` | open/write/closeの型検査。実機での再生確認は今後 |
 | `law`, `Equal`, 帰納法 | 第15–18章・第22章 | `04_flag_laws.bend`、`14_local_inference.bend`、`22_result_and_game.bend`、`24_bool_proofs.bend` | 全Boolについての法則と具体例を検査。依存型・補題は今後 |
 | `@unsafe`, 外部信頼境界 | 第18・20章 | 追加実習 | 証明検査の境界 |
-| CPU並列、GPU指定 | 第19章 | `06_parallel.bend` | GPUターゲット別検査 |
-| `Array.atomic` | 第19章 | 追加実習 | 使用制約と対応環境 |
-| C/JavaScriptと外部連携 | 第20章 | 追加実習 | 生成コード・FFI |
+| CPU並列、GPU指定 | 第19章を増補（CPU並列・GPU指定・IO並行の比較） | `06_parallel.bend`・`21_io_fork.bend` | CPU並列の実行確認、GPU・他ターゲットでの性能と実機挙動は未検証 |
+| `Array.atomic` | 第19章を増補（標準Baseの型と使用条件を説明） | 追加実習 | 呼出しコード・実機共有更新の検査は今後 |
+| C/JavaScriptと外部連携 | 第20章を増補（生成ターゲットごとの検証・外部所有権を整理） | 追加実習 | 生成コードの実行テスト・FFIは今後 |
 | モジュール・パッケージ | 第20章 | 追加実習 | 公開と配布 |
 | 4×4盤面の近傍数 | 第13章 | `10_board_neighbors.bend` | 境界ケースと盤面全体の更新 |
 | 乱数IOの失敗処理 | 第8章 | `11_random_io.bend` | 実機での失敗・再現性確認 |
@@ -43,7 +43,7 @@
 | 16マスArray・地雷マスク・隣接地雷数・境界検査 | `minesweeper/LESSON.md`に解説草稿（第13・17章に一部統合） | `minesweeper/board4.bend`、`LAWS.bend`、`PROOF.bend` | 地雷マスク不変・空盤面の数字・具体的な数字・配列外操作の8法則を証明。Python独立オラクルで154ケースを実行。一般の隣接数の全称証明、公開時の安全判定は未完成 |
 | 旗の基本操作・局所法則 | 第13・15章 | `09_minesweeper_status.bend`, `04_flag_laws.bend` | 操作の網羅 |
 | クリック・旗・敗北・勝利の純粋ゲーム進行（G-02/G-03部分） | `minesweeper/LESSON.md`に追記（第17・21章に一部統合） | `minesweeper/session.bend`・`LAWS.bend`・`PROOF.bend` | 7法則を証明。独立オラクルで86件の遷移（複数クリック含む）を実行検査。初手安全・0展開・GUIは未実装 |
-| プレイ可能な通常版マインスイーパー | 第21章 | **未実装** | GUI、勝敗、0展開、保存 |
+| プレイ可能な通常版マインスイーパー | 第21章を大幅改稿（段階的な組立て・境界条件・テスト観点） | 純粋なクリック・勝敗のみ実装、完成版は**未実装** | 初手安全、0展開、GUI、保存、実機操作の統合 |
 | 運ゲー無し版 | 第22章 | `14_local_inference.bend`（局所推論）・`solutions/noguess_reference.py`（Python参考実装） | Bend版生成とGUIは未実装。Python参考実装は全列挙・失敗明示・小盤面テスト |
 
 ## CIの判定範囲
