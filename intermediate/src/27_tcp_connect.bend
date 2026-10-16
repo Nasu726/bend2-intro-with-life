@@ -4,7 +4,7 @@ import Base
 def handle(r: Result<&1, &1, U32 & String, Socket>) -> IO(Unit):
   match r:
     case Done{socket}:
-      TCP.close(socket)
+      Socket.close(socket)
     case Fail{reason}:
       IO.print("No TCP listener at this address")
 
