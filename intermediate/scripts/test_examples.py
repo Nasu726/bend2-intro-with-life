@@ -28,6 +28,7 @@ EXPECTED = {
     "23_cell_hit_test.bend": "10",
     "24_bool_proofs.bend": "1",
     "25_either_case.bend": "7",
+    "28_chan_roundtrip.bend": "9",
 }
 
 def run(*args):
