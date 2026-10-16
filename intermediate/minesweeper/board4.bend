@@ -32,48 +32,34 @@ def toggle_from_read(index: U32, read: Array<Game.Square> & Game.Square) -> Arra
   (cells, square) = read
   Array.set(Game.Square, cells, index, Game.toggle_flag(square))
 
-def toggle_cells(cells: Array<Game.Square>, +index: U32) -> Array<Game.Square>:
-  toggle_from_read(index, Array.get(Game.Square, cells, index))
-
-def toggle_at(s: State, index: U32) -> State:
+def toggle_at(s: State, +index: U32) -> State:
   match s:
     case State{mines, cells}:
-      State{mines, toggle_cells(cells, index)}
+      State{mines, toggle_from_read(index, Array.get(Game.Square, cells, index))}
 
 # PRECONDITION: caller has already checked mine_mask and in-bounds index.
 def reveal_from_read(index: U32, clue: U32, read: Array<Game.Square> & Game.Square) -> Array<Game.Square>:
   (cells, square) = read
   Array.set(Game.Square, cells, index, Game.reveal_safe(square, clue))
 
-def reveal_cells(cells: Array<Game.Square>, +index: U32, clue: U32) -> Array<Game.Square>:
-  reveal_from_read(index, clue, Array.get(Game.Square, cells, index))
-
-def reveal_at(s: State, index: U32, clue: U32) -> State:
+def reveal_at(s: State, +index: U32, clue: U32) -> State:
   match s:
     case State{mines, cells}:
-      State{mines, reveal_cells(cells, index, clue)}
+      State{mines, reveal_from_read(index, clue, Array.get(Game.Square, cells, index))}
 
 def bit_is_set(mines: U32, flag: U32) -> Bool:
   U32.is_ne(U32.and(mines, flag), 0)
 
-def one_if_neighbor(neighbor: Bool) -> U32:
-  match neighbor:
+def one_if_true(b: Bool) -> U32:
+  match b:
     case True{}:
       1
     case False{}:
       0
 
-# Test the mine BEFORE testing adjacency: with no mines, the answer is
-# definitionally zero even for symbolic x,y (B-04's universal empty law).
-def count_if_mined(has_mine: Bool, neighbor: Bool) -> U32:
-  match has_mine:
-    case False{}:
-      0
-    case True{}:
-      one_if_neighbor(neighbor)
-
+# A cell contributes one only when it contains a mine AND is adjacent.
 def contribution(+mines: U32, +x: U32, +y: U32, u: U32, v: U32, bit: U32) -> U32:
-  count_if_mined(bit_is_set(mines, bit), Board.neighbor(x, y, u, v))
+  one_if_true(Bool.and(bit_is_set(mines, bit), Board.neighbor(x, y, u, v)))
 
 # Count the mines at neighbors of (x,y); Board.neighbor excludes the
 # current cell and positions beyond any edge. Never toroidal-wrap.
