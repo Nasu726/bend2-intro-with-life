@@ -4,10 +4,14 @@
 
 **主目的はBend 2の仕様を体系的に理解し、必要な機能を適切に使えるようになることです。** マインスイーパーは、そのための共通実習題材です。作品で使わないAPIも独立したコード例・解説で扱います。
 
-## 教材
+## 教材のダウンロード
 
-- [TeX原稿](Intermediate_Textbook.tex)
-- **[教科書PDF（レビュー用初稿・36ページ）](マインスイーパーで学ぶ_Bend2中級_初稿.pdf)**
+**[PDF＋学習用サンプルのZIP（執筆途中）](../reader-packages/bend2-intermediate-reader-preview.zip)** をダウンロードして展開してください。クローンは不要です。
+
+- [教科書PDF（レビュー用初稿）](マインスイーパーで学ぶ_Bend2中級_初稿.pdf)
+- [TeX原稿（編集・参照用）](Intermediate_Textbook.tex)
+
+ZIPにはPDF・学習用サンプル・案内・ライセンスのみが入ります。完成したゲームや演習の想定解答、CI・編集資料はZIPに含めず、リポジトリに残します。
 - [独立して動かせる教材コード](src/)
 - [機能カバレッジと検証記録](COVERAGE.md)
 
@@ -24,13 +28,14 @@
 
 ## 動作確認
 
+以下はZIPを展開し、そのフォルダーへ移動してから実行する例です。
+
 公式の[インストール手順](https://github.com/bendlang/bend/blob/main/guide/GUIDE.md)に従いBend 2を導入してください。教材はBend 2.0.37を基準に検査します。
 
 ```sh
-bend intermediate/src/01_set.bend
-bend intermediate/src/02_map.bend
-bend intermediate/src/04_flag_laws.bend --verdict
-python3 -m unittest discover -s intermediate/tests -v
+bend examples/01_set.bend
+bend examples/02_map.bend
+bend examples/04_flag_laws.bend --verdict
 ```
 
 GUIサンプルは画面が開ける環境でのみ実行してください。CIでは原則として型検査し、GUI動作を検証済みとは主張しません。
