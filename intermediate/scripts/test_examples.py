@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""Typecheck intermediate Bend examples, check outputs and proof verdict."""
+import os
+import pathlib
+import shutil
+import subprocess
+import sys
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+SAMPLES = ROOT / "src"
+EXPECTED = {
+    "01_set.bend": "1",
+    "02_map.bend": "7",
+    "03_list.bend": "3",
+    "05_marking.bend": "0",
+    "06_parallel.bend": "256",
+    "09_minesweeper_status.bend": "1",
+}
+
+def run(*args):
+    p = subprocess.run(args, text=True, capture_output=True, timeout=180,
+                       cwd=ROOT.parent,
+                       env=dict(os.environ, BEND_NO_TELEMETRY="1"))
+    if p.returncode != 0:
+        raise AssertionError(f"{args} exited {p.returncode}:\n{p.stdout}\n{p.stderr}")
+    return p.stdout.strip()
+
+def main():
+    if not shutil.which("bend"):
+        print("ERROR: bend not on PATH", file=sys.stderr)
+        return 2
+    files = sorted(SAMPLES.glob("*.bend"))
+    if not files:
+        raise AssertionError("No Bend examples")
+    for file in files:
+        run("bend", str(file), "--check-only")
+        print(f"PASS typecheck {file.name}", flush=True)
+    for file, result in EXPECTED.items():
+        value = run("bend", str(SAMPLES / file)).splitlines()[-1]
+        if value != result:
+            raise AssertionError(f"{file} expected {result}; got {value}")
+        print(f"PASS value {file} = {value}", flush=True)
+    verdict = run("bend", str(SAMPLES / "04_flag_laws.bend"), "--verdict")
+    if "ALL PROOFS CHECK" not in verdict:
+        raise AssertionError(f"Proof checker did not accept laws:\n{verdict}")
+    print("PASS law verdict", flush=True)
+    return 0
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except (AssertionError, subprocess.TimeoutExpired, OSError) as exc:
+        print("FAILED: " + str(exc), file=sys.stderr)
+        sys.exit(1)
