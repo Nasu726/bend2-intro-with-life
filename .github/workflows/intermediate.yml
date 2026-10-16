@@ -100,20 +100,19 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq poppler-utils
-      - name: Compare checked-in PDF and ZIP by content, not PDF timestamps
-        if: github.event_name == 'pull_request'
-        run: python3 intermediate/scripts/check_bundle_consistency.py
-      - name: Publish updated draft PDF and learner ZIP on manual dispatch
-        if: github.event_name == 'workflow_dispatch'
+      - name: Publish refreshed PDF and ZIP if reader-facing contents changed
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         env:
-          BRANCH_NAME: ${{ github.ref_name }}
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf reader-packages/bend2-intermediate-reader-preview.zip
-          if ! git diff --cached --quiet; then
-            git commit -m 'docs(intermediate): refresh readable PDF and learner-only ZIP'
+          if python3 intermediate/scripts/check_bundle_consistency.py; then
+            echo 'Committed learner PDF and ZIP already match the current manuscript.'
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf reader-packages/bend2-intermediate-reader-preview.zip
+            git commit -m 'docs(intermediate): refresh learner PDF and ZIP after manuscript changes'
             git push origin "HEAD:refs/heads/${BRANCH_NAME}"
           fi
