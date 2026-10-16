@@ -33,7 +33,7 @@ INTERMEDIATE_EXAMPLES = (
     "06_parallel.bend", "07_gui_hello.bend",
     "08_args.bend", "09_minesweeper_status.bend",
     "10_board_neighbors.bend", "11_random_io.bend",
-    "12_file_write.bend",
+    "12_file_write.bend", "13_file_read.bend",
 )
 
 def readme(track: str) -> str:
