@@ -42,6 +42,7 @@ INTERMEDIATE_EXAMPLES = (
     "24_bool_proofs.bend", "25_either_case.bend",
     "26_audio_open.bend", "27_tcp_connect.bend",
     "28_chan_roundtrip.bend",
+    "29_io_within.bend",
 )
 
 def readme(track: str) -> str:
