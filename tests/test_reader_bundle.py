@@ -36,7 +36,7 @@ class TestReaderBundle(unittest.TestCase):
     def test_intro_bundle(self):
         self.check_one("intro")
 
-    @unittest.skipUnless((ROOT / "intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf").exists(),
+    @unittest.skipUnless((ROOT / "intermediate/Bend2を使いこなす_プレビュー.pdf").exists(),
                          "Intermediate manuscript is on its separate PR branch")
     def test_intermediate_bundle(self):
         self.check_one("intermediate")
