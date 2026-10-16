@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   pdf:
@@ -49,3 +49,18 @@ jobs:
           name: textbook-pdf
           path: 'ライフゲームで学ぶ_はじめてのBend2.pdf'
 
+
+      - name: Publish regenerated PDF to PR branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 'ライフゲームで学ぶ_はじめてのBend2.pdf'
+          if ! git diff --cached --quiet; then
+            git commit -m 'docs: regenerate PDF with corrected table widths'
+            git push origin "HEAD:refs/heads/${HEAD_BRANCH}"
+          fi
