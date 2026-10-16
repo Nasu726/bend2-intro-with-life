@@ -42,6 +42,7 @@
 | 盤面境界・局所不変性 B-01/B-02/B-03/B-05 | `minesweeper/REQUIREMENTS.md`（本文への統合は未着手） | `minesweeper/LAWS.bend`・`board.bend`・`PROOF.bend` | 4×4非トーラス境界と単一セルの地雷値保持・公開状態維持について9件の法則を証明。独立オラクルで全256セル対も照合。盤面全体の扱いは次行、B-04の一般全称証明は未了 |
 | 16マスArray・地雷マスク・隣接地雷数・境界検査 | `minesweeper/LESSON.md`に解説草稿（プレビューPDF未反映） | `minesweeper/board4.bend`、`LAWS.bend`、`PROOF.bend` | 地雷マスク不変・空盤面の数字・具体的な数字・配列外操作の8法則を証明。Python独立オラクルで154ケースを実行。一般の隣接数の全称証明、公開時の安全判定は未完成 |
 | 旗の基本操作・局所法則 | 第13・15章 | `09_minesweeper_status.bend`, `04_flag_laws.bend` | 操作の網羅 |
+| クリック・旗・敗北・勝利の純粋ゲーム進行（G-02/G-03部分） | `minesweeper/LESSON.md`に追記（PDF未反映） | `minesweeper/session.bend`・`LAWS.bend`・`PROOF.bend` | 7法則を証明。独立オラクルで86件の遷移（複数クリック含む）を実行検査。初手安全・0展開・GUIは未実装 |
 | プレイ可能な通常版マインスイーパー | 第21章 | **未実装** | GUI、勝敗、0展開、保存 |
 | 運ゲー無し版 | 第22章 | `14_local_inference.bend`（局所推論）・`solutions/noguess_reference.py`（Python参考実装） | Bend版生成とGUIは未実装。Python参考実装は全列挙・失敗明示・小盤面テスト |
 
