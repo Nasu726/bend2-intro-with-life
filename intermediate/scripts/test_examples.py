@@ -151,6 +151,76 @@ def verify_dense_board(game_dir):
             raise AssertionError(f"Full-board oracle expected {expected}; got {found}")
         print(f"PASS dense board oracle: {expected} clue/index checks", flush=True)
 
+
+def verify_sessions(game_dir):
+    """Check complete click transitions against a separate Python game oracle."""
+    def clue(mask, index):
+        x, y = index % 4, index // 4
+        return sum(
+            (mask >> (4*v+u)) & 1
+            for v in range(4) for u in range(4)
+            if (u, v) != (x, y) and abs(x-u) <= 1 and abs(y-v) <= 1
+        )
+    checks = []
+    for mines in (0, 1, 33, 65532, 65534, 65535):
+        safe_count = sum(not (mines & (1 << i)) for i in range(16))
+        for index in (0, 1, 5, 15, 16):
+            mined = index < 16 and bool(mines & (1 << index))
+            phase = 0 if index >= 16 else (2 if mined else (1 if safe_count == 1 else 0))
+            expr = f"Session.click(Session.new({mines}), {index})"
+            checks.append(f"bit(U32.is_eq(phase_code(Session.phase_of({expr})), {phase}))")
+            if index < 16:
+                visible = 0 if mined else 10 + clue(mines, index)
+                checks.append(f"bit(U32.is_eq(square_code(Session.read_square({expr}, {index})), {visible}))")
+        for index in (0, 5):
+            expr = f"Session.click(Session.mark(Session.new({mines}), {index}), {index})"
+            checks.append(f"bit(U32.is_eq(phase_code(Session.phase_of({expr})), 0))")
+            checks.append(f"bit(U32.is_eq(square_code(Session.read_square({expr}, {index})), 1))")
+    # Two safe cells: one safe click is not a victory, both are. Flags are not
+    # substitutes for opening the safe squares, and are reversible.
+    checks += [
+        "bit(U32.is_eq(phase_code(Session.phase_of(Session.click(Session.new(65532), 0))), 0))",
+        "bit(U32.is_eq(phase_code(Session.phase_of(Session.click(Session.click(Session.new(65532), 0), 1))), 1))",
+        "bit(U32.is_eq(phase_code(Session.phase_of(Session.click(Session.mark(Session.new(65534), 0), 0))), 0))",
+        "bit(U32.is_eq(phase_code(Session.phase_of(Session.click(Session.mark(Session.mark(Session.new(65534), 0), 0), 0))), 1))",
+        "bit(U32.is_eq(phase_code(Session.phase_of(Session.click(Session.click(Session.new(1), 0), 5))), 2))",
+        "bit(U32.is_eq(phase_code(Session.phase_of(Session.mark(Session.click(Session.new(1), 0), 5))), 2))",
+        "bit(U32.is_eq(phase_code(Session.phase_of(Session.click(Session.click(Session.new(65534), 0), 1))), 1))",
+        "bit(U32.is_eq(phase_code(Session.phase_of(Session.mark(Session.click(Session.new(65534), 0), 1))), 1))",
+    ]
+    program = (
+        "import Base\nimport ./game.bend as Game\n"
+        "import ./board.bend as Board\nimport ./board4.bend as Board4\n"
+        "import ./session.bend as Session\n"
+        "def bit(b: Bool) -> U32:\n"
+        "  match b:\n    case True{}:\n      1\n    case False{}:\n      0\n"
+        "def phase_code(p: Session.Phase) -> U32:\n"
+        "  match p:\n    case Session.Playing{}:\n      0\n"
+        "    case Session.Won{}:\n      1\n    case Session.Lost{}:\n      2\n"
+        "def square_code(s: Game.Square) -> U32:\n"
+        "  match s:\n    case Game.Hidden{}:\n      0\n"
+        "    case Game.Flag{}:\n      1\n"
+        "    case Game.Open{clue}:\n      (10 + clue : U32)\n"
+        + "\n\n".join(
+            f"def check_{i}() -> U32:\n  ("
+            + " + ".join(checks[i:i+6]) + " : U32)"
+            for i in range(0, len(checks), 6)
+        )
+        + "\n\ndef main() -> U32:\n  ("
+        + " + ".join(f"check_{i}()" for i in range(0, len(checks), 6))
+        + " : U32)\n"
+    )
+    with tempfile.TemporaryDirectory() as td:
+        out = pathlib.Path(td)
+        for name in ("game.bend", "board.bend", "board4.bend", "session.bend"):
+            shutil.copyfile(game_dir / name, out / name)
+        filename = out / "session_oracle.bend"
+        filename.write_text(program, encoding="utf-8")
+        observed = run("bend", str(filename)).splitlines()[-1]
+        if observed != str(len(checks)):
+            raise AssertionError(f"Session oracle expected {len(checks)} checks; got {observed}")
+        print(f"PASS pure session oracle: {len(checks)} transition checks", flush=True)
+
 def main():
     if not shutil.which("bend"):
         print("ERROR: bend not on PATH", file=sys.stderr)
@@ -213,6 +283,7 @@ def main():
     print("PASS Minesweeper law proof gate (31 laws, including whole-board mine invariants and clues)", flush=True)
     verify_full_neighbor_table(game)
     verify_dense_board(game)
+    verify_sessions(game)
 
     # Mutation test: keeping the function well-typed must not suffice when
     # it violates an independently declared requirement.
