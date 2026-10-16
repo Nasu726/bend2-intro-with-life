@@ -17,6 +17,7 @@ EXPECTED = {
     "06_parallel.bend": "256",
     "09_minesweeper_status.bend": "1",
     "10_board_neighbors.bend": "2",
+    "14_local_inference.bend": "10",
 }
 
 def run(*args):
