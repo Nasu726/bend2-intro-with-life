@@ -4,10 +4,13 @@
 
 基本的なプログラミング経験がある方を対象にしています。手続き型言語にしか触れたことがなくても読み進められるよう、新しい用語や記法を順に説明します。
 
-## 教科書
+## 教材のダウンロード
 
-- **[PDFを読む](ライフゲームで学ぶ_はじめてのBend2.pdf)**（第1版）
-- [LaTeX原稿](Bend2_Life_Textbook.tex)
+**[教科書PDF＋学習用サンプルコードをまとめてダウンロード（ZIP）](reader-packages/bend2-intro-reader.zip)**
+
+ZIPを展開すると、教科書PDF、学習用のコード例、使い始めるための案内が入っています。**リポジトリをクローンする必要はありません。**
+
+PDFだけを読みたい場合は[こちら](ライフゲームで学ぶ_はじめてのBend2.pdf)から開けます。
 
 ## 学べること
 
@@ -20,16 +23,17 @@
 
 ## コードを動かす
 
-[Bend 2の公式ガイド](https://github.com/bendlang/bend/blob/main/guide/GUIDE.md)に従ってBendをインストールしてから、リポジトリ内で次のコマンドを実行してください。
+[Bend 2の公式ガイド](https://github.com/bendlang/bend/blob/main/guide/GUIDE.md)に従ってBendをインストールし、ダウンロードしたZIPを展開してください。展開したフォルダーで次を実行します。
 
 ```sh
 bend version
-bend src/01_hello.bend
-bend src/02_arithmetic.bend
-bend src/08_life_terminal.bend
+bend examples/01_hello.bend
+bend examples/02_arithmetic.bend
 ```
 
-各章のサンプルコードは[`src/`](src/)にあります。コードを変更し、実行結果やエラーメッセージを確かめながら読み進めてください。
+コードを書き換えて、実行結果やエラーメッセージを確かめながら読み進めてください。
+
+ライフゲームの**完成版や演習の参考実装**を確認したいときは、リポジトリの[参考コード一覧（src/）](src/)を参照できます。学習用ZIPには、完成版の解答コードや編集・テスト用のファイルを含めていません。
 
 サンプルコードは**Bend 2.0.37**で動作確認しています。Bendのバージョンによって記法や動作が異なる場合があります。
 

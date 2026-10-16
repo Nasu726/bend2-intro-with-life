@@ -1,0 +1,51 @@
+name: Reader download bundles
+on:
+  pull_request:
+    paths:
+      - 'README.md'
+      - 'scripts/build_reader_bundle.py'
+      - 'tests/test_reader_bundle.py'
+      - 'DISTRIBUTION_POLICY.md'
+      - '.github/workflows/reader-bundles.yml'
+      - 'ライフゲームで学ぶ_はじめてのBend2.pdf'
+      - 'src/**'
+      - 'intermediate/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    name: Validate and publish learner ZIPs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generate learner archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/build_reader_bundle.py intro
+          if test -f intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf; then
+            python3 scripts/build_reader_bundle.py intermediate
+          fi
+      - name: Verify exact package allowlists
+        run: python3 -m unittest tests.test_reader_bundle -v
+      - name: Confirm committed download archives are up to date
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code -- reader-packages/
+          test -s reader-packages/bend2-intro-reader.zip
+      - name: Upload permanent-download candidates as Actions artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: learner-zips
+          path: reader-packages/*.zip
+          if-no-files-found: error
