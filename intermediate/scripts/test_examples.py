@@ -58,6 +58,15 @@ def main():
         if saved.read_text() != "board-size=4\nmines=1,1\n":
             raise AssertionError("File sample wrote unexpected content")
         print("PASS file write/open/close", flush=True)
+        read = subprocess.run(["bend", str(SAMPLES / "13_file_read.bend")],
+                              text=True, capture_output=True, timeout=180, cwd=td,
+                              env=dict(os.environ, BEND_NO_TELEMETRY="1"))
+        if read.returncode != 0:
+            raise AssertionError(f"File read failed: {read.stdout}\n{read.stderr}")
+        if read.stdout.strip() != "board-size=4\nmines=1,1":
+            raise AssertionError(f"Unexpected read content: {read.stdout!r}")
+        print("PASS file read/open/close", flush=True)
+
     verdict = run("bend", str(SAMPLES / "04_flag_laws.bend"), "--verdict")
     if "ALL PROOFS CHECK" not in verdict:
         raise AssertionError(f"Proof checker did not accept laws:\n{verdict}")
