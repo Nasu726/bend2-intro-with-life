@@ -661,6 +661,26 @@ Bend 2はCのネイティブ実行ターゲットとJavaScriptの実行ターゲ
 
 ただし、外部関数が返す結果や副作用はBend内の純粋な証明だけで保証できません。\code{@unsafe}などの安全性に関する境界とともに理解します。モジュールやパッケージの整理、ライセンス、BendHub等を使った配布は、まず公式の最新ガイドで対応状況を確かめて進めます。
 
+\section{作成するファイルの種類を選ぶ}
+前巻ではBendコードを\code{bend}で直接実行しました。同じソースから、実行ファイルやC・JavaScriptのソースを生成することもできます。\textbf{実行する}操作と、\textbf{他の処理系で扱うファイルを作る}操作は区別して覚えます。
+
+\begin{lstlisting}[language={},caption={Bend 2で生成先を選ぶ例}]
+bend examples/15_string_parse.bend
+bend examples/15_string_parse.bend -o parse.c
+bend examples/15_string_parse.bend -o parse.js
+bend examples/15_string_parse.bend -o parse.mjs
+\end{lstlisting}
+
+1行目はコードを実行します。2行目はCのソース、3行目はJavaScriptのソース、4行目はJavaScriptから読み込めるESモジュールを作ります。\code{.mjs}へ出力したモジュールからは、Bendの非IO関数を利用できます。ただし、外部言語と値を受け渡すときには\textbf{コピーされずに同じ配列を参照する}場合があり、所有権の前提を崩さないよう注意が必要です。
+
+\section{Bendのモジュールとパッケージ}
+プログラムが大きくなったら、一つのファイルにすべてを書かず、別のファイルを\code{import ./math.bend as M}のように読み込みます。\code{M.square(7)}のように、読み込んだモジュールの名前を付けて関数を呼べます。入門編のモジュール例と対応付けて確認しましょう。
+
+公式のパッケージ管理にはBendHubがあり、内容ハッシュや名前・バージョンでパッケージを参照できます。公開には\code{--publish}を使用しますが、\textbf{公開は取り消せないことがある}ため、練習として不用意に公開しないでください。依存するファイルやライセンスも確認したうえで実際の公開を行います。
+
+\section{外部実装と形式的証明の境界}
+Bendの外部効果は、ホスト側のC・JavaScriptコードと対応しています。必要な効果を追加することは可能ですが、それらの効果の実行はBendの純粋な計算に対する証明の範囲外です。\code{@unsafe}の指定も、停止性などの保証を外す境界になります。外部コードを取り込んだプログラムを「証明済み」と呼ぶときは、\textbf{何を証明でき、何を外部環境へ委ねたのか}を明示します。
+
 \section{Audioは開いてから書く}
 音を出すための機能も、ファイルと同じように\textbf{使い始めと使い終わり}があります。\code{Audio.open}はサンプルレート（1秒当たりのサンプル数）を指定してデバイスを開き、\code{Result}を返します。使い終えたら\code{Audio.close}で閉じます。
 
