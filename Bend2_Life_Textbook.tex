@@ -187,48 +187,11 @@
 \tableofcontents
 \mainmatter
 \clearpage
-\part{はじめてのBend 2}
+\part{Bend 2の基本文法を学ぶ}
 \partchaptertoc
-\chapter{目標設定とライフゲームの仕様}
-\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
-\small 本章では、ライフゲームの規則を日本語と数式で整理します。\term{仕様（specification）}とは「完成したプログラムが何をするべきか」を定めた約束です。まず仕様を決めると、後で正しさを確認しやすくなります。
-\end{tcolorbox}
-
-\section{何を作るか}
-ライフゲームは二次元格子の各セルが生存（1）か死亡（0）かを持つ\term{セル・オートマトン（cellular automaton）}です。周囲8方向にある\term{近傍セル（neighboring cell）}の生存数を数えて、次の状態を決めます。簡単な規則ですが、移動する模様や形を変え続ける模様が生まれます。そのため、小さなプログラムでも\term{モデル化（modeling）}、境界での処理、テスト、性能評価を学べます。
-
-本書では格子を8行×8列、セルを\code{U32}の0と1、座標を\((x,y)\)（左上が\((0,0)\)）とします。盤面の右端は左端に、下端は上端につながります。これを\term{周期境界条件（periodic boundary condition）}と呼びます。全セルを\textbf{同時に更新}します。
-
-\section{生死規則 B3/S23}
-セル\(a\in\{0,1\}\)と、その8近傍の生存数\(n\in\{0,\ldots,8\}\)に対して
-\[
-F(a,n)=\begin{cases}
-1&n=3\quad\text{（生死によらず誕生／生存）}\\
-a&n=2\quad\text{（現状維持）}\\0&\text{その他}
-\end{cases}
-\]
-これが\textbf{B3/S23}（Birth at 3, Survive at 2 or 3）です。いわゆる「生存セルは2～3近傍で生き残る」という説明と矛盾しません。生存数だけでは次状態は決まらず、\(n=2\)なら現在の状態を参照することに注意してください。
-
-\begin{center}
-\begin{tikzpicture}[scale=.62]
-\foreach \x in {0,...,7}{\foreach \y in {0,...,7}{\draw[gray!50] (\x,\y) rectangle ++(1,1);}}
-\foreach \x/\y in {1/7,2/6,0/5,1/5,2/5}{\fill[teal!75] (\x+.07,\y+.07) rectangle ++(.86,.86);}
-\node[anchor=west,align=left,font=\sffamily\small] at (8.5,5.7) {世代0のグライダー\\生存: 5セル\\1=生存、0=死亡};
-\draw[-{Stealth},very thick,teal] (8.4,4.3)--(10.0,3.4);
-\node[anchor=west,font=\sffamily\small] at (8.6,3.1) {4世代後に右下へ1マス};
-\end{tikzpicture}
-\end{center}
-
-\section{受け入れ条件}
-\begin{enumerate}
-\item 正しいグライダーを初期状態として5枚（世代0～4）の8×8盤面を表示します。
-\item 近傍として数えるのは周囲の8マス\textbf{だけ}です。中心のセル自身は数えません。
-\item すべてのセルの新状態を、更新前の盤面だけから計算します。\term{その場更新（in-place update）}を1セルずつ行う方法は採用しません。
-\item ブロックが静止、ブリンカーが周期2、グライダーが4世代で斜めへ1マス動くことをPythonの独立実装と照合します。
-\item 表示と更新を分離して、後で表示形式・実行先を交換できる形にします。
-\end{enumerate}
-\exercise{上の規則から、現在0/1の各場合について近傍数0～8の真理値表（\(2\times9\)個）を作ってみましょう。なぜ「3なら1、2なら現状、それ以外0」の3分岐で全部を処理できるのかを説明してみましょう。}
-
+\begin{pointbox}
+このPartでは、Bend 2の言語仕様だけを扱います。プログラムの実行方法、関数と型、場合分け、配列、所有権、ユーザー定義型などを、短い独立した例で学びます。\textbf{具体的な制作物の仕様と実装はPart IIから学びます。}
+\end{pointbox}
 \chapter{環境構築と最初の実行}
 \begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
 \small 本章では、\term{ターミナル（terminal）}という文字入力の画面からBendを起動します。コマンドを一つ実行し、表示が変わるところまで進みましょう。
@@ -275,7 +238,7 @@ bend src/01_hello.bend -o build/hello
 Bendでは\code{def f(x: T) -> R:}の形で関数を宣言します。戻り値は最後の式であり、Pythonのように常に\code{return}が必要なのではありません。\code{U32}は0以上の整数を32ビットに格納する型です。\code{Nat}は0、1、2、……という\term{自然数（natural number）}の型で、再帰や型の添字に使います。\code{3n}は\code{Nat}のリテラルで、\code{3}とは扱いを区別します。
 
 \readcode{02_arithmetic.bend}{行優先の添字計算（02\_arithmetic.bend）}
-座標\((x,y)\)を一列の配列に格納するとき、\(i=yW+x\)とします。幅\(W=8\)で\((2,3)\)なら\(i=26\)となります。\code{(y * 8 + x : U32)}は演算の型注釈です。\code{+x}の\code{+}は「値を複数回使える」と示す\term{使用量（quantity）}の指定であり、この短い例では実際には必須ではありません。量の意味は配列とアフィン性の章で扱います。
+例の関数\code{calculate(x,y)}は\(5x+y\)を計算します。\code{calculate(2,3)}の結果は13です。\code{(x * 5 + y : U32)}は演算の型注釈です。\code{+x}の\code{+}は「値を複数回使える」という使用量の指定です。詳しくは配列とアフィン性の章で扱います。
 
 \section{演算でつまずく場所}
 整数加減算の演算子だけを式として書かず、\code{(x + y : U32)}のように型を与える。\code{Nat}と\code{U32}の暗黙変換を当てにしません。\code{U32.to\_nat}・\code{U32.from\_nat}等は\code{bend base}で確認します。\code{U32}には範囲の限界があり、任意精度整数として扱ってはいけません。
@@ -286,38 +249,29 @@ Bendでは\code{def f(x: T) -> R:}の形で関数を宣言します。戻り値�
 
 \exercise{\(W=8\)について\((0,0),(7,0),(0,7),(7,7)\)を添字に変換しましょう。幅を16に変えるにはどの定数を差し替えるか。将来、幅を値\code{w: U32}として引数にした場合、どの式はそのままでよいか。}
 
-\chapter{パターンマッチで生死規則を実装する}
+\chapter{パターンマッチで場合分けをする}
 \begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
-\small Bend 2では、条件ごとに処理を分けるときに\term{パターンマッチ（pattern matching）}を使います。まず生死規則の三つの場合に当てはめましょう。
+\small Bend 2では、条件に応じて処理を分けるときに\term{パターンマッチ（pattern matching）}を使います。ここでは、真偽値に応じて二つの数字から一つを選ぶ例で基本形を学びます。
 \end{tcolorbox}
-
 \section{条件に応じて処理を分ける方法}
-「隣の生存セルが3個なら生きる」という規則には、条件による場合分けが必要です。ここでは\code{match}を使うと、どの条件に対応する処理なのかを明確に書けます。
-
-Bend 2の公開ガイドには通常の\code{if ... else}構文がなく、\code{match}と\code{True\{\}}／\code{False\{\}}を使います。特に\textbf{計算した式を直接matchできない}制限があります。例えば\code{match U32.is\_eq(n,3):}をそのまま書くのではなく、比較の結果を別関数の引数に渡し、その関数が\code{match}します。
-
-\readcode{03_rule.bend}{ライフゲームの遷移規則（03\_rule.bend）}
-\code{choose}に渡す二つのBooleanは\code{rule}で計算した値です。\code{choose}の中では引数として渡された値だけを\code{match}するので、公式ガイドが許す形になります。\code{+neighbors}は、\code{neighbors}を2度比較するために必要です。ここでの\code{+}は加算ではなく、変数を複数回使ってよいことを示す記号です。
-
-\section{三つの条件分岐を順番に追う}
+たとえば「条件が真なら10、偽なら20を返す」という処理には、条件による場合分けが必要です。\code{match}を使うと、それぞれの条件に対応する処理を明確に書けます。Bend 2の公開ガイドには通常の\code{if ... else}構文がなく、\code{match}と\code{True\{\}}／\code{False\{\}}を使います。計算結果を引数として受け取った関数の中で場合分けします。
+\readcode{27_match_basics.bend}{真偽値による場合分け（27\_match\_basics.bend）}
+\code{choose}に渡す真偽値\code{flag}が\code{True\{\}}なら最初の数値、\code{False\{\}}なら次の数値を返します。\code{match}は引数として受け取った値に対して行います。
+\section{真の場合と偽の場合を追う}
 \begin{tabularx}{\linewidth}{@{}c c c X@{}}
 \toprule
-入力\(a\) & 近傍\(n\) & 結果 & どの分岐か\\
+条件 & 第1候補 & 第2候補 & 返り値\\
 \midrule
-0 & 3 & 1 & \code{is\_three=True}で生まれる。\\
-1 & 3 & 1 & \code{is\_three=True}で生存します。\\
-0 & 2 & 0 & \code{is\_two=True}で元の状態を返します。\\
-1 & 2 & 1 & \code{is\_two=True}で元の状態を返します。\\
-1 & 1 & 0 & 両方Falseなので死ぬ。\\
-1 & 4 & 0 & 両方Falseなので死ぬ。\\
+\code{True\{\}} & 10 & 20 & 10\\
+\code{False\{\}} & 10 & 20 & 20\\
+\code{True\{\}} & 5 & 9 & 5\\
 \bottomrule
 \end{tabularx}
+\exercise{\code{choose(True\{\},10,20)}と\code{choose(False\{\},10,20)}の返り値を予想して確かめてみましょう。第1候補と第2候補を変えて結果を比較してみましょう。}
 
-\exercise{\code{rule(0,3)}、\code{rule(1,2)}、\code{rule(1,4)}の出力を確認してみましょう。\code{+neighbors}を削除して期待したエラーになるか検証してみましょう。\textbf{追加}: 総当たりで18ケースを確認する表を作ってみましょう。}
-
-\chapter{配列とアフィン性を初めて理解する}
+\chapter{配列の操作とアフィン性}
 \begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
-\small これまでは数値一つを扱いました。ここから64個の値を保存する\term{配列（array）}を学びます。Bend独特の\term{アフィン性（affinity）}は「同じ値を何度も使ってよいとは限らない」という性質です。
+\small これまでは数値一つを扱いました。ここでは\term{配列（array）}を学びます。配列は複数の値を順番にまとめ、位置を指定して扱うデータ構造です。Bend独特の\term{アフィン性（affinity）}は「同じ値を何度も使ってよいとは限らない」という性質です。
 \end{tcolorbox}
 
 \section{配列から値を取り出す基本操作}
@@ -437,9 +391,62 @@ BendHubには内容ハッシュ指定や名前とバージョンによるimport�
 \exercise{Lifeの\code{rule}だけを別の\code{.bend}へ切り出す。importを通して呼べることを確認し、循環依存を作らずに整理してみましょう。}
 
 \clearpage
-\part{ライフゲームを組み立てる}
+\part{ライフゲームを設計して組み立てる}
 \partchaptertoc
+\begin{pointbox}
+ここでは、最初に\textbf{ライフゲームの規則と受け入れ条件}を決めます。次にPart Iで学んだ関数と配列を使って、盤面を動かしていきます。盤面の大きさは作品の設定であり、Bend 2の配列の制約ではありません。
+\end{pointbox}
+\chapter{ライフゲームのしくみと制作するもの}
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small 本章では、ライフゲームの規則を日本語と数式で整理します。\term{仕様（specification）}とは「完成したプログラムが何をするべきか」を定めた約束です。まず仕様を決めると、後で正しさを確認しやすくなります。
+\end{tcolorbox}
+
+\section{何を作るか}
+ライフゲームは二次元格子の各セルが生存（1）か死亡（0）かを持つ\term{セル・オートマトン（cellular automaton）}です。周囲8方向にある\term{近傍セル（neighboring cell）}の生存数を数えて、次の状態を決めます。簡単な規則ですが、移動する模様や形を変え続ける模様が生まれます。そのため、小さなプログラムでも\term{モデル化（modeling）}、境界での処理、テスト、性能評価を学べます。
+
+本書では格子を8行×8列、セルを\code{U32}の0と1、座標を\((x,y)\)（左上が\((0,0)\)）とします。盤面の右端は左端に、下端は上端につながります。これを\term{周期境界条件（periodic boundary condition）}と呼びます。全セルを\textbf{同時に更新}します。
+
+\section{生死規則 B3/S23}
+セル\(a\in\{0,1\}\)と、その8近傍の生存数\(n\in\{0,\ldots,8\}\)に対して
+\[
+F(a,n)=\begin{cases}
+1&n=3\quad\text{（生死によらず誕生／生存）}\\
+a&n=2\quad\text{（現状維持）}\\0&\text{その他}
+\end{cases}
+\]
+これが\textbf{B3/S23}（Birth at 3, Survive at 2 or 3）です。いわゆる「生存セルは2～3近傍で生き残る」という説明と矛盾しません。生存数だけでは次状態は決まらず、\(n=2\)なら現在の状態を参照することに注意してください。
+
+\begin{center}
+\begin{tikzpicture}[scale=.62]
+\foreach \x in {0,...,7}{\foreach \y in {0,...,7}{\draw[gray!50] (\x,\y) rectangle ++(1,1);}}
+\foreach \x/\y in {1/7,2/6,0/5,1/5,2/5}{\fill[teal!75] (\x+.07,\y+.07) rectangle ++(.86,.86);}
+\node[anchor=west,align=left,font=\sffamily\small] at (8.5,5.7) {世代0のグライダー\\生存: 5セル\\1=生存、0=死亡};
+\draw[-{Stealth},very thick,teal] (8.4,4.3)--(10.0,3.4);
+\node[anchor=west,font=\sffamily\small] at (8.6,3.1) {4世代後に右下へ1マス};
+\end{tikzpicture}
+\end{center}
+
+\section{受け入れ条件}
+\begin{enumerate}
+\item 正しいグライダーを初期状態として5枚（世代0～4）の8×8盤面を表示します。
+\item 近傍として数えるのは周囲の8マス\textbf{だけ}です。中心のセル自身は数えません。
+\item すべてのセルの新状態を、更新前の盤面だけから計算します。\term{その場更新（in-place update）}を1セルずつ行う方法は採用しません。
+\item ブロックが静止、ブリンカーが周期2、グライダーが4世代で斜めへ1マス動くことをPythonの独立実装と照合します。
+\item 表示と更新を分離して、後で表示形式・実行先を交換できる形にします。
+\end{enumerate}
+\exercise{上の規則から、現在0/1の各場合について近傍数0～8の真理値表（\(2\times9\)個）を作ってみましょう。なぜ「3なら1、2なら現状、それ以外0」の3分岐で全部を処理できるのかを説明してみましょう。}
+
+
 \chapter{一次元配列で8×8盤面を表す}
+\begin{pointbox}
+この章から作品のコードを書きます。まず、生死規則を関数にします。次に、二次元の盤面を一次元配列に並べる方法を学びます。
+\end{pointbox}
+\section{生死規則を関数で表す}
+直前の章で決めた\textbf{B3/S23}はライフゲームの規則です。\code{match}はBend 2の文法です。ゲームの規則と言語の機能は分けて考えましょう。
+\readcode{03_rule.bend}{生死規則の関数（03\_rule.bend）}
+\code{rule(alive,neighbors)}は、近傍の生存数が3なら1、2なら現在の状態、その他なら0を返します。全18通りをテストで確認します。
+\exercise{生存状態0/1、近傍数0～8の全18ケースについて、期待値の表を作ってみましょう。}
+
 \begin{tcolorbox}[colback=blue!3,colframe=blue!16,boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
 \small ここからライフゲーム本体を作ります。2次元の盤面を1次元の配列に変換する方法を、実例と図で確かめましょう。
 \end{tcolorbox}
