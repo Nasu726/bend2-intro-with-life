@@ -1,86 +1,67 @@
 # ライフゲームで学ぶ はじめてのBend2
 
-Bend 2 の基礎文法から、ライフゲームの実装、並列計算、依存型・形式的な証明までを、**実際にコードを書きながら**学ぶ日本語の入門教科書です。プログラミング経験が少ない方にも読めるよう、専門用語は登場箇所で簡潔に説明しています。
+少しだけプログラミング経験のある人が、**Bend 2の基本文法をコードで確かめながら学び、ライフゲームを完成させる**ための日本語の教科書です。値とデータ型、関数、パターンマッチ、配列と所有権、リスト、高階関数、クロージャ、モナド、モジュールを扱います。
 
-**執筆基準:** Bend 2.0.36 ／ **CI検証:** Bend 2.0.37 ／ **版:** 第1版（2026-10-16） ／ **形式:** XeLaTeX・PDF ／ **構成:** 全5 Part・37章
+**刊行上の版:** 第1版 ／ **検証用コンパイラ:** Bend 2.0.37 ／ **形式:** XeLaTeX・PDF ／ **構成:** 3 Part・21章
 
-## 📖 教科書
+## 教科書
 
-- [**教科書PDF：ライフゲームで学ぶ はじめてのBend2**](ライフゲームで学ぶ_はじめてのBend2.pdf)
-- [TeX原稿](Bend2_Life_Textbook.tex)
-- [基本機能の監査・実装状況](FEATURE_AUDIT.md)
+- [教科書PDF](ライフゲームで学ぶ_はじめてのBend2.pdf)
+- [LaTeX原稿](Bend2_Life_Textbook.tex)
 
-Part IはBend 2の言語機能を学び、ライフゲームのルールはPart IIの冒頭で導入します。各Partの冒頭では、**Part見出しと当該Partの章別目次を同じページ**に配置しています。本文は「です・ます」調を基本とし、重要な用語には太字と英語表記を付けています。冒頭には、データ型・関数・引数などの用語表も用意しました。
+**Part I**はBend 2の基本文法、**Part II**はライフゲームの仕様と実装、**Part III**は演習の解答とコマンド資料です。各Partの冒頭に、そのPartの章別目次を掲載しています。
 
-## 🎮 作るもの
+## ハンズオン
 
-8×8のトーラス型のライフゲーム（Conway's Game of Life）を、ターミナル上で5世代分表示するプログラムです。
+8×8のトーラス型ライフゲーム（B3/S23）を5世代分表示するプログラムを、関数ごとに組み立てます。
 
-1. **Part I — Bend 2の基礎:** ゲーム固有の設定に入る前に、データ型、関数、パターンマッチ、配列、アフィン性、リスト、高階関数、クロージャなど、言語の機能を学びます。
-2. **Part II — ライフゲームの設計・実装:** まずゲームの規則と受け入れ条件を定め、初期配置、8近傍、同期更新、描画、Python参照実装を使ったテストまで進みます。
-3. **Part III — アプリケーション:** モナドを詳しく学んでから、入出力、ファイル、並行処理、GUIに進みます。
-4. **Part IV — 応用:** 再帰、所有権、CPU/GPU並列、性能測定、依存型、形式的証明を扱います。
-5. **Part V — 補足:** 演習の解答、コマンド、機能監査をまとめています。
+```sh
+bend src/01_hello.bend
+bend src/08_life_terminal.bend
+python3 -m unittest discover -s tests -v
+python3 scripts/test_bend_runtime.py
+```
 
-CPU/GPUでの並列ライフゲーム本体、GUI版、盤面全体の形式的証明は、**発展的な制作課題**です。完成済みであるとは記載していません。
+Bend未導入の場合、Bendの実行テストはスキップされず、**非ゼロ終了**します。`src/12_affine_probe_INVALID.bend` は所有権エラーを観察するための意図的な失敗例です。
 
-## 🛠️ 動かす
+## インストール
 
-公式インストールスクリプトは、実行前に内容を確認してください。Bend 2は初代Bendとは異なる言語です。
+公式インストールスクリプトは、内容を確認してから実行してください。
 
 ```sh
 curl -fsSL https://bend-lang.com/install.sh -o install-bend.sh
-# 事前に install-bend.sh の内容を確認してください。
+# 内容を確認してから実行
 sh install-bend.sh
 export PATH="$HOME/.bend/bin:$PATH"
 bend version
 bend guide
 ```
 
-付属コードを試す場合：
+## テストとPDFの再生成
 
 ```sh
-bend src/01_hello.bend
-bend src/08_life_terminal.bend
-python3 -m unittest discover -s tests -v
-python3 scripts/check_bend.py
+make test         # Python参照テストと教材構成テスト
+make bend-check   # Bendサンプルの型検査（意図的な失敗例を除く）
+make bend-test    # Bend実行と期待値の照合
+make pdf          # XeLaTeXを3回実行してPDFを更新
 ```
 
-`src/12_affine_probe_INVALID.bend` は、**型エラーを観察するために意図的に誤ったコード**です。通常の確認対象から除外してください。`src/26_file_write.bend` はカレントディレクトリの `life-demo-output.txt` を上書きします。
+GitHub ActionsはPRとmainへのpushでPython・Bendのテストを実行し、エラーは正常終了として扱いません。PDFの再組版にはXeLaTeX、日本語Notoフォント、`xeCJK`、`etoc`、`tcolorbox`、`listings`、`tikz`等が必要です。
 
-## 🧪 テストとPDFの再生成
+## テスト済みの項目
 
-```sh
-make test        # Python参照実装6件＋教科書構成5件（失敗時は非ゼロ終了）
-make bend-check  # Bendを使った各サンプルの型チェック
-make check       # Bend製ライフゲームとPython参照実装の出力比較
-make pdf         # XeLaTeXで本文を3回組版
-```
+Bend 2.0.37による型検査と、ライフゲームの生死規則18ケース、5世代の盤面、モナドの`do`/`bind`の成功・失敗、高階関数の結果を検査するCIを用意しています。テストを実施したバージョンを変更した際は再確認してください。
 
-PDFを自分で組版するには、XeLaTeX、Notoの日本語フォントと、`xeCJK`、`etoc`、`tcolorbox`、`listings`、`tikz` などのLaTeXパッケージが必要です。生成途中のファイルは `build/` に入ります。
+## 配列の長さ
 
-### GitHub Actionsでの検証
-
-PR作成時とmainへのpush時に、Pythonの参照テストと教材構成の検査、Bendの型検査、ライフゲーム出力のオラクルとの完全一致検査を実行します。Bendの実行環境を作れない場合もスキップせず失敗させます。CIが成功してからマージしてください。
-
-### 検証状況
-
-- **PRのCIで確認済み:** Python参照テスト6件・教材構成テスト5件、Bend 2.0.37による29サンプルの型検査、意図的な所有権エラーの検出、生死規則18ケース、5世代分の全セル照合、高階関数の出力42、do/bindの成功・失敗時の同値性、および異常時の非ゼロ終了。
-- **未確認:** GUI起動、GPU実行、`--verdict` による証明検査。
-- **未実装:** ライフゲーム本体のGPU版・CPUタイル並列版、盤面全体の形式的な証明。
-
-利用するBendのバージョンによって構文やAPIが変わる場合があります。まずインストールした環境の `bend guide` と `bend base` を参照してください。
-
-## 📚 参考資料
-
-- [Bend 公式リポジトリ](https://github.com/bendlang/bend)
-- [Bend 公式ガイド](https://github.com/bendlang/bend/blob/main/guide/GUIDE.md)
-- [Bend 公式リリース](https://github.com/bendlang/bend/releases)
+`Array`の長さは64固定ではありません。`[0 : U32*256n]`で256要素を作れます。また`Array<Array<U32>>`で入れ子の配列を表せます。完成作品では8×8の盤面に合わせ、一次元の64要素を使用します。
 
 ## ライセンス
 
-本リポジトリに収録した教材および付属コードは、[MIT License](LICENSE) で公開する構成です。外部のBend言語処理系や参考資料のライセンスは、それぞれの原著作者の定めに従います。
+本リポジトリの教材とサンプルコードは[MIT License](LICENSE)で公開する構成です。外部のBend処理系や参考資料の権利はそれぞれの提供元に帰属します。
 
-## 配列の長さと多次元配列
+## 参照
 
-64要素は本書の8×8盤面のサイズであり、言語の上限ではありません。`[0 : U32*256n]`で256要素を作れます。`Array.new(U32, 8n, 0)`は深さ8（2^8個）の配列です。`Array<Array<U32>>`で入れ子の配列も表現できますが、本書の完成版では座標計算を簡単にするため一次元配列を使用します。
+- [公式リポジトリ](https://github.com/bendlang/bend)
+- [公式ガイド](https://github.com/bendlang/bend/blob/main/guide/GUIDE.md)
+- [公式リリース](https://github.com/bendlang/bend/releases)
