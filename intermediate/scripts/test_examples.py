@@ -29,6 +29,7 @@ EXPECTED = {
     "24_bool_proofs.bend": "1",
     "25_either_case.bend": "7",
     "28_chan_roundtrip.bend": "9",
+    "30_array_clone.bend": "22",
 }
 
 def run(*args):
