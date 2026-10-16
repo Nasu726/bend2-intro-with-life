@@ -1,0 +1,19 @@
+# XeLaTeX intermediate outputs
+/build/
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+# Local Bend generated binaries and GPU kernels
+*.gpu
+*.bendtt
+/scratch/
+/life-demo-output.txt
+# OS/editor
+.DS_Store
+.vscode/

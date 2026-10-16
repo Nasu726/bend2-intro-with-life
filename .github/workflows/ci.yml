@@ -1,0 +1,60 @@
+name: Tests
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bend:
+    name: Bend syntax and behavior
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      BEND_NO_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Bend compiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --silent --show-error https://bend-lang.com/install.sh -o /tmp/bend-install.sh
+          # Official installer verifies the downloaded archive checksum.
+          sh /tmp/bend-install.sh
+          echo "$HOME/.bend/bin" >> "$GITHUB_PATH"
+      - name: Install Lean 4 for independent BendTT proof verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o /tmp/elan-init.sh
+          sh /tmp/elan-init.sh -y --default-toolchain leanprover/lean4:v4.34.0 --no-modify-path
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+          "$HOME/.elan/bin/lean" --version
+      - name: Print Bend version
+        run: bend version
+      - name: Python reference tests (assertions enabled)
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Bend typecheck, invalid example, rule table and 5 generations
+        run: python3 scripts/test_bend_runtime.py
+      - name: Test failure propagation
+        run: |
+          python3 - <<'PY'
+          import shutil
+          import subprocess
+          import sys
+          import tempfile
+          from pathlib import Path
+          with tempfile.TemporaryDirectory() as td:
+              fake = Path(td) / 'bend'
+              fake.write_text('#!/bin/sh\nexit 13\n')
+              fake.chmod(0o755)
+              import os
+              env = dict(os.environ, PATH=f'{td}:' + os.environ['PATH'])
+              p = subprocess.run([sys.executable, 'scripts/test_bend_runtime.py'], env=env)
+              if p.returncode == 0:
+                  raise SystemExit('FAIL: runner ignored compiler failure')
+          PY
