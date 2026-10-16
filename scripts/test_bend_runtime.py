@@ -142,7 +142,11 @@ def test_monad_bind_equivalence() -> None:
     print("PASS: do and explicit bind agree on success and failure")
 
 def test_parallel_and_proofs() -> None:
-    for name, expected in (("09_parallel_tree.bend", "4096"), ("10_gpu_tree.bend", "4096")):
+    expected_results = (("09_parallel_tree.bend", "4096"),
+                        ("10_gpu_tree.bend", "4096"),
+                        ("31_parallel_life_pair.bend", "2"),
+                        ("32_gpu_life_call.bend", "1"))
+    for name, expected in expected_results:
         got = run(["bend", str(SOURCE / name)], timeout=180).strip().splitlines()[-1]
         if got != expected:
             raise AssertionError(f"{name}: expected {expected}, got {got}")
@@ -150,7 +154,7 @@ def test_parallel_and_proofs() -> None:
         out = run(["bend", str(SOURCE / name), "--verdict"], timeout=180)
         if "ALL PROOFS CHECK" not in out:
             raise AssertionError(f"Proof verdict did not certify {name}:\n{out}")
-    print("PASS: parallel CPU/GPU-call syntax and proof verdict")
+    print("PASS: CPU/GPU-call syntax and verified laws and induction")
 
 
 def main() -> int:
