@@ -22,6 +22,8 @@ EXPECTED = {
     "16_map_set_api.bend": "3n",
     "17_list_pipeline.bend": "3n",
     "18_array_mutations.bend": "17",
+    "20_process_run.bend": "0",
+    "21_io_fork.bend": "7",
 }
 
 def run(*args):
