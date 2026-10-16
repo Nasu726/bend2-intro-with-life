@@ -13,8 +13,8 @@
 |---|---|---|---|
 | `Nat`, `U32`, `F32`, `Word`, `Cmp` | 第2・23章を改稿（型を選ぶ必要性と変換を具体化） | `37_u32_dimension.bend` ほか | Nat→U32変換と大小比較を実行検査。F32/Wordの丸め・境界値は今後 |
 | `String`, `Char` | 第2章を改稿（設定行の分割・数値変換） | `15_string_parse.bend`、`35_string_fields.bend` | trim/U32.readとsplitの件数を実行照合。joinと文字境界は今後 |
-| `List`, 高階関数と畳み込み | 第3章＋[詳細補稿](manuscript/03_ListとArrayを選ぶ.md)（PDFに一部反映、残りは補稿） | `03_list.bend`、`17_list_pipeline.bend` | filter/foldを実行照合。map/sortと数量指定は追加予定 |
-| `Array` 操作、`fork/join/clone` | 第3章＋[詳細補稿](manuscript/03_ListとArrayを選ぶ.md)（PDFに一部反映、残りは補稿） | `18_array_mutations.bend`、`30_array_clone.bend`、前巻の基本例 | new/set/getとcloneを実行照合。fork/joinと共有時の競合は今後 |
+| `List`, 高階関数と畳み込み | 第3章を全面改稿（map/filter/sort/foldの目的と結果を比較） | `03_list.bend`、`17_list_pipeline.bend`、`38_list_sort.bend`、`40_list_map.bend` | map・sort・filter・foldを型検査と結果照合で確認。安定ソート・巨大入力性能は対象外 |
+| `Array` 操作、`fork/join/clone` | 第3章を改稿（更新・to_list・cloneの用途を比較） | `18_array_mutations.bend`、`30_array_clone.bend`、`39_array_to_list.bend` | new/set/get・clone・to_listの結果を照合。共有時の競合とfork/joinの実機検証は今後 |
 | `Map`（文字列キー） | 第4章を改稿（存在・既定値を使い分ける） | `02_map.bend`、`16_map_set_api.bend`、`36_map_missing.bend` | Map.hasで存在を区別、Map.getは既定値で取得。キー順と複雑な値型は今後 |
 | `Set` | 第4章 | `01_set.bend`、`05_marking.bend`、`16_map_set_api.bend` | 追加・重複・削除・サイズを照合 |
 | `Maybe`, `Result`, `Either` | 第5・第6章 | `15_string_parse.bend`、`22_result_and_game.bend`、`25_either_case.bend` | Maybe/Result/Eitherの独立例。失敗と二者択一を区別 |
@@ -35,7 +35,7 @@
 | CPU並列、GPU指定 | 第19章を増補（CPU並列・GPU指定・IO並行の比較） | `06_parallel.bend`・`21_io_fork.bend` | CPU並列の実行確認、GPU・他ターゲットでの性能と実機挙動は未検証 |
 | `Array.atomic` | 第19章を増補（標準Baseの型と使用条件を説明） | 追加実習 | 呼出しコード・実機共有更新の検査は今後 |
 | C/JavaScriptと外部連携 | 第20章を増補（生成ターゲットごとの検証・外部所有権を整理） | 追加実習 | 生成コードの実行テスト・FFIは今後 |
-| モジュール・パッケージ | 第20章 | 追加実習 | 公開と配布 |
+| モジュール・パッケージ | 第20章に二ファイルimport演習を追加 | `41_board_index.bend`、`42_module_board.bend` | モジュール読み込みと計算結果を照合。BendHubへの公開・外部パッケージ依存は実施せず |
 | 4×4盤面の近傍数 | 第13章 | `10_board_neighbors.bend` | 境界ケースと盤面全体の更新 |
 | 乱数IOの失敗処理 | 第8章 | `11_random_io.bend` | 実機での失敗・再現性確認 |
 | マインスイーパーの公開マス仕様 C-01〜C-07 | `intermediate/minesweeper/REQUIREMENTS.md`（第15章に一部統合） | `minesweeper/LAWS.bend`・`game.bend`・`PROOF.bend` | `--verdict`で7件の量化法則を証明。盤面・初手安全・GUIの証明ではない |
