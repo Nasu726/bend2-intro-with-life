@@ -95,12 +95,9 @@ jobs:
           path: |
             intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf
             reader-packages/bend2-intermediate-reader-preview.zip
-      - name: Ensure the checked-in draft PDF and ZIP match the sources
+      - name: Compare checked-in PDF and ZIP by content, not PDF timestamps
         if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          set -euo pipefail
-          git diff --exit-code -- intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf reader-packages/bend2-intermediate-reader-preview.zip
+        run: python3 intermediate/scripts/check_bundle_consistency.py
       - name: Publish updated draft PDF and learner ZIP on manual dispatch
         if: github.event_name == 'workflow_dispatch'
         env:
