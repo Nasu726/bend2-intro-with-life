@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   bend-examples:
@@ -100,19 +100,6 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq poppler-utils
-      - name: Publish refreshed book PDF and reader ZIP
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          if python3 intermediate/scripts/check_bundle_consistency.py; then
-            echo 'Reader edition already consistent.'
-          else
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git add 'intermediate/Bend2を使いこなす_プレビュー.pdf' reader-packages/bend2-intermediate-reader-preview.zip
-            git commit -m 'docs(intermediate): publish retitled Bend 2 reader edition'
-            git push origin "HEAD:refs/heads/${BRANCH_NAME}"
-          fi
+      - name: Verify committed book PDF and reader ZIP match the sources
+        if: github.event_name == 'pull_request'
+        run: python3 intermediate/scripts/check_bundle_consistency.py
