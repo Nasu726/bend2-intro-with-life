@@ -25,6 +25,7 @@ EXPECTED = {
     "20_process_run.bend": "0",
     "21_io_fork.bend": "7",
     "22_result_and_game.bend": "1",
+    "23_cell_hit_test.bend": "10",
 }
 
 def run(*args):
