@@ -52,8 +52,6 @@ jobs:
 
   intermediate-pdf:
     name: Intermediate XeLaTeX PDF
-    permissions:
-      contents: write
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -97,21 +95,6 @@ jobs:
           path: |
             intermediate/Bend2を使いこなす_プレビュー.pdf
             reader-packages/bend2-intermediate-reader-preview.zip
-      # Temporary one-time PDF/ZIP sync for our own draft branch.
-      # The exact commit-message guard prevents a push loop.
-      - name: Synchronize reader PDF and ZIP from the updated TeX
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feat/intermediate-minesweeper-textbook'
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$(git log -1 --format=%s)" = 'ci(intermediate): temporarily synchronize advanced chapter PDF' || exit 0
-          git add -- 'intermediate/Bend2を使いこなす_プレビュー.pdf' 'reader-packages/bend2-intermediate-reader-preview.zip'
-          if ! git diff --cached --quiet; then
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git commit -m 'docs(intermediate): update PDF and ZIP for chapters 19-21'
-            git push origin 'HEAD:refs/heads/feat/intermediate-minesweeper-textbook'
-          fi
       - name: Install PDF text comparison utility
         if: github.event_name == 'pull_request'
         run: |
