@@ -32,6 +32,7 @@ EXPECTED = {
     "30_array_clone.bend": "22",
     "31_image_quadrants.bend": "16711680",
     "32_mouse_events.bend": "10",
+    "33_nat_induction.bend": "0",
 }
 
 def run(*args):
@@ -308,6 +309,11 @@ def main():
         if "ALL PROOFS CHECK" in output or rejected.returncode == 0:
             raise AssertionError("A well-typed regression incorrectly passed the proof gate:\n" + output)
         print("PASS mutation: invalid flagging implementation rejected by proofs", flush=True)
+
+    nat_verdict = run("bend", str(SAMPLES / "33_nat_induction.bend"), "--verdict")
+    if "ALL PROOFS CHECK" not in nat_verdict:
+        raise AssertionError(f"Natural-number induction proof failed:\\n{nat_verdict}")
+    print("PASS induction law for every Nat", flush=True)
 
     verdict = run("bend", str(SAMPLES / "04_flag_laws.bend"), "--verdict")
     if "ALL PROOFS CHECK" not in verdict:
