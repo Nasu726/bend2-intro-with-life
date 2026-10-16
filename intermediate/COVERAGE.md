@@ -35,7 +35,7 @@
 | CPU並列、GPU指定 | 第19章を増補（CPU並列・GPU指定・IO並行の比較） | `06_parallel.bend`・`21_io_fork.bend` | CPU並列の実行確認、GPU・他ターゲットでの性能と実機挙動は未検証 |
 | `Array.atomic` | 第19章を増補（標準Baseの型と使用条件を説明） | 追加実習 | 呼出しコード・実機共有更新の検査は今後 |
 | C/JavaScriptと外部連携 | 第20章を増補（生成ターゲットごとの検証・外部所有権を整理） | 追加実習 | 生成コードの実行テスト・FFIは今後 |
-| モジュール・パッケージ | 第20章に二ファイルimport演習を追加 | `41_board_index.bend`、`42_module_board.bend` | モジュール読み込みと計算結果を照合。BendHubへの公開・外部パッケージ依存は実施せず |
+| モジュール・パッケージ | 第20章に二ファイルimport演習を追加 | `board_index.bend`、`42_module_board.bend` | モジュール読み込みと計算結果を照合。BendHubへの公開・外部パッケージ依存は実施せず |
 | 4×4盤面の近傍数 | 第13章 | `10_board_neighbors.bend` | 境界ケースと盤面全体の更新 |
 | 乱数IOの失敗処理 | 第8章 | `11_random_io.bend` | 実機での失敗・再現性確認 |
 | マインスイーパーの公開マス仕様 C-01〜C-07 | `intermediate/minesweeper/REQUIREMENTS.md`（第15章に一部統合） | `minesweeper/LAWS.bend`・`game.bend`・`PROOF.bend` | `--verdict`で7件の量化法則を証明。盤面・初手安全・GUIの証明ではない |

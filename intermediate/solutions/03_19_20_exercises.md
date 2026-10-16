@@ -13,7 +13,7 @@
 - 単一盤面の旗切替に `Array.fork` や原子的操作は不要です。独立候補の大量検査なら並列化を検討できますが、性能は実測します。
 
 ## 第20章：モジュールと生成先
-- `41_board_index.bend` の `index(row,col)` は `4*row+col` を返します。`42_module_board.bend` が `Board.index(2,3)` を呼び、結果11です。
-- `41_board_index.bend` は `main` がないモジュールです。ZIPでは、取り込む側の `42_module_board.bend` を実行してください。
+- `board_index.bend` の `index(row,col)` は `4*row+col` を返します。`42_module_board.bend` が `Board.index(2,3)` を呼び、結果11です。
+- `board_index.bend` は `main` がないモジュールです。ZIPでは、取り込む側の `42_module_board.bend` を実行してください。
 - `bend ... -o foo.c` でCのソースが生成されることと、生成後のCコードがコンパイル・実行できたことは別です。さらにブラウザやJSランタイム上での外部呼び出しも別途検査します。
 - `--publish` はパッケージを公開する操作であり、練習として実行しません。

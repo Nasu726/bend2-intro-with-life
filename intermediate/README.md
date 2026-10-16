@@ -91,6 +91,6 @@ IOの外部入力、Chanの受け渡し、TCP接続の成否を示す小さな�
 
 今回の第3章改稿では `38_list_sort.bend`、`39_array_to_list.bend`、`40_list_map.bend` を追加し、
 標準の `List.sort`・`List.map`・`List.foldl`・`Array.to_list` を自分で動かして比較できます。
-第19章にはCPUスレッド数を変えるコマンド、第20章には `41_board_index.bend` と
+第19章にはCPUスレッド数を変えるコマンド、第20章には `board_index.bend` と
 `42_module_board.bend` を使う二ファイルのimport実習を追加しました。
-後者の `41_board_index.bend` はライブラリ用なので、`main` を持つ `42_module_board.bend` を実行します。
+後者の `board_index.bend` はライブラリ用なので、`main` を持つ `42_module_board.bend` を実行します。
