@@ -7,7 +7,7 @@
 ## 教材
 
 - [TeX原稿](Intermediate_Textbook.tex)
-- [PDF（CIでビルドする予定）](../actions) — PRの`intermediate-pdf`成果物に配布用PDFを用意します
+- **[教科書PDF（レビュー用初稿・36ページ）](マインスイーパーで学ぶ_Bend2中級_初稿.pdf)**
 - [独立して動かせる教材コード](src/)
 - [機能カバレッジと検証記録](COVERAGE.md)
 
