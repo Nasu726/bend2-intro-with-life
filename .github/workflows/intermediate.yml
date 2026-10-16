@@ -68,13 +68,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -s intermediate/Intermediate_Textbook.log
-          if grep -nE 'Overfull|Underfull|LaTeX Font Warning|LaTeX Warning' intermediate/Intermediate_Textbook.log; then
+          LOG='Intermediate_Textbook.log'
+          if test -s intermediate/Intermediate_Textbook.log; then LOG='intermediate/Intermediate_Textbook.log'; fi
+          test -s "$LOG"
+          if grep -nE 'Overfull|Underfull|LaTeX Font Warning|LaTeX Warning' "$LOG"; then
             echo 'TeX layout/compatibility warnings detected' >&2
             exit 1
           fi
       - name: Prepare intermediate PDF
-        run: cp intermediate/Intermediate_Textbook.pdf 'intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf'
+        shell: bash
+        run: |
+          if test -s Intermediate_Textbook.pdf; then
+            cp Intermediate_Textbook.pdf 'intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf'
+          else
+            cp intermediate/Intermediate_Textbook.pdf 'intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf'
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: intermediate-pdf
