@@ -63,7 +63,7 @@ https://github.com/Nasu726/bend2-intro-with-life/tree/main/src
 原稿・CI・編集用資料もZIPには含めていません。
 ライセンスは同梱のLICENSEを参照してください。
 """
-    return """# Bend 2 中級 — 学習用セット（執筆途中）
+    return """# Bend 2を使いこなす — 学習用セット（執筆途中）
 
 PDFを読み、examples/ 内のコードを実行してください。
 初稿は執筆途中です。完成版マインスイーパーや
@@ -90,7 +90,7 @@ def build(track: str, outdir: Path) -> Path:
         example_names = INTRO_EXAMPLES
         output = "bend2-intro-reader.zip"
     else:
-        pdf = ROOT / "intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf"
+        pdf = ROOT / "intermediate/Bend2を使いこなす_プレビュー.pdf"
         examples_dir = ROOT / "intermediate/src"
         example_names = INTERMEDIATE_EXAMPLES
         output = "bend2-intermediate-reader-preview.zip"
