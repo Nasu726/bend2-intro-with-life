@@ -81,9 +81,9 @@ jobs:
         shell: bash
         run: |
           if test -s Intermediate_Textbook.pdf; then
-            cp Intermediate_Textbook.pdf 'intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf'
+            cp Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
           else
-            cp intermediate/Intermediate_Textbook.pdf 'intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf'
+            cp intermediate/Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
           fi
       - name: Build intermediate learner ZIP
         run: python3 scripts/build_reader_bundle.py intermediate
@@ -93,7 +93,7 @@ jobs:
         with:
           name: intermediate-reader-materials
           path: |
-            intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf
+            intermediate/Bend2を使いこなす_プレビュー.pdf
             reader-packages/bend2-intermediate-reader-preview.zip
       - name: Install PDF text comparison utility
         if: github.event_name == 'pull_request'
