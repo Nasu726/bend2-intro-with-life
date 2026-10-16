@@ -96,6 +96,28 @@ def main():
         raise AssertionError(f"Minesweeper law proof gate failed:\\n{game_verdict}")
     print("PASS Minesweeper requirements/proof gate (C-01..C-07)", flush=True)
 
+    # Mutation test: keeping the function well-typed must not suffice when
+    # it violates an independently declared requirement.
+    with tempfile.TemporaryDirectory() as td:
+        mutant_dir = pathlib.Path(td)
+        for name in ("LAWS.bend", "PROOF.bend"):
+            shutil.copyfile(game / name, mutant_dir / name)
+        original = (game / "game.bend").read_text(encoding="utf-8")
+        mutant = original.replace("    case Hidden{}:\\n      Flag{}",
+                                  "    case Hidden{}:\\n      Hidden{}", 1)
+        if mutant == original:
+            raise AssertionError("Unable to construct the flagging regression")
+        (mutant_dir / "game.bend").write_text(mutant, encoding="utf-8")
+        run("bend", str(mutant_dir / "game.bend"), "--check-only")
+        rejected = subprocess.run(
+            ["bend", str(mutant_dir / "PROOF.bend"), "--verdict"],
+            text=True, capture_output=True, timeout=180,
+            cwd=ROOT.parent, env=dict(os.environ, BEND_NO_TELEMETRY="1"))
+        output = rejected.stdout + rejected.stderr
+        if "ALL PROOFS CHECK" in output or rejected.returncode == 0:
+            raise AssertionError("A well-typed regression incorrectly passed the proof gate:\\n" + output)
+        print("PASS mutation: invalid flagging implementation rejected by proofs", flush=True)
+
     verdict = run("bend", str(SAMPLES / "04_flag_laws.bend"), "--verdict")
     if "ALL PROOFS CHECK" not in verdict:
         raise AssertionError(f"Proof checker did not accept laws:\n{verdict}")
