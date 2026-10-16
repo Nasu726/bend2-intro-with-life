@@ -3,6 +3,7 @@ import Base
 import ./game.bend as Game
 import ./board.bend as Board
 import ./board4.bend as Board4
+import ./session.bend as Session
 import ./LAWS.bend as Laws
 
 def Laws.hidden_is_flagged():
@@ -99,4 +100,25 @@ def Laws.board4_rejects_invalid_flag_index(mines, cells):
   {==}
 
 def Laws.board4_rejects_invalid_reveal_index(mines, cells, clue):
+  {==}
+
+def Laws.session_mine_click_loses():
+  {==}
+
+def Laws.session_flag_protects_mine():
+  {==}
+
+def Laws.session_outside_ignored(mines):
+  {==}
+
+def Laws.session_lost_is_terminal(board, index):
+  {==}
+
+def Laws.session_won_is_terminal(board, index):
+  {==}
+
+def Laws.session_last_safe_cell_wins():
+  {==}
+
+def Laws.session_safe_click_shows_true_clue():
   {==}

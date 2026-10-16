@@ -142,7 +142,7 @@ def verify_dense_board(game_dir):
     )
     with tempfile.TemporaryDirectory() as td:
         out = pathlib.Path(td)
-        for name in ("game.bend", "board.bend", "board4.bend"):
+        for name in ("game.bend", "board.bend", "board4.bend", "session.bend"):
             shutil.copyfile(game_dir / name, out / name)
         f = out / "dense_oracle.bend"
         f.write_text(program, encoding="utf-8")
@@ -203,13 +203,14 @@ def main():
     board_result = run("bend", str(game / "board4.bend")).splitlines()[-1]
     if board_result != "2":
         raise AssertionError(f"Incorrect full-board clue smoke output: {board_result}")
+    run("bend", str(game / "session.bend"), "--check-only")
     engine = run("bend", str(game / "game.bend")).splitlines()[-1]
     if engine != "1":
         raise AssertionError(f"Unexpected visible-state smoke output: {engine}")
     game_verdict = run("bend", str(game / "PROOF.bend"), "--verdict")
     if "ALL PROOFS CHECK" not in game_verdict:
         raise AssertionError(f"Minesweeper law proof gate failed:\n{game_verdict}")
-    print("PASS Minesweeper law proof gate (24 laws, including whole-board mine invariants and clues)", flush=True)
+    print("PASS Minesweeper law proof gate (31 laws, including whole-board mine invariants and clues)", flush=True)
     verify_full_neighbor_table(game)
     verify_dense_board(game)
 
