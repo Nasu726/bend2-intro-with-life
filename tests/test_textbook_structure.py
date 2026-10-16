@@ -20,7 +20,8 @@ class TextbookStructureTests(unittest.TestCase):
 
     def test_first_part_is_independent_of_game_rules(self):
         for phrase in ("B3/S23", "グライダー", "トーラス", "64要素",
-                       r"\chapter{ライフゲーム", "生死規則", "8×8"):
+                       "生死規則", "8×8", "ライフゲーム", "セル", "座標",
+                       "近傍", "Conway", "Life", "B/S", "ゲーム", "行優先"):
             with self.subTest(phrase=phrase):
                 self.assertNotIn(phrase, self.part1)
 
