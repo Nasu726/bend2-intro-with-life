@@ -37,6 +37,9 @@ EXPECTED = {
     "35_string_fields.bend": "2n",
     "36_map_missing.bend": "1",
     "37_u32_dimension.bend": "1",
+    "38_list_sort.bend": "2",
+    "39_array_to_list.bend": "10",
+    "40_list_map.bend": "9",
 }
 
 def run(*args):
