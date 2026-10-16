@@ -49,6 +49,7 @@ INTERMEDIATE_EXAMPLES = (
     "35_string_fields.bend", "36_map_missing.bend",
     "37_u32_dimension.bend",
     "38_list_sort.bend",     "39_array_to_list.bend",     "40_list_map.bend",
+    "41_board_index.bend", "42_module_board.bend",
 )
 
 def readme(track: str) -> str:

@@ -40,6 +40,7 @@ EXPECTED = {
     "38_list_sort.bend": "2",
     "39_array_to_list.bend": "10",
     "40_list_map.bend": "9",
+    "42_module_board.bend": "11",
 }
 
 def run(*args):
