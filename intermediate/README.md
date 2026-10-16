@@ -53,8 +53,8 @@ bend examples/04_flag_laws.bend --verdict
 bend intermediate/minesweeper/PROOF.bend --verdict
 ```
 
-現在の証明範囲はマス単体の旗と公開操作だけです。盤面全体やGUIの
-正当性はまだ証明・実装されていません。
+現在の証明範囲は旗・公開の7法則と、4×4盤面の境界・単一セル内部状態の9法則です。
+盤面全体の集合不変条件、勝敗、0展開、GUIの正当性はまだ証明・実装されていません。
 
 ## 公式資料とライセンス
 

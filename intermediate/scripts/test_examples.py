@@ -40,6 +40,49 @@ def run(*args):
         raise AssertionError(f"{args} exited {p.returncode}:\n{p.stdout}\n{p.stderr}")
     return p.stdout.strip()
 
+def verify_full_neighbor_table(game_dir):
+    """Independent 4x4 truth table: every ordered pair of cells, not just corners.
+
+    Generate a Bend test program rather than trusting a Python copy of the
+    implementation. Each of 16 rows returns an exact 16-bit adjacency mask.
+    """
+    rows = []
+    checks = []
+    for y in range(4):
+        for x in range(4):
+            i = y * 4 + x
+            terms = []
+            signature = 0
+            for v in range(4):
+                for u in range(4):
+                    j = v * 4 + u
+                    terms.append(
+                        f"(bit(Board.neighbor({x}, {y}, {u}, {v})) * {1 << j} : U32)"
+                    )
+                    if (x, y) != (u, v) and abs(x - u) <= 1 and abs(y - v) <= 1:
+                        signature |= 1 << j
+            rows.append(f"def row_{i}() -> U32:\n  (" + " + ".join(terms) + " : U32)")
+            checks.append(f"bit(U32.is_eq(row_{i}(), {signature}))")
+    source = (
+        "import Base\nimport ./board.bend as Board\n"
+        "def bit(b: Bool) -> U32:\n"
+        "  match b:\n    case True{}:\n      1\n"
+        "    case False{}:\n      0\n\n"
+        + "\n\n".join(rows)
+        + "\n\ndef main() -> U32:\n  ("
+        + " + ".join(checks)
+        + " : U32)\n"
+    )
+    with tempfile.TemporaryDirectory() as td:
+        path = pathlib.Path(td)
+        shutil.copyfile(game_dir / "game.bend", path / "game.bend")
+        shutil.copyfile(game_dir / "board.bend", path / "board.bend")
+        (path / "check_board.bend").write_text(source, encoding="utf-8")
+        result = run("bend", str(path / "check_board.bend")).splitlines()[-1]
+        if result != "16":
+            raise AssertionError(f"4x4 nonwrapping adjacency table failed: {result}")
+        print("PASS all 256 ordered 4x4 cell pairs against independent oracle", flush=True)
+
 def main():
     if not shutil.which("bend"):
         print("ERROR: bend not on PATH", file=sys.stderr)
@@ -96,6 +139,7 @@ def main():
     if "ALL PROOFS CHECK" not in game_verdict:
         raise AssertionError(f"Minesweeper law proof gate failed:\n{game_verdict}")
     print("PASS Minesweeper law proof gate (7 C laws + 9 local B laws)", flush=True)
+    verify_full_neighbor_table(game)
 
     # Mutation test: keeping the function well-typed must not suffice when
     # it violates an independently declared requirement.

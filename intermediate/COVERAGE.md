@@ -38,7 +38,9 @@
 | モジュール・パッケージ | 第20章 | 追加実習 | 公開と配布 |
 | 4×4盤面の近傍数 | 第13章 | `10_board_neighbors.bend` | 境界ケースと盤面全体の更新 |
 | 乱数IOの失敗処理 | 第8章 | `11_random_io.bend` | 実機での失敗・再現性確認 |
-| マインスイーパーの公開マス仕様 C-01〜C-07 | `intermediate/minesweeper/REQUIREMENTS.md`（本文統合は次段階） | `minesweeper/LAWS.bend`・`game.bend`・`PROOF.bend` | `--verdict`で7件の量化法則を証明。盤面・初手安全・GUIの証明ではない |\n| 盤面境界・局所不変性 B-01/B-02/B-03/B-05 | `minesweeper/REQUIREMENTS.md`（本文への統合は未着手） | `minesweeper/LAWS.bend`・`board.bend`・`PROOF.bend` | 4×4非トーラス境界と単一セルの地雷値保持・公開状態維持について9件の法則を検査。盤面全体・数字計算 B-04 は未実装 |\n| 旗の基本操作・局所法則 | 第13・15章 | `09_minesweeper_status.bend`, `04_flag_laws.bend` | 操作の網羅 |
+| マインスイーパーの公開マス仕様 C-01〜C-07 | `intermediate/minesweeper/REQUIREMENTS.md`（本文統合は次段階） | `minesweeper/LAWS.bend`・`game.bend`・`PROOF.bend` | `--verdict`で7件の量化法則を証明。盤面・初手安全・GUIの証明ではない |
+| 盤面境界・局所不変性 B-01/B-02/B-03/B-05 | `minesweeper/REQUIREMENTS.md`（本文への統合は未着手） | `minesweeper/LAWS.bend`・`board.bend`・`PROOF.bend` | 4×4非トーラス境界と単一セルの地雷値保持・公開状態維持について9件の法則を証明。独立オラクルで全256セル対も照合。盤面全体・数字計算 B-04 は未実装 |
+| 旗の基本操作・局所法則 | 第13・15章 | `09_minesweeper_status.bend`, `04_flag_laws.bend` | 操作の網羅 |
 | プレイ可能な通常版マインスイーパー | 第21章 | **未実装** | GUI、勝敗、0展開、保存 |
 | 運ゲー無し版 | 第22章 | `14_local_inference.bend`（局所推論）・`solutions/noguess_reference.py`（Python参考実装） | Bend版生成とGUIは未実装。Python参考実装は全列挙・失敗明示・小盤面テスト |
 
