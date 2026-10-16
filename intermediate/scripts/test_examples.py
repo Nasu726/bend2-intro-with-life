@@ -32,9 +32,15 @@ def main():
     files = sorted(SAMPLES.glob("*.bend"))
     if not files:
         raise AssertionError("No Bend examples")
+    errors = []
     for file in files:
-        run("bend", str(file), "--check-only")
-        print(f"PASS typecheck {file.name}", flush=True)
+        try:
+            run("bend", str(file), "--check-only")
+            print(f"PASS typecheck {file.name}", flush=True)
+        except AssertionError as exc:
+            errors.append(str(exc))
+    if errors:
+        raise AssertionError("\n\n".join(errors))
     for file, result in EXPECTED.items():
         value = run("bend", str(SAMPLES / file)).splitlines()[-1]
         if value != result:
