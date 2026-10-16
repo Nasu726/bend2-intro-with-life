@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   bend-examples:
@@ -87,17 +87,3 @@ jobs:
         with:
           name: intermediate-pdf
           path: 'intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf'
-      - name: Publish PDF to proposal branch
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add 'intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf'
-          if ! git diff --cached --quiet; then
-            git commit -m 'docs(intermediate): add compiled review PDF'
-            git push origin "HEAD:refs/heads/${BRANCH_NAME}"
-          fi
