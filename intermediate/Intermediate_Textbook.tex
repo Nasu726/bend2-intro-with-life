@@ -36,7 +36,7 @@
 \definecolor{codebg}{HTML}{F4F7FA}
 \definecolor{muted}{HTML}{536378}
 \hypersetup{colorlinks=true,linkcolor=blue,urlcolor=teal,
-  pdftitle={マインスイーパーで学ぶ Bend 2 中級},
+  pdftitle={Bend 2を使いこなす — マインスイーパーで学ぶ機能と実践},
   pdfauthor={Nasu726},hypertexnames=false}
 \setlength{\parskip}{.5em}
 \setlength{\parindent}{0pt}
@@ -44,7 +44,7 @@
 \raggedbottom
 \setlist{nosep,leftmargin=2em}
 \fancyhf{}
-\fancyhead[LE,RO]{\sffamily\small\textcolor{muted}{マインスイーパーで学ぶ Bend 2 中級}}
+\fancyhead[LE,RO]{\sffamily\small\textcolor{muted}{Bend 2を使いこなす}}
 \fancyhead[LO,RE]{\sffamily\small\textcolor{muted}{\nouppercase{\leftmark}}}
 \fancyfoot[C]{\sffamily\small\thepage}
 \pagestyle{fancy}
@@ -121,23 +121,23 @@
     \fill[warm] ([xshift=-3.4cm,yshift=-9.8cm]current page.north east) circle (.1cm);
   \end{tikzpicture}
   \vspace*{34mm}
-  {\sffamily\fontsize{15}{19}\selectfont\color{blue} 基本文法の次の一歩へ\par}
+  {\sffamily\fontsize{15}{19}\selectfont\color{blue} はじめてのBend 2から、実際に使えるBend 2へ\par}
   \vspace{13mm}
   {\sffamily\bfseries\fontsize{22}{29}\selectfont\color{blue} マインスイーパーで学ぶ\par}
   \vspace{5mm}
-  {\sffamily\bfseries\fontsize{37}{48}\selectfont\color{ink} Bend 2 中級\par}
+  {\sffamily\bfseries\fontsize{33}{44}\selectfont\color{ink} Bend 2を使いこなす\par}
   \vspace{12mm}
-  {\sffamily\Large 標準ライブラリ・入出力・GUI・形式的証明を学ぶ\par}
+  {\sffamily\Large 標準ライブラリ・入出力・GUI・証明を、自分の道具にする\par}
   \vfill
   {\sffamily\large 本文・演習・Bendソース・独立テスト付き\par}
   \vspace{5mm}
-  {\sffamily\large 続編 \quad / \quad Bend 2 中級機能\par}
+  {\sffamily\large 『はじめてのBend2』から続く実践編\par}
   \vspace{15mm}
 \end{titlepage}
 \nopagecolor
 \chapter*{本書の読み方}
 \addcontentsline{toc}{chapter}{本書の読み方}
-本書は『ライフゲームで学ぶ はじめてのBend2』の続編です。前巻で学んだ関数、パターンマッチ、配列、アフィン性、\code{do}の基本から始め、\term{標準ライブラリの使い分け、入出力、GUI、形式的証明}へ進みます。
+本書は『ライフゲームで学ぶ はじめてのBend2』の続編です。『使いこなす』とは、あらゆるAPIを暗記することではありません。必要な処理から適切な機能を探し、型と失敗条件を確かめ、実装と検証を自分で進められることです。前巻で学んだ関数、パターンマッチ、配列、アフィン性、\code{do}の基本から始め、\term{標準ライブラリの使い分け、入出力、GUI、形式的証明}へ進みます。
 
 目標は、難しいテクニックを暗記することではありません。\textbf{Bend 2で何ができるかを把握し、引数・返り値・所有権・失敗時の挙動を理解して、必要な機能を自分で使えること}です。マインスイーパーはそのための共通の実習題材ですが、ゲームに不要な機能も独立した例で扱います。
 
