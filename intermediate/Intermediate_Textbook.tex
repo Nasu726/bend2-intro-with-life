@@ -5,9 +5,10 @@
 \setmainfont{TeX Gyre Pagella}
 \setCJKmainfont{Noto Serif CJK JP}
 \setCJKsansfont{Noto Sans CJK JP}
+\setCJKmonofont{Noto Sans Mono CJK JP}
 \usepackage{amsmath,amssymb,booktabs,longtable,tabularx,array,hyperref}
 \usepackage{enumitem,xcolor,listings,fancyhdr}
-\hypersetup{colorlinks=true,linkcolor=blue!45!black,urlcolor=blue!55!black}
+\hypersetup{colorlinks=true,linkcolor=blue!45!black,urlcolor=blue!55!black,hypertexnames=false}
 \definecolor{shade}{RGB}{246,248,251}
 \lstset{basicstyle=\ttfamily\footnotesize,backgroundcolor=\color{shade},frame=single,framerule=.2pt,rulecolor=\color{black!25},numbers=none,breaklines=true,breakatwhitespace=true,columns=fullflexible,keepspaces=true,showstringspaces=false,xleftmargin=1em,xrightmargin=1em,aboveskip=8pt,belowskip=8pt}
 \newcommand{\code}[1]{\texttt{\detokenize{#1}}}
@@ -284,7 +285,7 @@ Bend 2はCのネイティブ実行ターゲットとJavaScriptの実行ターゲ
 \sectiongoal{使い方が分からない機能を自分で調べ、検証できるようにする。}
 標準ライブラリは機能名を列挙するだけでは使いこなせません。必要な操作について\textbf{引数・戻り値・所有権・失敗・対象ターゲット}を調べる方法を繰り返しましょう。
 
-\begin{longtable}{@{}p{32mm}p{42mm}p{65mm}@{}}
+\begin{longtable}{@{}p{28mm}p{57mm}p{54mm}@{}}
 \toprule
 分類 & 主な名前 & 確認すること\\\midrule
 \endfirsthead
@@ -302,6 +303,6 @@ GUI & Image, App, Window, Event & 画面・イベントの環境\\
 証明 & law, Equal, Sigma & 仮定と結論、カーネル\\
 \bottomrule
 \end{longtable}
-\noindent 公式資料：\url{https://github.com/bendlang/bend/blob/main/guide/GUIDE.md}、\url{https://github.com/bendlang/bend/blob/main/bend2/base.bend}。
+\noindent 公式資料：\href{https://github.com/bendlang/bend/blob/main/guide/GUIDE.md}{Bend 2公式ガイド}、\href{https://github.com/bendlang/bend/blob/main/bend2/base.bend}{公式Baseライブラリ}。
 \exercise{初めて見る\code{Base}の関数を一つ選び、最小サンプルを作って型検査し、成功時と失敗時の振る舞いを確かめましょう。}
 \end{document}
