@@ -2,6 +2,7 @@
 # These are not example-only assertions: the quantified properties are proven
 # for all values of their declared types, subject to the modeled scope.
 import Base
+import ./game.bend as Game
 import ./LAWS.bend as Laws
 
 def Laws.hidden_is_flagged():
@@ -15,11 +16,11 @@ def Laws.opened_ignores_flag(clue):
 
 def Laws.flag_toggle_involution(s):
   match s:
-    case Laws.Game.Hidden{}:
+    case Game.Hidden{}:
       {==}
-    case Laws.Game.Flag{}:
+    case Game.Flag{}:
       {==}
-    case Laws.Game.Open{clue}:
+    case Game.Open{clue}:
       {==}
 
 def Laws.reveal_hidden(clue):
