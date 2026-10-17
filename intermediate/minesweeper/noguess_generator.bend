@@ -154,13 +154,20 @@ def search_rows(+fuel: Nat) -> Maybe<&2, Certified>:
 def generate() -> Maybe<&2, Certified>:
   search_rows(16n)
 
+def trace_strings(trace: List<&2, U32>) -> List<&2, String>:
+  match trace:
+    case Nil{}:
+      Nil{}
+    case i <> rest:
+      U32.show(i) <> trace_strings(rest)
+
 def result_text(certificate: Maybe<&2, Certified>) -> String:
   match certificate:
     case None{}:
       "NO VERIFIED BOARD"
     case Some{Certified{mines, trace}}:
       "mines=" ++ U32.show(mines) ++ ";moves=" ++
-      String.join(List.map(~U32, ~String, i => U32.show(i), trace), ",")
+      String.join(trace_strings(trace), ",")
 
 def main() -> IO(Unit):
   do IO<Unit>:
