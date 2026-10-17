@@ -57,7 +57,7 @@ def candidate_index(safe: Maybe<&2, U32>) -> Maybe<&2, U32>:
   match safe:
     case None{}:
       None{}
-    case Some{bits}:
+    case Some{+bits}:
       index_if_nonzero(U32.is_eq(bits, 0), bits)
 
 # Continuation avoids destructuring an expression: only parameter
