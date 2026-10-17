@@ -1,0 +1,54 @@
+name: Intermediate handson cover staging preview
+on:
+  push:
+    branches: [build/intermediate-handson-cover-20261018]
+    paths:
+      - '.github/workflows/staging-cover-build.yml'
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: build/intermediate-handson-cover-20261018
+      - name: Render intermediate XeLaTeX manuscript
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: intermediate/Intermediate_Textbook.tex
+          latexmk_use_xelatex: true
+          texlive_version: '2025'
+          os: debian
+          extra_system_packages: fonts-noto-cjk fonts-noto-core
+      - name: Fail on typography warnings
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOG='Intermediate_Textbook.log'
+          if test -s intermediate/Intermediate_Textbook.log; then LOG=intermediate/Intermediate_Textbook.log; fi
+          test -s "$LOG"
+          if grep -nE 'Overfull|Underfull|LaTeX Font Warning|LaTeX Warning' "$LOG"; then
+            echo 'Fix typography before updating the PR' >&2
+            exit 1
+          fi
+      - name: Regenerate PDF and strictly allowlisted learner ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test -s Intermediate_Textbook.pdf; then
+            cp Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          else
+            cp intermediate/Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          fi
+          python3 scripts/build_reader_bundle.py intermediate
+          python3 -m unittest discover -s tests -p test_reader_bundle.py -v
+          python3 -m unittest discover -s intermediate/tests -v
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- 'intermediate/Bend2を使いこなす_プレビュー.pdf' 'reader-packages/bend2-intermediate-reader-preview.zip'
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(intermediate): stage verified Minesweeper cover PDF and ZIP'
+            git push origin HEAD:build/intermediate-handson-cover-20261018
+          fi
