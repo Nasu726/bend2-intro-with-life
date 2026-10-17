@@ -46,7 +46,7 @@ def columns(+fuel: Nat, +i: U32, +view: Public, summary: Summary) -> Summary:
       summary
     case 1n+k:
       j = U32.from_nat(k)
-      mask = U32.or(U32.shln(1, U32.to_nat(i)), U32.shln(1, k))
+      +mask = U32.or(U32.shln(1, U32.to_nat(i)), U32.shln(1, k))
       ok = Bool.and(U32.is_lt(i, j), valid(view, mask))
       columns(k, i, view, add_if(ok, summary, mask))
 
