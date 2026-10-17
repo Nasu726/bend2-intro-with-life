@@ -1,5 +1,5 @@
 name: Temporary intermediate CLI validation and reader sync
-# CLI validation after fixing structural recursion (shrinking list first).
+# CLI validation passed; rerun TeX after escaping a filename underscore.
 on:
   push:
     branches: [feat/intermediate-minesweeper-textbook]
