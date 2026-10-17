@@ -82,8 +82,9 @@ https://github.com/Nasu726/bend2-intro-with-life/tree/main/src
     return """# Bend 2を使いこなす — 学習用セット（執筆途中）
 
 PDFを読み、examples/ 内のコードを実行してください。
-初稿は執筆途中です。通常版マインスイーパーのGUI教材コードは収録しましたが、
-保存・対話CLIと「運ゲー無し」盤面生成はまだ完成していません。
+初稿は執筆途中です。GUI、操作列の保存・復元、4×4・地雷2個限定の
+「運ゲー無し」盤面生成を含みます。
+ただしGUI実機確認、GUI保存、対話CLI、任意サイズの盤面生成は未完成です。
 
 公式ガイド: https://github.com/bendlang/bend/blob/main/guide/GUIDE.md
 
@@ -92,6 +93,17 @@ PDFを読み、examples/ 内のコードを実行してください。
 bend examples/minesweeper/cli_replay.bend c0 f1 c1
 操作 c番号=左クリック、f番号=旗、r=リセット。
 初期地雷マスク33は固定で、表示する盤面には隠れた地雷位置を出しません。
+
+別の起動でも同じCLI盤面へ戻るため、現在のディレクトリへ操作履歴を保存:
+bend examples/minesweeper/cli_save.bend save c0 f1
+bend examples/minesweeper/cli_save.bend load
+保存形式はBEND2-SAVE-1|c0|f1|ENDで、破損した形式は拒否します。
+GUIの状態全体を保存する機能ではありません。
+
+公開済みの数字だけで確実にクリアできる候補を生成（4×4・地雷2個・左上開始限定）:
+bend examples/minesweeper/noguess_generator.bend
+期待結果: mines=40960;moves=0,12,14
+生成器は真の地雷配置を持ちますが、推論器へは公開数字しか渡しません。
 
 4×4マインスイーパーのGUIをネイティブビルドして起動:
 bend examples/minesweeper/gui.bend -o minesweeper
