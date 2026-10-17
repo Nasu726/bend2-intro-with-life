@@ -80,7 +80,7 @@ def program(items):
             f"def check_{k}() -> U32:",
             f"  bit(U32.is_eq(code(Solver.provably_safe(Solver.Public{{[{data}]}})), {target}))",
         ])
-    summands = " + ".join(f"check_{k}()" for k in range(len(items)))
+    summands = " + ".join(f"(check_{k}() * {1 << k} : U32)" for k in range(len(items)))
     defs.extend(["def main() -> U32:", f"  ({summands} : U32)"])
     return "\n".join(defs) + "\n"
 
@@ -100,8 +100,11 @@ def main():
         if proc.returncode:
             raise AssertionError(f"Exact public solver failed:\n{proc.stdout}\n{proc.stderr}")
         observed = proc.stdout.strip().splitlines()[-1]
-        if observed != str(len(items)):
-            raise AssertionError(f"Only {observed}/{len(items)} exact-oracle cases passed")
+        if observed != str((1 << len(items)) - 1):
+            bits = int(observed)
+            failed = [(k, items[k], oracle(items[k])) for k in range(len(items))
+                      if not (bits & (1 << k))]
+            raise AssertionError(f"Exact-oracle failures: {failed}; bitmask={bits}")
         print(f"PASS {len(items)} independent public solver cases, including inconsistent views")
 
 
