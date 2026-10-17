@@ -193,3 +193,23 @@ law start_ignores_outside_first_click:
 
 law start_rejects_impossible_full_board:
   {Start.is_fresh(Start.click(Start.new(65535), 0)) == True{} : Bool}
+
+# G-04: A zero click reaches all zero-connected safe squares and the
+# nonzero boundary, but neither mines nor existing flags may be opened.
+law flood_empty_board_wins:
+  {Session.phase_of(Session.click(Session.new(0), 0)) == Session.Won{} : Session.Phase}
+
+law flood_empty_board_far_corner:
+  {Session.read_square(Session.click(Session.new(0), 0), 15) == Game.Open{0} : Game.Square}
+
+law flood_reaches_numbered_boundary:
+  {Session.read_square(Session.click(Session.new(32768), 0), 14) == Game.Open{1} : Game.Square}
+
+law flood_never_reveals_mine:
+  {Session.read_square(Session.click(Session.new(32768), 0), 15) == Game.Hidden{} : Game.Square}
+
+law flood_preserves_flagged_safe_cell:
+  {Session.read_square(Session.click(Session.mark(Session.new(0), 1), 0), 1) == Game.Flag{} : Game.Square}
+
+law nonzero_click_does_not_cascade:
+  {Session.read_square(Session.click(Session.new(1), 5), 15) == Game.Hidden{} : Game.Square}
