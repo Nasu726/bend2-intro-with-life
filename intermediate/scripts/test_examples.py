@@ -374,9 +374,9 @@ def verify_cli_replay(game_dir):
     if fresh != "Fresh: first click with c0..c15":
         raise AssertionError(f"Unexpected fresh CLI screen: {fresh!r}")
     opened = run("bend", str(entry), "c0")
-    expected = "Playing\\n2 . . .\\n. . . .\\n. . . .\\n. . . ."
+    expected = "Playing\n2 . . .\n. . . .\n. . . .\n. . . ."
     if opened != expected:
-        raise AssertionError(f"CLI first click mismatch:\\n{opened!r}")
+        raise AssertionError(f"CLI first click mismatch:\n{opened!r}")
     flagged = run("bend", str(entry), "c0", "f1", "c1")
     if flagged != expected.replace("2 . . .", "2 F . ."):
         raise AssertionError(f"CLI flag protection mismatch: {flagged!r}")
@@ -387,7 +387,7 @@ def verify_cli_replay(game_dir):
     if invalid != expected:
         raise AssertionError(f"CLI invalid command mismatch: {invalid!r}")
     ended = run("bend", str(entry), "c0", "c1", "f2")
-    if not ended.startswith("Lost\\n2 . . .\\n"):
+    if not ended.startswith("Lost\n2 . . .\n"):
         raise AssertionError(f"CLI loss/terminal guard mismatch: {ended!r}")
     reset = run("bend", str(entry), "c0", "f1", "r")
     if reset != fresh:
