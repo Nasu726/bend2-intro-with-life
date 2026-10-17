@@ -142,3 +142,22 @@ def Laws.start_ignores_outside_first_click():
 
 def Laws.start_rejects_impossible_full_board():
   {==}
+
+# G-04: zero region expansion and boundary/flag/mine preservation.
+def Laws.flood_empty_board_wins():
+  {==}
+
+def Laws.flood_empty_board_far_corner():
+  {==}
+
+def Laws.flood_reaches_numbered_boundary():
+  {==}
+
+def Laws.flood_never_reveals_mine():
+  {==}
+
+def Laws.flood_preserves_flagged_safe_cell():
+  {==}
+
+def Laws.nonzero_click_does_not_cascade():
+  {==}

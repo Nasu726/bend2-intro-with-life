@@ -1,8 +1,9 @@
 # Pure click/flag/phase rules. Contract: LAWS.bend (G-series).
-# No first-click placement, zero expansion, GUI or solver in this milestone.
+# First-click placement lives in start.bend; flood expansion is delegated to flood.bend.
 import Base
 import ./game.bend as Game
 import ./board4.bend as Board4
+import ./flood.bend as Flood
 
 type Phase is Data:
   Playing{}
@@ -46,8 +47,7 @@ def finish(result: Board4.State & Bool) -> Session:
 
 # Mines are examined ONLY here, after confirming the clicked cell is Hidden.
 def open_safe(+mines: U32, cells: Array<Game.Square>, +index: U32) -> Session:
-  clue = Board4.clue(mines, U32.mod(index, 4), U32.div(index, 4))
-  board = Board4.reveal_at(Board4.State{mines, cells}, index, clue)
+  board = Flood.reveal(Board4.State{mines, cells}, mines, index)
   finish(Board4.check_won(board))
 
 def click_hidden(is_mine: Bool, mines: U32, cells: Array<Game.Square>, index: U32) -> Session:
