@@ -3,7 +3,7 @@ name: Temporary intermediate GUI smoke
 on:
   push:
     branches: [feat/intermediate-minesweeper-textbook]
-    paths: ['.github/workflows/intermediate-gui-smoke-once.yml']
+    paths: ['.github/workflows/intermediate-gui-smoke-once.yml', 'intermediate/minesweeper/gui.bend']
 permissions:
   contents: read
 jobs:
