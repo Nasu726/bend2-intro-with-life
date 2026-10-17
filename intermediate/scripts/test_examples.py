@@ -463,9 +463,9 @@ def main():
     verify_cli_replay(game)
     run("bend", str(game / "gui.bend"), "--check-only")
     gui_result = run("bend", str(game / "gui_smoke.bend")).splitlines()[-1]
-    if gui_result != "12":
-        raise AssertionError(f"GUI logic check expected 12; got {gui_result}")
-    print("PASS GUI 12 geometry, digit and state-transition checks", flush=True)
+    if gui_result != "13":
+        raise AssertionError(f"GUI logic check expected 13; got {gui_result}")
+    print("PASS GUI 13 geometry, input-button and state-transition checks", flush=True)
     public_mask = run("bend", str(game / "public_solver.bend")).splitlines()[-1]
     if public_mask != "50":
         raise AssertionError(f"Public two-mine deduction expected 50, got {public_mask!r}")
