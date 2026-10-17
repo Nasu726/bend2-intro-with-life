@@ -1,4 +1,5 @@
 name: Temporary intermediate CLI validation and reader sync
+# CLI validation after fixing structural recursion (shrinking list first).
 on:
   push:
     branches: [feat/intermediate-minesweeper-textbook]
