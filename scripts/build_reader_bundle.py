@@ -57,7 +57,7 @@ INTERMEDIATE_EXAMPLES = (
 # This is a game engine example, not a solution to the book exercises.
 INTERMEDIATE_GAME_FILES = (
     "game.bend", "board.bend", "board4.bend", "flood.bend",
-    "session.bend", "start.bend", "cli_replay.bend",
+    "session.bend", "start.bend", "cli_replay.bend", "gui.bend",
 )
 
 def readme(track: str) -> str:
