@@ -7,7 +7,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from build_reader_bundle import (INTRO_EXAMPLES, INTERMEDIATE_EXAMPLES,
-                                 readme, build)
+                                 INTERMEDIATE_GAME_FILES, readme, build)
 
 class TestReaderBundle(unittest.TestCase):
     def check_one(self, kind):
@@ -18,6 +18,9 @@ class TestReaderBundle(unittest.TestCase):
             expected_examples = INTRO_EXAMPLES if kind == "intro" else INTERMEDIATE_EXAMPLES
             expected = {prefix + n for n in ("README.md", "LICENSE", "textbook.pdf")}
             expected |= {prefix + "examples/" + name for name in expected_examples}
+            if kind == "intermediate":
+                expected |= {prefix + "examples/minesweeper/" + name
+                             for name in INTERMEDIATE_GAME_FILES}
             with zipfile.ZipFile(p) as z:
                 names = z.namelist()
                 self.assertEqual(set(names), expected)
@@ -36,7 +39,7 @@ class TestReaderBundle(unittest.TestCase):
     def test_intro_bundle(self):
         self.check_one("intro")
 
-    @unittest.skipUnless((ROOT / "intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf").exists(),
+    @unittest.skipUnless((ROOT / "intermediate/Bend2を使いこなす_プレビュー.pdf").exists(),
                          "Intermediate manuscript is on its separate PR branch")
     def test_intermediate_bundle(self):
         self.check_one("intermediate")

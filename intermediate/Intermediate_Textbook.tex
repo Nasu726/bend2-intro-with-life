@@ -1,0 +1,2161 @@
+% !TEX program = xelatex
+% Visual system follows 「ライフゲームで学ぶ はじめてのBend2」.
+% Do not add editor-only details to learner-facing content.
+\documentclass[11pt,a4paper,openany]{book}
+\usepackage[margin=22mm,top=25mm,bottom=24mm,headheight=16pt]{geometry}
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setmainfont{Noto Serif}
+\setsansfont{Noto Sans}
+\setmonofont{Noto Sans Mono CJK JP}[Scale=0.84]
+\setCJKmainfont{Noto Serif CJK JP}
+\setCJKsansfont{Noto Sans CJK JP}
+\setCJKmonofont{Noto Sans Mono CJK JP}
+\usepackage{amsmath,amssymb,mathtools,booktabs,tabularx,longtable,multicol}
+\usepackage{ragged2e}
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,fit,shapes.geometric}
+\usepackage[most]{tcolorbox}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{needspace}
+\usepackage{etoc}
+\usepackage{float}
+% The book reaches section 22.10: standard Book ToC number boxes (2.3em)
+% clip a five-character section label. Expand the section/subsection columns.
+\makeatletter
+\renewcommand*{\l@section}{\@dottedtocline{1}{1.5em}{3.0em}}
+\renewcommand*{\l@subsection}{\@dottedtocline{2}{4.5em}{4.0em}}
+\makeatother
+\definecolor{ink}{HTML}{17263C}
+\definecolor{blue}{HTML}{176A9A}
+\definecolor{teal}{HTML}{167A72}
+\definecolor{warm}{HTML}{C16D25}
+\definecolor{paper}{HTML}{F5F7FA}
+\definecolor{soft}{HTML}{E6EDF2}
+\definecolor{codebg}{HTML}{F4F7FA}
+\definecolor{muted}{HTML}{536378}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=teal,
+  pdftitle={Bend 2を使いこなす — マインスイーパーで学ぶ機能と実践},
+  pdfauthor={Nasu726},hypertexnames=false}
+\setlength{\parskip}{.5em}
+\setlength{\parindent}{0pt}
+\setlength{\emergencystretch}{2em}
+\raggedbottom
+\setlist{nosep,leftmargin=2em}
+\fancyhf{}
+\fancyhead[LE,RO]{\sffamily\small\textcolor{muted}{Bend 2を使いこなす}}
+\fancyhead[LO,RE]{\sffamily\small\textcolor{muted}{\nouppercase{\leftmark}}}
+\fancyfoot[C]{\sffamily\small\thepage}
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0.3pt}
+\usepackage{titlesec}
+\titleclass{\part}{straight}
+\titleformat{\part}[display]
+  {\sffamily\bfseries\color{ink}\raggedright}
+  {\color{teal}\fontsize{16}{21}\selectfont PART \thepart}
+  {5mm}{\fontsize{27}{35}\selectfont}
+\titlespacing*{\part}{0pt}{30mm}{15mm}
+\titleformat{\chapter}[display]{\normalfont\sffamily\bfseries\color{ink}}
+  {\fontsize{12}{14}\selectfont Chapter \thechapter}
+  {10pt}{\fontsize{24}{30}\selectfont}
+\titleformat{\section}{\Large\sffamily\bfseries\color{ink}}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\sffamily\bfseries\color{blue}}{\thesubsection}{1em}{}
+\lstdefinelanguage{BendTwo}{
+  morekeywords={import,def,law,type,is,match,case,do,return,for,exs,where,unsafe},
+  sensitive=true,morecomment=[l]{\#},morestring=[b]"
+}
+\lstset{language=BendTwo,basicstyle=\ttfamily\footnotesize,
+ keywordstyle=\color{blue}\bfseries,commentstyle=\color{muted},
+ stringstyle=\color{teal},numbers=left,numberstyle=\tiny\color{muted},
+ stepnumber=1,numbersep=8pt,breaklines=true,breakatwhitespace=true,
+ showstringspaces=false,columns=fullflexible,keepspaces=true,upquote=true,
+ tabsize=2,frame=single,rulecolor=\color{soft},backgroundcolor=\color{codebg},
+ xleftmargin=12pt,xrightmargin=3pt,framexleftmargin=12pt,
+ aboveskip=9pt,belowskip=9pt,captionpos=b}
+\newtcolorbox{pointbox}[1][]{enhanced,breakable,colback=paper,colframe=blue!32,
+ boxrule=.6pt,arc=2mm,left=4mm,right=4mm,top=3mm,bottom=3mm,
+ title={\sffamily\bfseries 要点},coltitle=ink,fonttitle=\sffamily\bfseries,#1}
+\newtcolorbox{exercisebox}[1][]{enhanced,breakable,colback=white,colframe=teal!55,
+ boxrule=.7pt,arc=1.5mm,left=4mm,right=4mm,top=3mm,bottom=3mm,
+ title={\sffamily\bfseries ハンズオン／確認問題},coltitle=ink,#1}
+\newtcolorbox{cautionbox}[1][]{enhanced,breakable,colback=warm!5,colframe=warm!65,
+ boxrule=.7pt,arc=1.5mm,left=4mm,right=4mm,top=3mm,bottom=3mm,
+ title={\sffamily\bfseries 注意},coltitle=ink,#1}
+% Use detokenize so literal Bend quantity syntax (&1, &2) is safe in \code.
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\file}[1]{\textsf{\color{blue}#1}}
+\newcommand{\term}[1]{\textbf{#1}}
+\newcommand{\key}[1]{\textcolor{blue}{\textbf{#1}}}
+\newcommand{\sample}[2]{\lstinputlisting[caption={#2}]{intermediate/src/#1}}
+\newcommand{\exercise}[1]{\begin{exercisebox}\RaggedRight #1\end{exercisebox}}
+\newcommand{\note}[1]{\begin{pointbox}#1\end{pointbox}}
+\newcommand{\sectiongoal}[1]{%
+\begin{tcolorbox}[colback=blue!3,colframe=blue!16,
+ boxrule=.35pt,arc=1mm,left=3mm,right=3mm,top=2mm,bottom=2mm]
+\small #1
+\end{tcolorbox}}
+\newcommand{\partchaptertoc}{%
+  \begingroup
+  \etocsetnexttocdepth{chapter}%
+  \etocsettocstyle{%
+    \vspace{2mm}\begin{tcolorbox}[colback=paper,colframe=blue!32,boxrule=.5pt,arc=2mm,
+      title={\sffamily\bfseries このPartの目次},coltitle=ink,fonttitle=\sffamily\bfseries]
+    \small\sffamily
+  }{\end{tcolorbox}}%
+  \localtableofcontents
+  \endgroup
+}
+\begin{document}
+\frontmatter
+\begin{titlepage}
+  \pagecolor{paper}
+  \vspace*{26mm}
+  {\sffamily\bfseries\color{teal}\fontsize{11}{15}\selectfont BEND 2 \hspace{2mm}/\hspace{2mm} INTERMEDIATE\par}
+  \vspace{11mm}
+  {\sffamily\bfseries\fontsize{33}{43}\selectfont\color{ink} Bend 2を使いこなす\par}
+  \vspace{7mm}
+  {\sffamily\fontsize{14}{20}\selectfont\color{blue} 読んで、書いて、動かして、確かめる。\par}
+  \vspace{5mm}
+  {\sffamily\normalsize\color{muted} 標準ライブラリ・入出力・GUI・証明を、自分の道具にする\par}
+  \vspace{6mm}
+  {\sffamily\small\color{muted} マインスイーパーを題材に学ぶ Bend 2 の実践編\par}
+  \vspace{15mm}
+  \begin{center}
+  % Cover illustration: the language and its workflow take precedence.
+  % A tiny board is one output of code and compositional data structures.
+  \begin{tikzpicture}[x=1cm,y=1cm]
+    % Quiet structural background, echoing recursive subdivision.
+    \fill[teal!5,rounded corners=5mm] (0.1,1.65) rectangle (14.45,9.15);
+    \foreach \x in {1.0,2.05,3.1,4.15,5.2,6.25,7.3,8.35,9.4,10.45,11.5,12.55,13.6} {
+      \draw[blue!9,line width=.35pt] (\x,2.05)--(\x,8.75);
+    }
+    \foreach \y in {2.45,3.5,4.55,5.6,6.65,7.7,8.75} {
+      \draw[blue!9,line width=.35pt] (.65,\y)--(13.95,\y);
+    }
+    % Curving dataflow is behind the cards.
+    \draw[teal!68,line width=1.5pt,rounded corners=8mm,-{Stealth[length=3.0mm]}]
+      (4.85,6.0)--(5.65,6.0)--(5.65,5.25)--(6.05,5.25);
+    \draw[blue!64,line width=1.5pt,rounded corners=8mm,-{Stealth[length=3.0mm]}]
+      (9.8,5.25)--(10.35,5.25)--(10.35,6.05)--(10.78,6.05);
+    % Code card: abstract syntax highlighting, not faux runnable Bend source.
+    \fill[ink!11,rounded corners=2.3mm] (.58,4.42) rectangle (5.05,8.13);
+    \fill[white,rounded corners=2.3mm] (.43,4.55) rectangle (4.90,8.27);
+    \draw[soft,line width=.6pt,rounded corners=2.3mm] (.43,4.55) rectangle (4.90,8.27);
+    \node[anchor=west,font=\sffamily\bfseries\fontsize{9}{11}\selectfont,text=teal]
+       at (.82,7.85) {BEND 2 / CODE};
+    \foreach \x/\c in {4.05/warm,4.30/teal,4.55/blue} {
+      \fill[\c!65] (\x,7.83) circle (.07);
+    }
+    \draw[muted!16,line width=.45pt] (.78,7.54)--(4.52,7.54);
+    \fill[teal!85,rounded corners=.04cm] (.85,7.07) rectangle (1.66,7.19);
+    \fill[blue!75,rounded corners=.04cm] (1.78,7.07) rectangle (3.74,7.19);
+    \fill[blue!43,rounded corners=.04cm] (1.18,6.62) rectangle (2.47,6.74);
+    \fill[muted!25,rounded corners=.04cm] (2.60,6.62) rectangle (4.25,6.74);
+    \fill[teal!56,rounded corners=.04cm] (1.53,6.17) rectangle (2.29,6.29);
+    \fill[blue!80,rounded corners=.04cm] (2.41,6.17) rectangle (3.53,6.29);
+    \fill[muted!25,rounded corners=.04cm] (1.53,5.72) rectangle (4.14,5.84);
+    \fill[warm!72,rounded corners=.04cm] (1.18,5.27) rectangle (2.02,5.39);
+    \fill[muted!25,rounded corners=.04cm] (2.16,5.27) rectangle (3.42,5.39);
+    \node[font=\sffamily\fontsize{8}{10}\selectfont,text=muted,anchor=west] at (.85,4.84) {01 \, 機能を学び、書く};
+    % Recursive decomposition card: quadtree, parallel nodes, reusable parts.
+    \fill[ink!10,rounded corners=2.3mm] (5.90,3.14) rectangle (9.98,7.18);
+    \fill[white,rounded corners=2.3mm] (5.75,3.27) rectangle (9.83,7.32);
+    \draw[soft,line width=.6pt,rounded corners=2.3mm] (5.75,3.27) rectangle (9.83,7.32);
+    \node[anchor=west,font=\sffamily\bfseries\fontsize{9}{11}\selectfont,text=teal] at (6.15,6.93) {STRUCTURE / PROOF};
+    % Small 2x2 quadtree parent and four descendants.
+    \fill[blue!72,rounded corners=.9mm] (7.40,6.12) rectangle (8.07,6.79);
+    \draw[white,line width=.8pt] (7.74,6.12)--(7.74,6.79) (7.40,6.45)--(8.07,6.45);
+    \draw[teal!80,line width=1pt] (7.74,6.09)--(7.74,5.82);
+    \draw[teal!80,line width=1pt] (6.86,5.82)--(8.62,5.82);
+    \foreach \x in {6.86,7.44,8.02,8.62} {
+      \draw[teal!80,line width=1pt] (\x,5.82)--(\x,5.54);
+      \fill[blue!35,rounded corners=.5mm] (\x-.17,5.19) rectangle (\x+.17,5.53);
+    }
+    \foreach \x in {6.47,6.72,6.97,7.22} {
+      \fill[soft,rounded corners=.35mm] (\x,4.42) rectangle (\x+.19,4.61);
+    }
+    \draw[blue!50,line width=.9pt,-{Stealth[length=1.5mm]}] (6.86,5.18)--(6.86,4.75);
+    \node[font=\sffamily\fontsize{8}{10}\selectfont,text=muted,anchor=west] at (6.15,3.73) {02 \, 分けて、確かめる};
+    % Small application motif: board is deliberately subordinate.
+    \fill[ink!10,rounded corners=2.3mm] (10.69,4.42) rectangle (14.28,8.13);
+    \fill[white,rounded corners=2.3mm] (10.54,4.55) rectangle (14.13,8.27);
+    \draw[soft,line width=.6pt,rounded corners=2.3mm] (10.54,4.55) rectangle (14.13,8.27);
+    \node[anchor=west,font=\sffamily\bfseries\fontsize{9}{11}\selectfont,text=teal] at (10.90,7.85) {APP / OUTPUT};
+    \fill[soft!85,rounded corners=1mm] (11.16,5.42) rectangle (13.55,7.52);
+    \foreach \x in {0,1,2} {
+      \foreach \y in {0,1,2} {
+        \fill[white] ({11.36+.66*\x},{5.64+.55*\y}) rectangle
+                     ({11.98+.66*\x},{6.15+.55*\y});
+        \draw[muted!34,line width=.45pt]
+          ({11.36+.66*\x},{5.64+.55*\y}) rectangle
+          ({11.98+.66*\x},{6.15+.55*\y});
+      }
+    }
+    % A few covered tiles and ONE small flag, used as visual accent.
+    \foreach \x/\y in {2/2,0/0,2/0} {
+      \fill[soft!80] ({11.39+.66*\x},{5.67+.55*\y}) rectangle
+                     ({11.95+.66*\x},{6.12+.55*\y});
+    }
+    \node[font=\sffamily\bfseries\fontsize{11}{13}\selectfont,text=blue] at (11.67,6.46) {1};
+    \node[font=\sffamily\bfseries\fontsize{11}{13}\selectfont,text=teal] at (12.33,5.92) {2};
+    \draw[ink,line width=.9pt] (12.25,6.91)--(12.25,7.20);
+    \fill[warm] (12.27,7.20)--(12.51,7.11)--(12.27,7.04)--cycle;
+    \node[font=\sffamily\fontsize{8}{10}\selectfont,text=muted,anchor=west] at (10.93,4.86) {03 \, 実際に動かす};
+    % A small horizontal connector key: highlights an exercise-oriented book.
+    \node[font=\sffamily\fontsize{9}{12}\selectfont,text=muted,anchor=center]
+       at (7.25,2.32) {CODE  $\longrightarrow$  MODEL  $\longrightarrow$  APPLICATION};
+  \end{tikzpicture}
+  \end{center}
+  \vfill
+  {\sffamily\color{teal}\bfseries\small 理解から実装へ。実装から検証へ。\par}
+  \vspace{9mm}
+  {\sffamily\normalsize 本文・ハンズオン演習・Bendソース付き\par}
+  \vspace{3mm}
+  {\sffamily\small\color{muted} 『はじめてのBend2』から続く実践編\par}
+  \vspace{15mm}
+\end{titlepage}
+\nopagecolor
+\chapter*{本書の読み方}
+\addcontentsline{toc}{chapter}{本書の読み方}
+本書は『ライフゲームで学ぶ はじめてのBend2』の続編です。『使いこなす』とは、あらゆるAPIを暗記することではありません。必要な処理から適切な機能を探し、型と失敗条件を確かめ、実装と検証を自分で進められることです。前巻で学んだ関数、パターンマッチ、配列、アフィン性、\code{do}の基本から始め、\term{標準ライブラリの使い分け、入出力、GUI、形式的証明}へ進みます。
+
+目標は、難しいテクニックを暗記することではありません。\textbf{Bend 2で何ができるかを把握し、引数・返り値・所有権・失敗時の挙動を理解して、必要な機能を自分で使えること}です。マインスイーパーはそのための共通の実習題材ですが、ゲームに不要な機能も独立した例で扱います。
+
+\begin{pointbox}
+各例は「\textbf{結果を予想する} $\rightarrow$ \textbf{実行する} $\rightarrow$ \textbf{解説を読む} $\rightarrow$ \textbf{少し改造する}」という順序で進めてください。例を読んだときの疑問が、次の型や仕様の説明につながるようにしています。
+\end{pointbox}
+
+\section*{教材の使い方}
+配布ZIPにはPDF、実習用の\file{examples/}、使い始めるための案内が含まれます。ZIPを展開し、そのフォルダーで\code{bend examples/01_set.bend}のように実行します。リポジトリのクローンは必要ありません。
+
+演習の参考実装や追加の検証資料は、必要なときに
+\href{https://github.com/Nasu726/bend2-intro-with-life/tree/feat/intermediate-minesweeper-textbook/intermediate}{参考コードのリポジトリ}から参照できます。
+
+\section*{学ぶ内容の見取り図}
+\begin{tabularx}{\linewidth}{@{}L{30mm}X@{}}
+\toprule Part & 主な学習事項\\\midrule
+I & 標準ライブラリ、List・Array・Map・Set、失敗を表す型\\
+II & IO、ファイル、引数、乱数、並行処理、通信\\
+III & 画像、GUIイベント、マインスイーパーの状態と座標\\
+IV & 仕様の定義、law、帰納法、不変条件、証明の範囲\\
+V & 並列計算、GPU、外部との連携\\
+VI & マインスイーパーへの統合と運ゲー無し盤面の発展課題\\
+\bottomrule
+\end{tabularx}
+
+\chapter*{新しく出てくる用語}
+\addcontentsline{toc}{chapter}{新しく出てくる用語}
+入門編の基本用語に加えて、次の言葉をよく使います。最初からすべて覚える必要はありません。
+\begin{longtable}{@{}L{43mm}p{103mm}@{}}
+\toprule 用語 & この本での意味\\\midrule\endhead
+\term{標準ライブラリ} & 言語に用意されたデータ構造や関数の集まり。Bend 2では\code{Base}に含まれます。\\
+\term{ハンドル} & ファイルや通信など、外部の資源を操作するための値です。使い終えたら閉じる必要があります。\\
+\term{純粋関数} & 同じ入力に同じ値を返し、画面やファイルなどの外部状態に作用しない処理です。\\
+\term{結果型} & 成功・失敗や値の有無を、\code{Maybe}や\code{Result}などの型で表したものです。\\
+\term{不変条件} & ある操作の前後を通じて保たれるべき性質です。\\
+\term{公開情報} & マインスイーパーでプレイヤーに見えている数字や状態です。隠れた地雷配置とは区別します。\\
+\term{推論規則} & 公開情報から確実に言えることを導くための規則です。推測とは異なります。\\
+\bottomrule
+\end{longtable}
+\begin{pointbox}
+「型検査に成功した」「実際に動かした」「法則を形式的に証明した」は別の確認です。とくにGUIはデスクトップ環境を必要とするため、型検査だけで画面上の動作まで確認できたとは限りません。
+\end{pointbox}
+\tableofcontents
+\mainmatter
+\clearpage
+\part{標準ライブラリとデータ構造}
+\partchaptertoc
+\chapter{Baseを調べる}
+\sectiongoal{必要な標準機能を自分で見つけ、入力・返り値・所有権を読んで使えるようになる。}
+
+\section{同じ処理を自分で書く前に}
+入門編では\code{import Base}を使い、\code{List}や\code{Array}の基本を学びました。中級編では「使いたい処理があるとき、どこから調べればよいか」から始めましょう。
+
+例えば、マインスイーパーで「(2,3)に旗があるか」を調べたいとします。旗を置いた場所を全部並べ、一つずつ比較する関数を自作することもできます。しかしBend 2には、文字列をキーにする\code{Set}が用意されています。\code{Set.has}で存在を調べれば、やりたいことをそのままコードにできます。
+
+\begin{lstlisting}[caption={集合に座標を追加し、存在を調べる}]
+s0 = Set.new()
+s1 = Set.add(s0, "2,3")
+result = Set.has(s1, "2,3")
+\end{lstlisting}
+
+ここで気になるのは、\code{result}の型です。単に\code{Bool}でしょうか。実際には\code{Set() \& Bool}という\textbf{組}です。所属判定の後も集合を使えるように、集合も一緒に返します。第4章で実行例を見ますが、まずは「戻り値には何が入っているか」が重要です。
+
+\section{bend baseで関数の定義を探す}
+\code{bend base}は、Bend 2が提供するBaseライブラリを調べるためのコマンドです。使い方を知りたい型や関数の名前を指定できます。
+
+\begin{lstlisting}[language={},caption={標準ライブラリを手元で調べる}]
+bend base
+bend base Set
+bend base Set.has
+bend base Array.get
+bend guide
+\end{lstlisting}
+
+\code{bend base Set.has}を調べると、返り値に集合と真偽値が並んでいることが分かります。次に\code{Array.get}を見てみましょう。こちらも「配列と取得した値」を返します。両方とも、\textbf{値を読み出した後に元の構造をどう扱うか}という共通点があります。
+
+関数を探すときは、次の順序で読むと迷いにくくなります。
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{関数名}：目的の操作と合っていますか。
+\item \textbf{引数}：どの型を、いくつ受け取りますか。数量指定はありますか。
+\item \textbf{返り値}：実際に欲しい値だけですか。元の構造も返しますか。
+\item \textbf{失敗の表現}：\code{Maybe}や\code{Result}、あるいは既定値がありますか。
+\item \textbf{実行環境}：IO、GUI、GPUなど、特別な環境が必要ですか。
+\end{enumerate}
+
+最初からBaseの関数をすべて暗記する必要はありません。この五つを自分で調べられることが、中級編の出発点です。
+
+\section{返された構造を受け取る理由}
+アフィン性のある値を使う場合、「読み取るだけ」の操作でも、その後の利用に注意が必要です。例えば\code{Set.has}の返り値は、次のように二つの変数へ分けられます。
+
+\begin{lstlisting}[caption={調べた後にも集合を使う場合}]
+(again, exists) = Set.has(s1, "2,3")
+s2 = Set.add(again, "1,1")
+\end{lstlisting}
+
+\code{exists}は所属判定の結果、\code{again}は後続の操作へ渡す集合です。元の\code{s1}を勝手に再利用せず、返った値を使うことが大切です。
+
+ただし、どの関数も同じ形で返るわけではありません。数値の\code{U32.is_lt}は\code{Bool}を返し、\code{String.split}は文字列のリストを返します。名前だけから想像せず、必要な型を確かめましょう。
+
+\section{Baseの内部関数に迷い込んだら}
+Baseのソースには、実装を小さな処理へ分割するための\code{.go}や\code{.fin}といった補助関数もあります。一般的な使い方を学ぶ段階では、まず\code{Set.has}や\code{String.split}など\textbf{公開された外側の操作}を試してください。内部の再帰や分岐は、実装方法を詳しく学びたいときに読むとよいでしょう。
+
+最新の関数宣言は\href{https://github.com/bendlang/bend/blob/main/bend2/base.bend}{公式Base}、言語の基本は\href{https://github.com/bendlang/bend/blob/main/guide/GUIDE.md}{公式GUIDE}で確認できます。本文のサンプルは検証したBend環境を基準としているため、実行して型が一致しない場合は現在使っているバージョンも確認しましょう。
+
+\exercise{\code{bend base Set.has}と\code{bend base Map.get}を実行し、返り値の構成を比較してみましょう。次に\code{Array.get}について「どの値が返るか」「配列をその後も使うにはどうするか」を一文ずつ書いてみましょう。}
+
+\chapter{数値、文字、比較を正しく選ぶ}
+\sectiongoal{目的に合う数値型を選び、文字列から安全に値を取り出せるようになる。}
+
+\section{4×4の盤面サイズは何型で表す？}
+マインスイーパーの幅が4、高さが4の盤面を考えます。「4」という同じ値でも、Bend 2には\code{Nat}、\code{U32}、\code{F32}などの型があります。どれを使っても意味が同じ、というわけではありません。
+
+\begin{center}
+\begin{tabularx}{\linewidth}{@{}L{20mm}X L{38mm}@{}}
+\toprule
+型 & 特徴 & 使う場面\\\midrule
+\code{Nat} & 0から始まる自然数。再帰的な構造 & 個数、構造に沿った再帰\\
+\code{U32} & 32ビットの符号なし整数 & 添字、ビットマスク、座標\\
+\code{F32} & 近似的な浮動小数点数 & 割合、近似値の計算\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+盤面の添字や地雷位置のビットマスクには\code{U32}が便利です。一方、リストの長さなどを返す関数には\code{Nat}があります。型が異なるなら、必要に応じて明示的に変換します。\code{F32}は丸めのある近似値を扱うため、盤面の正確な番号には適しません。
+
+\section{NatをU32へ変換して比較する}
+\sample{37_u32_dimension.bend}{盤面サイズを変換して範囲を調べる}
+
+コードの\code{U32.from_nat(4n)}は、自然数の4を\code{U32}へ変換します。続く\code{U32.is_lt(width,16)}は、幅が16より小さいかを\code{Bool}として返します。
+
+\begin{lstlisting}[caption={型の変換と大小比較}]
+width: U32 = U32.from_nat(4n)
+safe: Bool = U32.is_lt(width, 16)
+\end{lstlisting}
+
+\code{main}は真なら1、偽なら0を返すので、実行すると\code{1}になります。この例では確実に小さい値だけを変換しています。\code{U32}には表せる最大値があり、\code{Nat}の任意の大きな値を変換しても元の値が保たれるとは限りません。必要な範囲を先に確認しましょう。
+
+\begin{lstlisting}[language={},caption={数値変換の実行}]
+bend examples/37_u32_dimension.bend
+\end{lstlisting}
+
+比較は\code{U32.is_lt}のように真偽値を返すものだけではありません。\code{Cmp}には大小と等しさを表す複数の結果があり、並べ替えのAPIなどで使われます。「条件を満たすか」という二択なら\code{Bool}、「小さい・等しい・大きい」という三択が必要なら\code{Cmp}です。
+
+\section{文字列から数値を読み取る}
+ユーザーが「42」と入力しても、最初から数値型として得られるとは限りません。受け取った文字列を整数に変換する必要があります。
+
+\sample{15_string_parse.bend}{文字列の空白を除去して数値にする}
+
+\code{String.trim(" 42 ")}は前後の空白を除いた\code{"42"}を作ります。続く\code{U32.read}は変換を試み、成功なら\code{Some{42}}、失敗なら\code{None{}}を返します。\code{main}の返り値は\code{42}です。
+
+\begin{lstlisting}[caption={失敗する可能性のある数値変換}]
+cleaned = String.trim(" 42 ")
+parsed = U32.read(cleaned)
+\end{lstlisting}
+
+ここで\code{U32.read("abc")}を試したらどうなるでしょうか。文字列を数値として読めないので\code{None{}}になります。サンプルは失敗時に0を返しますが、本当に0が入力された場合との区別は失われます。次の章の\code{Maybe}を読むときはこの例を思い出してください。
+
+\section{設定の一行を区切ってみる}
+ゲームの保存ファイルに\code{board-size=4}という一行が入っているとします。「項目名」と「値」の二つに分けるにはどうすればよいでしょうか。Bend 2の\code{String.split}が使えます。
+
+\sample{35_string_fields.bend}{設定行をイコール記号で分割する}
+
+\code{Chr{61}}は\code{=}に対応する文字を表します。\code{String.split("board-size=4", Chr{61})}は、二つの文字列からなるリストを返します。そのため\code{List.length}の結果は\code{2n}です。
+
+\begin{lstlisting}[caption={文字列を区切って個数を調べる}]
+fields = String.split("board-size=4", Chr{61})
+List.length(&2, String, fields)
+\end{lstlisting}
+
+\begin{lstlisting}[language={},caption={文字列を分割するサンプルを実行する}]
+bend examples/35_string_fields.bend
+\end{lstlisting}
+
+実行結果が2でも、これだけで\textbf{保存形式が正しいと分かったわけではありません}。例えば\code{board-size=abc}も二つに分かれます。値が数値であるかを\code{U32.read}で確かめ、さらに盤面として許される大きさか検査する必要があります。
+
+\code{String.join}は文字列のリストを区切り文字でつなぐ操作です。文字列操作を手動の再帰で毎回作るのではなく、必要に合う標準APIを使いましょう。
+
+\section{文字の長さと見た目は必ずしも同じではない}
+Bendの\code{String}は文字の列です。ただし、一つの文字として見えるものが内部で複数の文字から構成されることもあります。文字数や文字コードの扱いを、画面上の表示幅と同じだと決め付けてはいけません。固定幅のゲーム画面を作る場合は、文字列の要素数と描画する幅を分けて考えましょう。
+
+\exercise{\code{37_u32_dimension.bend}の幅を16に変更して結果を予想し、確かめましょう。\code{35_string_fields.bend}の設定行を\code{"board-size=4=extra"}へ変更すると分割後の個数はいくつになるでしょうか。次に\code{15_string_parse.bend}で\code{" abc "}を与え、\code{Some}と\code{None}のどちらになるか調べてみましょう。}
+
+\chapter{ListとArrayの詳しい使い方}
+\sectiongoal{目的に合う標準のList・Array操作を選び、所有権に従って結果を受け渡せるようになる。}
+
+\section{「何をしたいか」で操作を選ぶ}
+地雷の候補番号を並べて調べたい場合を考えてみましょう。番号を順に数えるなら\code{List}が使えます。一方、4×4盤面の7番目のマスを直接書き換えるなら、添字で操作できる\code{Array}が向いています。
+
+最初にリストの一番簡単な例を動かします。
+\sample{03_list.bend}{同じ値を3個並べて長さを調べる}
+
+\code{List.replicate(U32,3n,7)}は7を3個並べます。\code{List.length}の結果は\code{3n}です。ここで\code{3n}は\code{Nat}、要素の7は\code{U32}です。要素の型と個数の型は同じではありません。
+
+\begin{lstlisting}[language={},caption={Listの長さを確認する}]
+bend examples/03_list.bend
+\end{lstlisting}
+
+\section{リストの値を全部1ずつ増やす}
+次はリストの各要素を一つずつ変える操作です。例えば\code{[1,2,3]}を\code{[2,3,4]}にしてみましょう。自分で再帰関数を書くこともできますが、標準の\code{List.map}がちょうどこの仕事をします。
+
+\sample{40_list_map.bend}{mapで各要素を変えてから合計する}
+
+\begin{lstlisting}[caption={要素ごとの変換と集計}]
+xs = {[1, 2, 3] : List<U32>}
+ys = List.map(~U32, ~U32, ~plus_one, xs)
+List.foldl(~&1, ~U32, ~U32, ~add, ys, 0)
+\end{lstlisting}
+
+\code{plus_one}は一つの数値へ1を足す関数です。\code{List.map}はこれを各要素へ適用します。結果のリスト\code{ys}は\code{[2,3,4]}なので、\code{List.foldl}で合計すると\code{9}になります。
+
+\begin{lstlisting}[language={},caption={各要素を変換して合計する}]
+bend examples/40_list_map.bend
+\end{lstlisting}
+
+\code{map}は\textbf{それぞれの要素を別の値へ変換する}ときに使います。標準の\code{map}が目的に合っているなら、同じ再帰を自作する必要はありません。
+
+\section{選んでから合計する}
+今度は0、1、2、3というリストから3未満の値だけを取り出します。値そのものを変更するのではなく、条件に合うものだけを\textbf{選ぶ}仕事なので\code{List.filter}です。
+
+\sample{17_list_pipeline.bend}{filterで値を選びfoldlで合計する}
+
+\code{List.range(4n)}で\code{[0,1,2,3]}を作り、\code{small}で3未満の値だけを残します。残るのは\code{[0,1,2]}です。それを\code{List.foldl}で足すと\code{3n}になります。
+
+\begin{lstlisting}[caption={絞り込みと集計を分ける}]
+xs = List.range(4n)
+ys = List.filter(~Nat, ~small, xs)
+List.foldl(~&2, ~Nat, ~Nat, ~sum, ys, 0n)
+\end{lstlisting}
+
+\code{foldl}は、左から順に「途中までの結果」と「次の要素」をまとめていきます。最後の\code{0n}は合計の初期値です。最初の値を5にすれば結果は8になります。これらは関数を引数に受け取る\term{高階関数}です。難しい仕組みだから使うのではなく、必要な操作がはっきりしているから使っています。
+
+\section{並べ替えると最初の値が変わる}
+順位やスコアの一覧を小さい順に見たいなら、\code{List.sort}を使います。
+
+\sample{38_list_sort.bend}{標準のsortで三つの整数を昇順に並べる}
+
+\begin{lstlisting}[caption={比較の関数をsortに渡す}]
+sorted = List.sort(~U32, ~U32.is_le, [7, 2, 4])
+\end{lstlisting}
+
+\code{U32.is_le(a,b)}は「aがb以下なら真」を返す関数です。この比較を使えば、\code{[7,2,4]}は\code{[2,4,7]}の順になります。\code{List.head}で最初の要素を取り出すと\code{2}です。
+
+\code{List.head}は空リストなら値を返せないため、戻り値は\code{Maybe}です。このサンプルでは\code{or_zero}で\code{Some}と\code{None}を場合分けしています。
+
+\begin{lstlisting}[language={},caption={ソートして最初の値を確認する}]
+bend examples/38_list_sort.bend
+\end{lstlisting}
+
+ここでは標準の\code{sort}を使いました。比較関数がどんな順序を表すかを決めれば、ソートのアルゴリズムを毎回実装し直す必要はありません。ただし、比較関数が正しい大小関係を表しているかは、自分で確かめましょう。
+
+\section{Arrayでは番号を直接指定する}
+4×4盤面の16マスを表すなら、番号を指定して読み書きできる\code{Array}が便利です。
+
+\code{Array.new(U32,4n,0)}は16要素の配列を作ります。第二引数の\code{4n}は\textbf{要素数ではなく深さ}であり、要素数は\(2^4=16\)です。深さ3なら8要素です。
+
+\sample{18_array_mutations.bend}{8要素のArrayを更新する}
+
+この例では2番目の値を17、7番目の値を25へ書き換え、2番目の値を読みます。
+
+\begin{lstlisting}[caption={更新された配列を次へ渡す}]
+a = Array.new(U32, 3n, 0)
+b = Array.set(U32, a, 2, 17)
+c = Array.set(U32, b, 7, 25)
+\end{lstlisting}
+
+\code{Array.set}は更新済みの配列を返します。\code{Array.get}は配列と読み出した値の組を返すので、必要に応じて両方を受け取ります。最終結果は\code{17}です。以前の\code{a}を後から勝手に使い回さず、\code{b}、\code{c}と\textbf{更新後の値を受け渡す}ことが、所有権の基本です。
+
+添字が範囲外のときにどうなるかはAPIの実装に依存するため、ゲームからはそのような添字を渡さないようにします。第14章の座標変換と組み合わせれば、画面の外から盤面外の添字を作らないようにできます。
+
+\section{ArrayをListとして集計したいとき}
+配列を更新し終えた後で、全要素を一度集計したい場面です。配列をリストへ変換すれば、先ほどの\code{List.foldl}をそのまま使えます。
+
+\sample{39_array_to_list.bend}{配列をリストに変換して合計する}
+
+\begin{lstlisting}[caption={配列をリストへ変換して集計する}]
+xs = Array.new(U32, 2n, 1)
+ys = Array.set(U32, xs, 0, 7)
+items = Array.to_list(~U32, ys)
+List.foldl(~&1, ~U32, ~U32, ~add, items, 0)
+\end{lstlisting}
+
+配列には4要素あり、最初はすべて1です。0番目だけ7へ変えるので、合計は\(7+1+1+1=10\)です。最後の返り値は\code{10}になります。
+
+リストの操作を使いたいから変換したのであって、\textbf{配列のまま扱える処理まで必ず変換する必要はありません}。データをどのように利用するかによって選びます。
+
+\section{cloneとforkを混同しない}
+\sample{30_array_clone.bend}{配列を二つの独立した値に複製する}
+
+\code{Array.clone}は独立した複製を作ります。一方の0番目を17に変えても、もう一方の0番目は5のままです。合計は\code{22}となります。
+
+\code{Array.fork}はこれとは異なり、同じ配列を共有するハンドルを作る操作です。共有した配列への書き込みには競合や原子的操作の問題が伴います。第19章でその違いを扱います。
+
+普通のマインスイーパーで一手ごとに盤面を進めるだけなら、共有更新を導入する必要はありません。最初は一つの状態を受け取り、新しい状態を返す方法で十分です。
+
+\exercise{\code{40_list_map.bend}の\code{plus_one}を「2を足す」関数へ変更し、合計を予想しましょう。次に\code{38_list_sort.bend}で比較を逆向きにしたとき、最初の値がどうなるか試してください。最後に4×4の盤面を\code{Array.new}で用意するには、深さをいくつにする必要があるか説明しましょう。}
+
+\chapter{MapとSetを使う}
+\sectiongoal{「あるかどうか」と「名前から値を取り出す」の違いを理解し、更新後の所有権を正しく渡す。}
+
+\section{旗の場所だけを記録したい}
+4×4の盤面で、プレイヤーが旗を置いた場所を覚えるとします。16個のマスすべてを調べる方法もありますが、旗のある場所の集合を持てば「この場所に旗があるか」をそのまま表せます。
+
+Bend 2には文字列キーの\code{Set}があります。例えば座標を\code{"2,3"}という文字列にして記録できます。座標の文字列化はあくまでこの小例の方法であり、実際の4×4エンジンでは\code{Array}やビットマスクを選ぶこともできます。
+
+\sample{01_set.bend}{座標をSetへ入れて存在を調べる}
+
+この例は\code{Set.new}で空集合を作り、\code{Set.add}で\code{"2,3"}を追加してから\code{Set.has}で調べます。所属判定が真なので、結果は\code{1}です。
+
+\begin{lstlisting}[caption={所属判定は集合とBoolを返す}]
+s0 = Set.new()
+s1 = Set.add(s0, "2,3")
+result = Set.has(s1, "2,3")
+\end{lstlisting}
+
+第1章で確認したとおり、\code{Set.has}は\code{Set() \& Bool}を返します。「調べた後の集合」と「含まれるか」を受け取り、次の操作へ進めます。なぜ単純に\code{Bool}だけではないのか、返り値の型をもう一度確認しましょう。
+
+\section{旗を一度押すと立ち、二度押すと消える}
+\sample{05_marking.bend}{同じマスの旗を二度切り替える}
+
+この例では\code{toggle_mark}を使います。キーが集合にあれば\code{Set.del}、なければ\code{Set.add}します。最初に空集合を渡し、\code{"2,3"}を二回操作するので、最後の要素数は\code{0n}です。
+
+\begin{lstlisting}[language={},caption={旗の操作を確かめる}]
+bend examples/05_marking.bend
+\end{lstlisting}
+
+途中の\code{s0}、\code{s1}、\code{s2}は別々に扱われる値です。集合を操作した結果として返ってきた値を次の行へ渡し、すでに消費した集合を再び使うことはしません。これがBendの所有権に沿った使い方です。
+
+\section{戦績を名前と数値で記録する}
+今度は\code{"wins"}という名前から勝利回数を取り出したいとします。「キーがあるか」だけではなく、キーに対応する数値が必要なので\code{Map}を選びます。
+
+\sample{02_map.bend}{辞書から勝利回数を読み出す}
+
+この例は\code{Map.new}で辞書を作り、\code{Map.set}で\code{"wins"}に7を保存し、\code{Map.get}で取り出します。結果は\code{7}です。ここでも\code{Map.get}は辞書と値の組を返します。
+
+\begin{lstlisting}[caption={Map.getには既定値を渡す}]
+m0 = Map.new(&2, U32)
+m1 = Map.set(&2, U32, m0, "wins", 7)
+result = Map.get(U32, 0, m1, "wins")
+\end{lstlisting}
+
+\code{Map.get}へ渡した0は\term{既定値（default value）}です。キーがないときは0を取り出せます。しかし、それだけでは「保存されていた0」と「キーがなかったので返した0」を区別できません。この違いを次の例で確かめます。
+
+\section{登録済みの0と、存在しないキーを分ける}
+\sample{36_map_missing.bend}{Map.hasとMap.getの役割を比べる}
+
+このプログラムは、\code{"wins"}というキーに0を保存します。\code{"losses"}は保存しません。その後、両方のキーについて\code{Map.has}で存在を確かめます。
+
+\begin{lstlisting}[caption={計算した組を引数として受け渡す}]
+def count_first(r: Map<&2, U32> & Bool) -> U32:
+  (m, first) = r
+  count_second(Map.has(&2, U32, m, "losses"), first)
+\end{lstlisting}
+
+Bend 2では、\code{Map.has}の計算結果をその場で分解できない場面があります。この例では結果を補助関数\code{count_first}の\textbf{引数}へ渡してから、集合と真偽値を取り出します。続く\code{count_second}も同様です。数量の都合で必要な二つの小さな関数なので、複雑な抽象化にはしません。
+
+結果は\code{1}です。\code{"wins"}は存在するので真で1、\code{"losses"}は存在しないので偽で0です。\code{Map.get}を既定値0で呼んだ場合、登録済みの0と未登録のキーの両方で0が返ります。だからこそ、\textbf{値を読み出すことと、キーの存在を確かめることは違う}のです。
+
+\begin{lstlisting}[language={},caption={未登録キーの例を実行する}]
+bend examples/36_map_missing.bend
+\end{lstlisting}
+
+これを保存データに応用するとき、登録されていなければ0回と扱ってよい設定なのか、未登録をエラーにすべき項目なのかを先に決めます。後者なら\code{Map.has}などで区別する必要があります。
+
+\section{重複する座標を追加したら？}
+\sample{16_map_set_api.bend}{Setの重複とMapのキー一覧}
+
+同じ\code{"0,0"}を二度\code{Set.add}しても、重複したキーは一つとして扱います。その後\code{"0,0"}を削除し、残る集合は\code{"1,1"}の一要素です。別の\code{Map}には二つのキーがあり、\code{Map.keys}で一覧を取り出します。両方の個数を足すので結果は\code{3n}です。
+
+\code{Map.keys}の順序が追加した順番と同じだと仮定してはいけません。順番も必要な画面なら、並べ替えの操作や別の順序管理を使います。
+
+\section{Map・Set・Arrayは何を基準に選ぶ？}
+「旗があるか」なら\code{Set}、「設定名から値を取り出す」なら\code{Map}、「盤面の何番のマスを更新する」なら\code{Array}が候補になります。ただし、小さい4×4の盤面ならビットマスクで状態を記録する方法もあります。
+
+使う方が難しくなる構造を無理に導入する必要はありません。データを何回読み書きするか、何を検索したいか、既存のどのAPIで目的を直接表せるかを考えて選びます。
+
+\exercise{\code{36_map_missing.bend}で\code{"losses"}にも0を登録し、\code{Map.has}の結果がどう変わるか確かめてみましょう。次に\code{16_map_set_api.bend}の\code{Set.del}を外すと結果はいくつになるか、実行前に予想しましょう。}
+
+\chapter{失敗、選択肢、依存する値}
+\sectiongoal{「値がない」と「操作を受け付けない」を区別し、型を選べるようになる。}
+
+\section{0を返せば十分だろうか}
+\begin{pointbox}
+「値が見つからない」という情報まで消して0にしてしまうと、本当に0という値を返す場合と区別できません。\code{Some{0}}と\code{None{}}を区別する\code{Maybe}なら、この二つを正しく扱えます。
+\end{pointbox}
+
+座標を調べる関数が0を返したとします。これは「周囲の地雷数が0」なのか、「その座標が見つからなかった」のか、関数の外からは判断できません。値そのものと、値を得られなかったという状況を別々に表す必要があります。
+
+前巻で学んだ\code{Maybe}は、\code{Some{value}}と\code{None{}}を区別します。存在しなかった理由までは必要ない場合に便利です。例えば数値として読めない文字列を\code{U32.read}へ渡すと\code{None{}}になり得ます。既出の\code{15_string_parse.bend}をもう一度見て、成功と失敗でどの分岐を通るか確認しましょう。
+
+\section{失敗の理由を知りたいときはResult}
+マインスイーパーでは「すでに開いたマスには旗を付けられない」という操作を考えます。失敗したことだけでなく、なぜ操作できないかを伝えたいとき、\code{Result}を使います。
+\sample{22_result_and_game.bend}{旗を付ける操作の成功と失敗}
+\begin{lstlisting}[caption={結果をDoneまたはFailとして返す}]
+def flag(s: Cell) -> Result<&2, &2, String, Cell>:
+  match s:
+    case Hidden{}:
+      Done{Flag{}}
+    case Flag{}:
+      Done{Flag{}}
+    case Open{}:
+      Fail{"an open square cannot be flagged"}
+\end{lstlisting}
+
+\code{flag}は、閉じたマスなら\code{Done{Flag{}}}を、開いたマスなら\code{Fail{...}}を返します。これは\textbf{純粋関数で判定したゲームの規則}です。ファイルへの書き込み失敗のようなIOエラーとは分けて考えます。コードの\code{success}は成功なら1、失敗なら0に変えているため、\code{main}は\code{1}を返します。
+
+\code{Result}を読む際は、\textbf{成功の値の型}と\textbf{失敗の理由の型}を別々に確かめましょう。この例では成功の値は\code{Cell}で、失敗の理由は\code{String}です。\code{Result}の宣言には数量引数も含まれているため、型を記すときは\code{Result<&2, &2, String, Cell>}のようになります。こうした追加の型引数を適当に省略すると、型検査で失敗することがあります。
+
+\section{複数の値を返すことと、二種類の結果とは違う}
+\code{A & B}は二つの値をまとめた組です。\code{Map.get}が「辞書と読み出した値」を返すのは、\textbf{両方を同時に持っている}からです。一方、\code{Either}の\code{Inl}と\code{Inr}は、\textbf{どちらか一方が入っている}ことを表します。\code{Result}はこの発想を成功・失敗という用途に特化した型です。
+
+\code{Sigma}はさらに一般的な組で、\textbf{最初の値によって次の値の型が決まる}場合に使います。普通の二つの数を返すだけなら依存型にする必要はありません。この段階では「普通の組と、依存する組を区別できる」ことを目標にし、実際の存在命題と依存型は証明のPartで扱います。
+
+\section{Eitherを使って「どちらか一方」を表す}
+「設定ファイルに数値がある場合」と「説明文をそのまま扱う場合」の二種類を一つの値として持ちたいとします。二つが\textbf{同時にある}わけではないので、普通の組とは違います。\code{Either}は左側の\code{Inl}または右側の\code{Inr}で、異なる二種類の値を受け取れる型です。
+
+\sample{25_either_case.bend}{Eitherの二種類を場合分けする}
+\begin{lstlisting}[caption={Eitherの左右の値の使い分け}]
+match choice:
+  case Inl{number}:
+    number
+  case Inr{text}:
+    U32.from_nat(String.length(text))
+\end{lstlisting}
+
+この例では左側に\code{U32}、右側に\code{String}を入れられます。\code{meaning}は\code{Inl}なら数値をそのまま返し、\code{Inr}なら文字列の長さを\code{U32}に変換して返します。\code{main}は\code{Inl{7}}を渡すため、結果は7です。
+
+ここで\code{Result}との違いを整理しましょう。\code{Either}の左右には、成功・失敗という意味は最初から付いていません。\code{Result}はその区別を明確にしたいときに選びます。型を選ぶ際は、\textbf{値が二つ必要なのか、二者択一なのか、失敗の理由を表したいのか}を考えます。
+
+\exercise{\code{main}から右側の\code{Inr}に短い文字列を渡し、返り値を予想してから実行しましょう。}
+
+\section{Kindと数量指定は何を制限しているのか}
+一見難しい型を暗記するより先に、\code{bend base Result}などで公開された型の引数を確認しましょう。たとえば\code{Result}の数量は失敗側と成功側でそれぞれ指定されます。型の名前だけから勝手に省略しないことが大切です。
+\begin{lstlisting}[language={},caption={型と数量指定を調べる}]
+bend base Result
+bend base Either
+bend base List.foldl
+\end{lstlisting}
+
+ここまでの\code{Map.get}や\code{List.filter}では、\code{&1}・\code{&2}・\code{Type}・\code{Data}などを見ました。これらは装飾ではありません。ある値を複数回使ってよいか、使った後に戻す必要があるかに関係します。\code{Kind}はそうした型の分類を表し、\code{Quant}は数量を指定する仕組みです。
+
+最初に覚えるべき手順は三つです。関数の引数の型を読むこと、返り値で所有権が戻るかを見ること、複製が必要なら適切な数量指定を使うことです。すべての種類の数量を暗記するより、\code{Set.has}と\code{File.read}のような実例で意味を確認すると混乱しません。
+
+\exercise{「座標を探したが見つからない」「保存が失敗したので理由を知らせたい」「辞書と読み出した値を返したい」それぞれに、\code{Maybe}、\code{Result}、組のどれが適切かを選び、理由を説明してみましょう。}
+\part{入出力と並行処理}
+\partchaptertoc
+\chapter{IOを読む}
+\sectiongoal{値を計算する処理と、画面・ファイルなど外界に作用する処理を分ける。}
+
+\section{「ゲームの規則」と「画面に出す」は別の仕事}
+前章の\code{flag}は、引数が同じならいつ呼んでも同じ結果を返します。画面がなくても検査できる\textbf{純粋関数}です。ところが、画面に文章を表示する、ファイルを書き換える、乱数を取得するといった操作は、プログラムの外に影響したり、外の状態に左右されたりします。このような\textbf{副作用を伴う計算}を表すために、\code{IO<A>}を使います。
+
+\code{IO.print("hello")}は\code{IO(Unit)}です。文章を表示する仕事を表し、特に返す値がないことを\code{Unit}で表現しています。対して\code{IO.args()}は\code{IO(List<String>)}です。起動時の引数をリストとして受け取ります。\textbf{IOの括弧の中身は、作用の結果として得る値の型}です。
+
+\section{どうしてdoの中で順番を書くのか}
+\begin{lstlisting}[caption={IOで受け取ったListをそのまま集計する}]
+def main() -> IO(Unit):
+  do IO<Unit>:
+    xs: List<String> <- IO.args()
+    IO.print(Nat.show(List.length(&1, String, xs)))
+\end{lstlisting}
+第8章の\code{08_args.bend}がこのコードです。\code{IO.args}は起動対象のパスも含むため、利用者が追加した引数の個数とリスト全体の長さを区別しましょう。ここでは値を得る処理はIO、長さを数える処理は純粋関数です。
+
+マインスイーパーの設定を保存するなら、まずファイルを開き、次に書き込み、最後に閉じます。順番を入れ替えると意味が変わる処理です。\code{do IO<Unit>:}は、こうした順序を読みやすく書くためにあります。
+
+すでに使った\code{08_args.bend}を見直すと、\code{<-}の左側で得た値を、次の行へ渡しています。これが「外部の処理が返した結果を受け取り、次の処理を続ける」という流れです。\code{IO.pure}は、外へ作用せず値を\code{IO}の結果として返すための操作で、後の\code{IO.fork}の実例にも登場します。
+
+\section{失敗し得るIOには二重の結果がある}
+\code{File.open}や\code{IO.random_u32}は、成功するとは限りません。そのため\code{IO(Result<...>)}のように、\textbf{外部の処理}と\textbf{その成功・失敗}を両方型に書きます。\code{IO.try}は、結果が\code{Done}なら値を取り出し、\code{Fail}なら後続の計算へ進まず失敗を伝えます。
+
+ここで重要なのは、\code{IO.try}を使えば必ず回復できるわけではないということです。失敗時に別の保存先を試すなど、回復する方針が必要なら、\code{Result}の値を直接受け取って\code{match}で分岐します。第7章で実際のファイル操作を見ます。
+
+\section{何をIOにするべきか}
+旗を付けられるかの判定、周囲の地雷数、勝敗の規則は純粋関数にできます。一方、結果を画面に表示する、設定を保存する、実際の時刻を読む、といった境界の仕事はIOです。両者を分けると、ゲームの規則を\code{law}で述べたり、自動テストで調べたりできます。
+
+\exercise{「マスを開いた後に地雷数を調べる」「戦績をファイルへ保存する」「マウスクリックを待つ」の三つを、純粋な部分とIOが必要な部分に分けてみましょう。}
+
+\begin{pointbox}
+この章では「IOで値を取得し、純粋関数で加工する」という流れだけを押さえれば十分です。第7章では実際にFileを開いて閉じ、第8章では環境変数と乱数、第9章では結果を待つIOを、それぞれ小さなプログラムで試します。
+\end{pointbox}
+
+\chapter{Fileとリソースの受け渡し}
+\sectiongoal{保存と読み戻しを通して、Fileハンドルの所有権と失敗処理を理解する。}
+
+\section{保存するには、どんな順序が必要だろうか}
+マインスイーパーの戦績を次に起動したときも使いたいとします。プログラムが終了しても情報を残すには、ファイルへ書き込む必要があります。
+
+保存には「ファイルを開く $\rightarrow$ 書き込む $\rightarrow$ 閉じる」という順序があります。先に閉じてから書くことはできません。また、ファイルを開けなかったときには、書き込みに進んではいけません。この流れがそのままBendの型と返り値に表れています。
+
+\section{ファイルを開き、書き込んで閉じる}
+\sample{12_file_write.bend}{ファイルへ盤面の設定を書き込む}
+\begin{lstlisting}[language={},caption={書き込み用のサンプルを実行する}]
+bend examples/12_file_write.bend
+\end{lstlisting}
+
+この例を実行すると、作業フォルダーに\code{sample_board.txt}が作られます。まず\code{File.open}で書き込み用に開き、\code{File.write}で二行の文字列を書きます。最後に\code{File.close}で閉じます。
+
+ここで\term{ファイルハンドル（file handle）}に注目しましょう。ハンドルは「いま開いているファイルを操作するための値」です。Bend 2では、書き込みへ渡したハンドルを、その後も同じ変数から勝手に使い続けることはできません。\code{File.write}は\textbf{継続して使うハンドルと書き込み結果}を組で返します。成功時も失敗時も、返されたハンドルを受け取り、最後に閉じます。
+
+\begin{pointbox}
+\code{File.open}で失敗した場合には、まだ使用可能なハンドルがありません。一方、\code{File.write}で失敗した場合には、書き込みの結果を受け取ってから\textbf{ハンドルを閉じる処理}が必要です。どの時点でリソースが存在しているかを区別しましょう。
+\end{pointbox}
+
+\section{成功と失敗を型で追う}
+\code{File.open}は\code{IO(Result<...,File>)}を返します。外部の操作であることに加え、その操作が失敗し得ることを表す型です。この例では\code{IO.try}で成功したファイルを取り出し、開けなかった場合は失敗を伝えます。
+
+書き込みを行う\code{File.write}はハンドルと\code{Result}を返すので、\code{Done}と\code{Fail}を\code{match}で分けます。失敗したら後の処理へ進まないというだけでなく、\textbf{閉じ忘れを防ぐ}ように両方の分岐で\code{File.close}しています。
+
+\section{読み戻せたら保存を確認できる}
+ファイルに文字列を書いたとしても、保存した内容を本当に使えるかはまだ分かりません。今度は読み込みを試します。
+\sample{13_file_read.bend}{保存した文字列を読み戻す}
+\begin{lstlisting}[language={},caption={続けて読み戻しを試す}]
+bend examples/13_file_read.bend
+\end{lstlisting}
+
+まず\code{12_file_write.bend}を実行し、次に\code{13_file_read.bend}を実行してみましょう。読み込んだ文字列が保存した二行と同じであることを確認します。このように\textbf{書き込みから読み込みまで一組として確かめること}をラウンドトリップテストと呼びます。
+
+\code{File.read(file,4096)}の数値は、一度に読み取る最大量です。大きなファイルを読んだときに、一度の呼び出しで必ず全体が戻ると思ってはいけません。終端まで繰り返す必要がある場合もあります。また、\code{File.read_bytes}と\code{File.write_bytes}は、文字列ではなくバイト列を扱うAPIです。
+
+\section{マインスイーパーの保存に応用する}
+実際の戦績を保存するときは、盤面サイズ、地雷数、勝利数などを別の項目にします。読み込んだ文字列は外部から渡されたデータです。値が欠けている、数字として読めない、範囲から外れている場合には、ゲームの内部状態として採用せず、\code{Maybe}や\code{Result}で失敗を表します。読み込みに成功したことと、\textbf{内容が正しいこと}は別です。
+
+\exercise{書き込み例の\code{"board-size=4"}を別の値に変更して保存し、読み込み例で表示が変わるか確認しましょう。次に、ファイルを削除した状態で読み込み例を実行するとどうなるか、実行前に予想してみましょう。}
+\chapter{引数、時刻、乱数、プロセス}
+\sectiongoal{外部情報を受け取る方法と、再現できるテストの作り方を学ぶ。}
+\code{IO.args}は起動時の引数をリストとして受け取ります。設定ファイルの位置や盤面のサイズを指定する例で使えます。\code{IO.get_env}は環境変数を読みます。
+\sample{08_args.bend}{引数の個数を表示する}
+\section{環境変数は常に存在するとは限らない}
+環境変数はOSや起動方法によって変化します。\code{IO.get_env("PATH")}はパス検索の設定を読む例ですが、必ず値があると仮定してはいけません。
+\sample{19_environment.bend}{環境変数を読み取り長さを表示する}
+\begin{lstlisting}[caption={環境変数がない場合にも備える}]
+match value:
+  case Done{s}:
+    String.length(s)
+  case Fail{problem}:
+    0n
+\end{lstlisting}
+
+\code{IO.get_env}の結果は\code{Result}です。\code{Done}の場合は文字列を受け取り、\code{Fail}の場合は例のように既定動作へ分岐できます。エラー内容が必要なら、\code{Fail}の値を捨てずに利用します。環境変数の中身をそのままログに出すと、パスワードなどの機密情報を漏らす可能性があります。この例では値そのものではなく長さだけを出力します。
+
+\code{IO.now}は現在時刻、\code{IO.sleep}は時間待ち、\code{IO.random_u32}は乱数を扱います。乱数を使ったテストは、実際の乱数に依存させず、固定した地雷配置を入力にする方法と分けて実施します。
+
+\section{乱数の取得と失敗の伝播}
+\code{IO.random_u32()}の型は\code{IO(Result<..., U32>)}であり、単に\code{U32}が返るわけではありません。外部機能が失敗する可能性を明示するためです。\code{IO.try}を使うと成功した\code{U32}を取り出せますが、失敗したときは後続の\code{IO.print}へは進みません。
+\sample{11_random_io.bend}{乱数を取得して表示する}
+\begin{lstlisting}[caption={成功した乱数だけを取り出す}]
+random_value: U32 <- IO.try(U32, IO.random_u32())
+IO.print(U32.show(random_value))
+\end{lstlisting}
+
+この例は毎回値が変化するため、数値そのものを固定して比較するテストには不向きです。ソルバーの正しさは固定した盤面でテストし、ランダム盤面の生成はその後に確認しましょう。
+
+\section{外部プログラムを起動する}
+\code{Process.run}は外部プログラムを起動します。引数のリスト、標準入力へ渡す文字列、受け取り可能な出力の最大量、タイムアウトを指定します。
+\sample{20_process_run.bend}{外部プログラムを起動して終了コードを確認する}
+この例はUnix系環境の\code{/usr/bin/true}を実行します。このコマンドは何も表示せずに成功の終了コード0を返します。Windowsなどでは同じパスは使えないため、実行環境に応じてプログラムを選んでください。
+
+\code{Process.run}は\code{IO(Result<...>)}型の結果を返します。プロセスの\textbf{起動そのものが失敗した場合}と、\textbf{起動したプログラムが0以外の終了コードで終わった場合}は違います。前者は\code{Fail}で、後者は成功結果内の終了コードで区別します。返り値には標準出力と標準エラー出力も含まれます。ここでは終了コードだけを取り出しますが、利用者に必要な情報を捨ててはいけません。
+\exercise{引数が不足するときは既定の盤面を使うか、理由を表示して終了するか、用途に応じて選んでみましょう。}
+
+\chapter{IO.fork、Chanとタイムアウト}
+\sectiongoal{独立したIOを開始して結果を受け取り、チャネルの終了を扱う。}
+
+\section{「二つの仕事を始める」と「結果を待つ」}
+画面を表示する処理とは別に、時間のかかる読み込み処理を始めたい場面を考えます。何かを始める処理と、結果が必要になるまで待つ処理を分けられれば、複数の仕事を扱いやすくなります。
+
+Bend 2の\code{IO.fork}はIO計算を開始し、その結果を受け取るための\code{Chan}を返します。\code{IO.join}はそのチャネルから結果を待ちます。まずは複雑な並行処理ではなく、確実に7が返ってくる小さな仕事で型を確認します。
+\sample{21_io_fork.bend}{IO計算を開始し結果を受け取る}
+\begin{lstlisting}[caption={結果を受け取るチャネルを使う}]
+chan: Chan(U32) <- IO.fork(U32, IO.pure(U32, 7))
+value: U32 <- IO.join(U32, chan)
+IO.print(U32.show(value))
+\end{lstlisting}
+
+
+実行結果は7です。\code{IO.pure(U32,7)}は外部に作用せず7を返すIO計算です。ここで分かるのは、\textbf{計算を開始して結果を受け取れること}です。複数のCPUコアを使ったとか、処理時間が短くなったとまでは言えません。
+
+\section{Chanは何を受け渡すのか}
+\code{Chan}は\term{チャネル（channel）}と呼ばれ、値の送信と受信に使います。\code{Chan.new}はチャネルを用意し、\code{Chan.send}は値を送信し、\code{Chan.recv}は値を受け取ります。\code{Chan.close}でチャネルを閉じます。
+
+受信時の結果は\code{Maybe}です。送られた値があれば\code{Some}、チャネルが閉じられて残りの値もなければ\code{None}になります。\textbf{受信できないときに、存在しない値が適当に返るわけではありません。}送信時も、閉じたチャネルへ送れない場合は\code{Fail}として扱います。失敗と終了を結果型で読み取るのが、このAPIの大切な点です。
+
+\section{送る側と受け取る側を一つの例で確認する}
+\code{IO.fork}では結果を受け取るチャネルが内部的に用意されますが、チャネル自体を直接使うこともできます。
+\sample{28_chan_roundtrip.bend}{チャネルへ9を送り、受け取り、閉じる}
+\begin{lstlisting}[language={},caption={送信してから受信を試す}]
+bend examples/28_chan_roundtrip.bend
+\end{lstlisting}
+
+\code{Chan.new(U32,1)}の第二引数はバッファの容量です。この例は容量1のチャネルへ9を送ります。受信結果は\code{Maybe}なので、\code{Some}の場合だけ値を取り出します。受信後に\code{Chan.close}を呼びます。
+
+この例では\code{+chan}を使って、送信、受信、終了処理で同じチャネルを参照しています。これは\code{Chan}の特性を使った例です。他のアフィンな値が同様に共有できるとは限りません。また、バッファがない、送受信の相手が現れないといった場合には待機することがあるため、実際のプログラムでは\textbf{誰が送るか、誰が受け取るか、いつ閉じるか}を先に設計します。
+
+\exercise{この例の9を別の数値に変えてみましょう。次に、どの行を実行すると受信側が値を得られるか、順序を追って説明してください。}
+
+\begin{pointbox}
+\code{IO.fork}とCPU計算を並列に呼び出す構文は、目的が異なります。前者はIOの開始と結果の受信、後者は独立した計算の並列実行です。速さを考える前に、どの結果をいつ必要とするか整理しましょう。
+\end{pointbox}
+
+\section{時間内に終わらなかったら}
+\code{IO.within}は時間制限内に値が得られたかを\code{Maybe}として返します。\code{Some}は間に合った結果、\code{None}は時間内に結果が得られなかったことを表します。
+\sample{29_io_within.bend}{制限時間内の結果をMaybeで受け取る}
+ここではすぐ7を返す計算を、1000ミリ秒の制限付きで待ちます。ほとんどの実行環境で7が表示されるはずですが、実行スケジューリングの条件によっては結果が変わる可能性もあります。したがって、この例の目的は\textbf{必ず7が出ることを証明する}のではなく、\code{Some}・\code{None}を両方処理することです。
+
+ただし\textbf{待つ側が時間切れになっても、裏で動く仕事が自動的に停止するとは限りません}。時間が掛かる処理を開始するなら、途中で終了させる方法や、終了後のリソース管理も設計する必要があります。\code{Chan.try_recv}や\code{Chan.try_send}では\code{Poll}の\code{Ready}・\code{Wait}で、処理できたか、待つ必要があるかを表します。
+
+\section{いつ使うべきか}
+小さなマインスイーパーの通常の操作は、まず一つずつ順番に実装する方が理解しやすいでしょう。一方、時間のかかる分析や外部処理を追加する場合には、処理を分ける選択肢があります。並行処理が必要になるまでは、単純な純粋関数と順序どおりのIOで十分です。
+
+\exercise{\code{21_io_fork.bend}が7を返す理由を説明してみましょう。次に\code{IO.pure}の7を別の数値へ変え、\code{IO.join}が同じ数値を受け取れるか確かめましょう。}
+\chapter{TCP、UDPと外部環境}
+\sectiongoal{通信の開始・送受信・終了と、相手が応答しない場合の扱いを理解する。}
+
+\section{通信はファイルと似ているだろうか}
+ファイルでは「開く、読み書きする、閉じる」という順序がありました。別のプログラムやコンピュータと通信するときも、\textbf{接続する、データを送受信する、接続を閉じる}という順序を考えます。違うのは、相手がいつ応答するか分からないことと、途中で通信が切れることがある点です。
+
+Bend 2の\code{Base}には\code{TCP}と\code{UDP}のAPIがあります。ネットワーク通信をマインスイーパーへ無理に組み込む必要はありません。この章では、通信する相手がいるときにどの操作を選び、どんな失敗が起こるかを学びます。
+
+\section{TCPは接続を作ってから使う}
+\begin{center}
+\begin{tikzpicture}[node distance=13mm]
+\node[draw=blue!50,fill=blue!4,rounded corners,minimum width=34mm,minimum height=12mm] (a) {\sffamily 接続：connect};
+\node[draw=warm!50,fill=warm!4,rounded corners,minimum width=34mm,minimum height=12mm,right=of a] (b) {\sffamily 待機：listen};
+\draw[-{Latex[length=2mm]},thick,teal] (a) -- node[above,font=\small]{TCP} (b);
+\end{tikzpicture}
+\end{center}
+
+TCPでは、受け取る側が\code{TCP.listen}で待ち受け、\code{TCP.accept}で接続を受け取ります。接続する側は\code{TCP.connect}を使います。接続して得た\code{Socket}を\code{TCP.send}や\code{TCP.recv}へ渡してデータを送受信します。
+
+\code{TCP.listen}や\code{TCP.connect}は\code{IO(Result<...>)}を返します。利用するアドレスやポートが正しくても、相手が起動していなかったり、アクセスが拒否されたりすることがあります。この場合はハンドルが得られません。接続できた後も、送信と受信には失敗の可能性があり、\code{Socket}を次の操作へ渡します。
+
+\begin{pointbox}
+\code{TCP.send}が成功しても、それは送信内容が相手のアプリケーションで処理されたことまで保証しません。また、一度の\code{TCP.recv}で送信した文章全体が必ず届くわけではありません。送受信するデータの区切り方を、アプリケーション側で決める必要があります。
+\end{pointbox}
+
+\section{UDPは何が違うのか}
+UDPでは、接続を確立してから使う方法ではなく、送信先を指定したデータグラムをやり取りするAPIを使います。\code{UDP.bind}で受信側を用意し、\code{UDP.send_to}で送信し、\code{UDP.recv_from}でデータと送信元の情報を受け取ります。
+
+\textbf{送信したデータが相手へ必ず届く保証はありません。}順番が変わることや同じデータが複数回届くことも考慮します。通信方式の名前だけで選ぶのではなく、「確実に順序どおり受け取りたいか」「一つのデータを独立して送りたいか」を基準に選びます。
+
+\section{接続できなかった場合の最小例}
+相手が用意されていない環境でも、\textbf{接続の失敗を受け取る}練習はできます。次のコードはローカルのアドレスへ接続を試み、成功した場合はソケットを閉じ、失敗した場合はその旨を表示します。
+
+\sample{27_tcp_connect.bend}{TCP接続の成功と失敗を区別する}
+\begin{lstlisting}[caption={成功なら閉じ、失敗なら理由を表示する}]
+match r:
+  case Done{socket}:
+    Socket.close(socket)
+  case Fail{reason}:
+    IO.print("No TCP listener at this address")
+\end{lstlisting}
+
+\code{TCP.connect}が返す\code{Result}を\code{match}で処理します。\code{Done}には利用できる\code{Socket}が、\code{Fail}にはエラー情報が入ります。接続に成功した分岐では\code{Socket.close}を呼びます。これは接続の成否を確かめる最小例です。ポート1で待ち受ける相手がいれば成功する可能性もあり、\textbf{失敗を保証する例ではありません}。送受信の方法そのものは、まだ試していません。
+
+\section{安全に試すには}
+最初の通信実験では外部のサービスへ接続せず、同じコンピュータの\term{ループバック（loopback）}を使いましょう。受信側を開始し、送信側を起動し、届いた内容を表示する順番です。ただし、この節ではAPIの基本的な意味を説明する段階です。TCP・UDPの送受信を一通り動かす独立実習は、続く改訂で追加します。
+
+\begin{pointbox}
+\textbf{試す順番を決めておきましょう。} 接続が失敗したら、すぐに外部のサーバーへ接続先を変えるのではなく、(1)受信側の起動、(2)アドレスとポートの一致、(3)通信を許可する環境か、の順に調べます。\code{127.0.0.1}は自分のコンピュータを指しますが、そのアドレスで待ち受けるプログラムがあることまでは保証しません。
+\end{pointbox}
+
+\section{通信データには境界が必要}
+ファイルへ文章を書き込むときは、ファイルの終わりまで読む方法を考えられました。しかしTCPは\textbf{バイトの連続}を届ける仕組みであり、送信側の一回の\code{send}と受信側の一回の\code{recv}は一対一に対応しません。
+
+例えば\code{HELLO}という5バイトを送ったとしても、受信側では\code{HE}と\code{LLO}に分かれて届く可能性があります。逆に二回に分けて送ったデータをまとめて受け取ることもあります。
+
+このため、\term{メッセージの区切り（framing）}をアプリケーションで決めます。短いテキストなら改行を区切りにする方法があります。任意のバイト列なら、先頭に長さを付ける方法もあります。長さを付ける場合は、その長さ自体を何バイトで表すか、上限を超えたらどうするかも決めなければなりません。
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+受信した断片 & 受信側で保持する未完成のデータ \\
+\midrule
+\code{HE} & \code{HE} \\
+\code{LLO} & \code{HELLO} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+この「区切りを決める」考え方を、Bendの文字列操作で確かめてみましょう。通信環境がなくても試せるよう、受信が完了した文字列をあらかじめ用意します。
+
+\sample{44_message_boundary.bend}{区切り記号で二つのメッセージを取り出す}
+
+\begin{lstlisting}[language={},caption={区切りを指定して実行する}]
+bend examples/44_message_boundary.bend
+\end{lstlisting}
+
+結果は\code{2n}です。\code{String.split}は、区切り記号\code{|}（文字コード124）で\code{ABC|DEF}を分割します。\code{List.length}は分割後の要素数を数えます。ここで使っている区切り記号は説明用であり、実際のプロトコルではデータ内にその文字が現れた場合の扱いも決める必要があります。
+
+\begin{pointbox}
+\textbf{このコードがまだ解決していないこと。} 受信途中で\code{AB}までしか届いていない場合、そこに区切り記号が見当たらないからといって、\code{AB}を一件のメッセージとして扱ってはいけません。未完了の部分を保持し、次の受信結果とつないでから区切りを探します。この例は\textbf{完成した文字列の分割}だけを扱い、ソケットの受信や未完了データの蓄積は実装していません。
+\end{pointbox}
+
+実際の通信APIで一度の受信が一つの文章に等しいとは限りません。UDPでは一回の受信でデータグラム単位の境界を扱えますが、損失や受信バッファより大きいデータの切り詰めなど、別の問題があります。
+
+\exercise{\code{44_message_boundary.bend}の入力を\code{ABCDEF}へ変えて、結果が\code{1n}になることを確かめてみましょう。次に、二つのメッセージを結合した文字列に区切り記号を入れないと、なぜ受信側が境界を判断できなくなるのか説明してみましょう。}
+
+\exercise{\code{ABC}と\code{DEF}を二回の\code{send}で送るとき、TCPの受信側が\code{ABCDEF}を一度に受け取る場合と、\code{AB}・\code{CDEF}に分かれて受け取る場合を考えてみましょう。改行区切りなら、送信する文字列をどう変えればよいか説明してみましょう。}
+
+送受信した値は外部から受け取るデータなので、不正な長さ、不正な文字列、予期しない切断を考慮します。ファイルで学んだ\code{Result}やハンドル管理が、ここでも役立ちます。
+
+\exercise{TCPで接続先プログラムが起動していない場合、どの操作が失敗しそうか考えてみましょう。次に、一回の受信で文章全体を受け取れると仮定してはいけない理由を説明してみましょう。}
+\part{Image・App・GUI}
+\partchaptertoc
+\chapter{Imageと四分木}
+\sectiongoal{PixとQuaで画像を組み立て、画面表示より先に画像の構造を確かめられるようになる。}
+
+\section{四つのマスを塗り分けてみる}
+マインスイーパーの画面を作る準備として、まず四つの正方形を並べてみましょう。左上だけを赤、ほかの三つを黒にする場合、64個や256個の画素を一つずつ指定する必要はあるでしょうか。
+
+Bend 2には画像そのものを値として表す\code{Image}があります。\code{Pix{color}}は一色の正方形、\code{Qua{tl, tr, bl, br}}は四つの領域からなる正方形です。\code{tl}は左上、\code{tr}は右上、\code{bl}は左下、\code{br}は右下です。
+
+\begin{center}
+\begin{tikzpicture}[x=.9cm,y=.9cm]
+  \fill[red!85!black] (0,1) rectangle (1,2);
+  \fill[black] (1,1) rectangle (2,2);
+  \fill[black] (0,0) rectangle (1,1);
+  \fill[black] (1,0) rectangle (2,1);
+  \draw[white,line width=.7pt] (0,0) grid (2,2);
+  \node[text=white,font=\scriptsize] at (.5,1.5) {tl};
+  \node[text=white,font=\scriptsize] at (1.5,1.5) {tr};
+  \node[text=white,font=\scriptsize] at (.5,.5) {bl};
+  \node[text=white,font=\scriptsize] at (1.5,.5) {br};
+\end{tikzpicture}
+\end{center}
+
+これをBendで作るなら、次の\code{make_icon}が使えます。
+
+\sample{31_image_quadrants.bend}{四分木を作って左上の色を読む}
+
+色の値\code{16711680}は16進数で\code{0xFF0000}、つまり赤です。ほかの\code{0}は黒を表します。このプログラムはウィンドウを開きません。\code{make_icon}で画像の値を作り、\code{top_left_color}でその左上を読み取ります。ターミナルから実行してみましょう。
+
+\begin{lstlisting}[language={},caption={Imageの構造を確認する}]
+bend examples/31_image_quadrants.bend
+\end{lstlisting}
+
+結果は\code{16711680}です。左上の色を返しただけなので、まだ実際の画面に赤い四角が表示されたわけではありません。この違いは重要です。
+
+\section{Quaの中へさらにQuaを入れる}
+四つの領域に分けた後、その一つをさらに四分割できます。例えば、左上だけが細かい模様になり、ほかは単色の画像を作れます。このように一つの領域の中に同じ種類の構造が現れるものを\term{再帰的な構造}と呼びます。
+
+先ほどの\code{top_left_color}では、\code{Pix}に到達したらその色を返し、\code{Qua}なら左上の子\code{tl}に対して同じ関数を呼びます。最後には\code{Pix}へ到達するので処理が終わります。前巻の再帰で学んだ「小さくして進める」「終わる場合を設ける」という考え方が、そのまま画像に使えます。
+
+画像を四つに分ける\code{Qua}の並び順を、画面での見た目に結び付けて覚えておきましょう。コード上では\code{tl, tr, bl, br}の順です。\textbf{左上、右上、左下、右下}であり、時計回りではありません。
+
+\section{画像を作る処理と表示する処理を分ける}
+画像の値を作る関数には、副作用が必要ありません。ゲームの状態から色を決める関数も、基本的には純粋な計算として書けます。例えば\code{Hidden}なら灰色、\code{Flag}なら黄色、\code{Open{clue}}なら白色というように、まず状態と色の対応を決めます。これは画像を描画する前に実行結果を検査できる処理です。
+
+実際にウィンドウへ表示するのは次章の\code{App.run}です。画像を組み立てることと、イベントを受け取って画面を更新することを同時に考える必要はありません。まず表示したい絵を値として作り、次に画面へ渡す方法を学びます。
+
+\exercise{\code{31_image_quadrants.bend}の左上の赤を青（\code{255}）に変え、返り値を予想してから実行してみましょう。次に赤い\code{Pix}を右下へ移し、\code{top_left_color}の結果がどう変わるか確かめてください。表示される図と、プログラムが検査している領域を区別しましょう。}
+
+\chapter{Appとイベントの処理}
+\sectiongoal{小さなウィンドウを動かし、イベントを状態の更新へ結び付ける流れを理解する。}
+
+\section{表示するだけでは画面は変わらない}
+第11章では\code{Image}を作りました。では、その画像を表示し、キーやマウスの入力によって変えるにはどうすればよいでしょうか。Bend 2では、\code{App}に二つの処理を渡すことで基本のアプリを作れます。
+
+一つは、\textbf{現在の状態から画像を作る\code{view}}です。もう一つは、\textbf{受け取ったイベントから次の状態を決める\code{tick}}です。まずマインスイーパーのような大きなゲームではなく、画面の色が変わる最小例を動かしましょう。
+
+\sample{07_gui_hello.bend}{App.runで色の変わるウィンドウを開く}
+
+このサンプルを、デスクトップ環境で実行してみましょう。
+
+\begin{lstlisting}[language={},caption={最小のGUIアプリを実行する}]
+bend examples/07_gui_hello.bend
+\end{lstlisting}
+
+256×256画素のウィンドウが開く想定です。何かイベントが届くと色の値が変わり、ウィンドウを閉じると終了します。画面を開けない環境では\code{--check-only}で型を調べることはできますが、\textbf{実際にウィンドウが開いたことの確認にはなりません}。
+
+\section{viewとtickを一行ずつ読む}
+最初の例の\code{App.run}には、次の部分があります。
+
+\begin{lstlisting}[caption={viewとtickを組み合わせる部分}]
+App.run(~U32, ~App{+s => (s, Pix{s}), tick},
+  "GUI example", 256, 256, 0)
+\end{lstlisting}
+
+ここで状態\code{s}は一つの\code{U32}です。\code{+s => (s, Pix{s})}は、状態を受け取り、\textbf{状態そのものと、その状態を使って作った画像の組}を返します。Bend 2では値の所有権があるため、表示のために状態を勝手に消費してはいけません。描画した後も次の更新に使うので、元の状態を返しているのです。
+
+\code{tick}は\code{List<Event>}と現在の状態を受け取り、次の状態を\code{IO(Maybe<U32>)}として返します。ここで\code{Maybe}が役に立ちます。\code{Some{state}}なら続行、\code{None{}}なら終了です。
+
+サンプルには三つの分岐があります。イベントがない\code{Nil{}}では色を変えずに続行します。\code{Close{}}を受け取った場合は\code{None{}}で終了します。それ以外のイベントを受けたら色の値を1増やして、残りのイベントを再帰的に調べます。つまり、\textbf{マウスをクリックしたときだけ色が変わるプログラムではありません}。キー操作やほかのイベントでも変わることに注意してください。
+
+\section{マウスから得られるのは盤面の番号ではない}
+マインスイーパーでは、色を増やすだけでは足りません。画面のどこをクリックしたかによって、開くマスを選びたいのです。
+
+Bend 2のイベントには\code{Mouse{x, y, button, down}}があります。画面上の位置\code{x}、\code{y}に加え、ボタンの番号と押されたかどうかの値を持ちます。ゲームの内部で使うのは、行と列、あるいは配列の添字です。そこで、\textbf{画素座標をマスの番号へ変換する処理}を別の関数にしておきます。
+
+\sample{23_cell_hit_test.bend}{画素座標を8×8盤面の添字へ変換する}
+
+このサンプルでは、一辺32画素のマスを縦横8個並べた256×256画素の画面を想定しています。\code{(64,32)}は左から3列目、上から2行目なので、0始まりの添字は
+\[
+  \left\lfloor \frac{32}{32} \right\rfloor\cdot 8
+  +\left\lfloor \frac{64}{32} \right\rfloor=10
+\]
+となります。一方、\code{(256,32)}は画面外です。\code{Maybe}の\code{None{}}を返せば、盤面のどこかを誤って開くことを防げます。
+
+\section{Mouseイベントと座標変換をつなぐ}
+今度は\code{Event}を受け取り、マウスが押されたときだけ座標を変換してみましょう。
+
+\sample{32_mouse_events.bend}{Mouseイベントを盤面の番号へ変換する}
+
+この例では\code{Mouse}の\code{down}が\code{True{}}のときだけ、先ほどの\code{pixel_to_cell}を呼びます。ボタンの番号はまだ区別しません。右クリックを旗操作に割り当てる方法は、この後でゲームに接続するときに決めます。
+
+\begin{lstlisting}[language={},caption={マウス入力から添字までを確認する}]
+bend examples/32_mouse_events.bend
+\end{lstlisting}
+
+結果は\code{10}です。プログラム内で、\code{(64,32)}への押下は\code{Some{10}}、\code{(256,0)}への押下は\code{None{}}となります。ここでは結果を見やすい一つの数値にするため、\code{None{}}を0へ変換して足しています。実際のゲームでは\textbf{\code{None{}}を「0番のマス」と同一視してはいけません}。そのまま「何もしない」という分岐へ進めます。
+
+このように、実際のウィンドウを使わなくても、イベントから座標へ変換する部分の型検査と数値テストはできます。画面が必要なのはイベントを受信する部分であり、変換した後の計算までGUIへ結び付ける必要はありません。
+
+\section{マインスイーパーのクリック処理につなぐ}
+ここまでをゲームへつなぐと、次の流れになります。
+
+\begin{enumerate}[leftmargin=*]
+\item \code{App}の\code{tick}が\code{Mouse}を受け取ります。
+\item 押されたかどうかと、対象の座標が盤面内かを確かめます。
+\item 有効な添字なら、左クリックでは公開、右クリックでは旗の切替を行います。
+\item 更新後のゲーム状態を\code{Some{state}}で返します。
+\item \code{view}がその状態から新しい\code{Image}を組み立てます。
+\end{enumerate}
+
+第14章で扱う位置変換のサンプルは8×8ですが、現在のゲームエンジンは4×4です。ゲームの配列の大きさに合わせて、行数と列数を統一してから接続してください。\code{App}のイベント受信と\code{Session.click}の実行を結び付ける実機のGUIは、まだ完成していません。
+
+\exercise{まず\code{07_gui_hello.bend}を実行し、キーを押したときとウィンドウを閉じたときの違いを観察しましょう。次に\code{32_mouse_events.bend}の\code{True{}}を\code{False{}}に変えて結果を予想してください。最後に\code{(255,255)}、\code{(256,0)}、\code{(0,256)}がそれぞれ盤面内か、コードを動かして確かめましょう。}
+
+\chapter{マインスイーパーの状態}
+\sectiongoal{「画面に見えるもの」と「ゲームが内部で知っていること」を分け、4×4の小さな盤面を表してみる。}
+
+\section{まず一つのマスを考える}
+マインスイーパーを作ってみましょう。まだ盤面もウィンドウも必要ありません。最初に決めたいのは、一つのマスをクリックしたときに何が起こるかです。
+
+マスは最初は閉じています。旗を立てると旗付きになり、もう一度旗を操作すると閉じた状態へ戻ります。開いたマスには周囲の地雷数が表示され、普通の旗操作では変わりません。この三つの状態を、Bendの\term{データ型}として表せます。
+
+\sample{09_minesweeper_status.bend}{閉じる・旗を立てる・数字を表示する}
+
+\code{Square}型には\code{Hidden}、\code{Flag}、\code{Revealed{nearby}}という三つの候補があります。\code{Revealed}だけは数字を一つ持ちます。この章のコードで使う\code{flip_flag}は、\code{Hidden}なら\code{Flag}へ、\code{Flag}なら\code{Hidden}へ、\code{Revealed}なら元の表示のままにします。
+
+ここで、プログラムをまだ実行せずに最後の二行を読んでみてください。\code{flip_flag(Hidden{})}は何になり、\code{is_flag}は何を返すでしょうか。
+
+\begin{lstlisting}[language={},caption={旗の状態を実行して確かめる}]
+bend examples/09_minesweeper_status.bend
+\end{lstlisting}
+
+結果は\code{1}です。最初は\code{Hidden}ですが、旗を立てると\code{Flag}となり、\code{is_flag}が1を返すからです。これが最初の小さな完成部分です。
+
+\section{閉じたマスの地雷は見えない}
+ここで一つ疑問があります。閉じたマスの中に地雷があるかどうかは、\code{Hidden}という値だけで表せるでしょうか。表せません。\code{Hidden}は、\textbf{プレイヤーにまだ見えていない}という意味であり、\textbf{地雷がない}という意味ではないからです。
+
+ゲームの内部では地雷の位置を知っておく必要がありますが、画面にはその正解を表示しません。この二種類の情報を分けましょう。
+
+\begin{center}
+\begin{tikzpicture}[node distance=7mm]
+\node[draw=blue!50,fill=blue!4,rounded corners,minimum width=44mm,minimum height=12mm] (hidden) {\sffamily 表示：Hidden};
+\node[draw=warm!65,fill=warm!6,rounded corners,minimum width=44mm,minimum height=12mm,right=18mm of hidden] (secret) {\sffamily 内部：地雷がある？};
+\draw[-{Latex[length=2mm]},thick,blue] (secret.south) .. controls +(0,-9mm) and +(0,-9mm) .. node[below,font=\small]{安全な公開を判定するときだけ参照} (hidden.south);
+\end{tikzpicture}
+\end{center}
+
+\code{09_minesweeper_status.bend}は見た目の状態を学ぶための最小例です。盤面全体を管理する参考実装では、内部の地雷位置を別の情報として保持します。後に作る運ゲー無しソルバーへ\textbf{最初から地雷の位置を渡すことはできません}。それでは考えて解くプログラムにならないからです。
+
+\section{左上のマスに隣は何個ある？}
+次に、開いたときの数字を作りましょう。数字は、周囲8方向にある\textbf{地雷の個数}です。しかし左上の隅では、左や上にはマスがありません。隅のマスから調べる対象は三か所だけです。
+
+前巻のライフゲームでは、端を越えると反対側へつながる\term{トーラス境界}を扱いました。マインスイーパーでは端を越えたら盤面の外です。同じ「近傍」という言葉でも、どちらの境界を採用するかで数え方が変わります。
+
+\sample{10_board_neighbors.bend}{4×4盤面で周囲の地雷を数える}
+
+このサンプルでは、地雷がある座標を\code{"1,1"}のような文字列として\code{Set}へ入れています。隣の座標が0〜3の範囲内かを確認してから\code{Set.has}で調べ、見つかった地雷の個数を足します。\code{Set.has}は集合自体も返すので、集合を何度も調べるために\code{+mines}という数量指定を使っている点にも注目してください。
+
+地雷が(1,1)に一つだけあるなら、左上(0,0)の数字は1です。反対側の(2,2)も斜め隣なので1です。
+
+\begin{lstlisting}[language={},caption={二つのマスの隣接地雷数を足した結果}]
+bend examples/10_board_neighbors.bend
+\end{lstlisting}
+
+結果は\code{2}です。これは「盤面全体に地雷が二つある」という意味ではありません。\textbf{二つの位置からそれぞれ数えた結果を足した値}です。何を\code{main}が返しているかを必ず確認しましょう。
+
+\section{4×4の盤面を配列に並べる}
+一マスの状態と周囲の数え方が分かったら、16マスを一つにまとめます。位置を指定して状態を変えたいので、ここでは\code{Array}が適しています。
+
+\begin{lstlisting}[caption={ゲーム内部の盤面を表す参考コード（抜粋）}]
+type State is Type:
+  State{mines: U32, cells: Array<Game.Square>}
+
+def new_state(mines: U32) -> State:
+  State{mines, Array.new(Game.Square, 4n, Game.Hidden{})}
+\end{lstlisting}
+
+\code{mines}の下位16ビットは地雷配置、\code{cells}は16マス分の表示状態です。\code{Array.new}の\code{4n}は「4要素」ではなく深さ4を表すので、長さは\(2^4=16\)です。配列を持つ\code{State}は\code{Data}ではなく\code{Type}として宣言します。実際の\code{Game.Square}という型名は、学習用の\code{Square}と別のモジュールの型です。目的は同じですが、そのまま互換の値として混ぜないでください。
+
+行を\code{y}、列を\code{x}とすると、4×4盤面の添字は\(\,4y+x\,\)です。(1,1)なら5、(3,3)なら15になります。画面の座標が盤面外なら、\code{Array.get}に進む前に取り除かなければなりません。
+
+\exercise{\code{09_minesweeper_status.bend}の\code{main}を変更し、旗を二回操作した結果が0になることを確かめましょう。次に\code{10_board_neighbors.bend}の地雷を(0,0)へ移し、(0,1)、(1,1)、(3,3)の数字を予想して実行してください。なぜ隅から見える隣接位置は三か所だけなのでしょうか。}
+
+\chapter{表示と入力をテストする}
+\sectiongoal{画面上の位置から盤面の添字を求めるときに、境界条件を先に確かめる。}
+
+\section{画面の数字と盤面の数字は違う}
+第12章では\code{Mouse}イベントを受け取り、\code{pixel_to_cell}で盤面の位置へ変換しました。そこで扱ったのは8×8盤面で、一マスは32画素です。今度は、その変換が画面の端でも正しく働くか確かめましょう。
+
+画素座標は左上を(0,0)として数えます。32画素目は最初のマスの右端ではなく、二番目のマスの始まりです。列と行は次の式で求められます。
+\[
+  \text{列}=\left\lfloor\frac{x}{32}\right\rfloor,\qquad
+  \text{行}=\left\lfloor\frac{y}{32}\right\rfloor.
+\]
+8×8なら配列の添字は\(8\times\text{行}+\text{列}\)です。第12章の\code{23_cell_hit_test.bend}をもう一度開き、コード中でこの計算を行う場所を見つけてください。
+
+\section{端をまたぐ値はどうなるか}
+\begin{center}
+\begin{tabularx}{.9\linewidth}{@{}L{30mm}L{40mm}X@{}}
+\toprule
+画素座標 & 変換結果 & 理由\\\midrule
+(0,0) & \code{Some{0}} & 最初のマス\\
+(31,31) & \code{Some{0}} & まだ最初のマス\\
+(32,0) & \code{Some{1}} & 次の列に入る\\
+(255,255) & \code{Some{63}} & 右下のマス\\
+(256,0) & \code{None{}} & 右端より外\\
+(0,256) & \code{None{}} & 下端より外\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+ここで\code{None{}}を0へ置き換えて操作してはいけません。盤面の外をクリックしたことが、左上のマスをクリックしたことになってしまうからです。\code{Maybe}を使う理由は、\textbf{有効な位置と無効な位置を別々に扱う}ためです。
+
+\section{実際の盤面へ渡す前に}
+第13章の参考ゲームエンジンは4×4ですが、この座標変換は8×8です。ゲームにつなぐ際には、行数と列数を統一します。例えば32画素のマスを4×4に並べるなら、画面は128×128画素で、添字は\(4\times\text{行}+\text{列}\)になります。
+
+座標変換の計算はウィンドウがなくてもテストできます。一方、ウィンドウが実際に開くことや、OSからマウスイベントが届くことは、\code{App}を実機で動かす検査が必要です。ゲームの内部処理と画面の動作を分けて確かめましょう。
+
+\exercise{第12章の\code{23_cell_hit_test.bend}に(31,31)、(32,0)、(255,255)を渡し、表と一致するか確認してください。次に「盤面外のクリックは何もしない」を満たすために、\code{None{}}の場合はどのように分岐させるべきか説明しましょう。}
+
+\part{仕様駆動開発と形式的証明}
+\partchaptertoc
+\chapter{lawを先に書く}
+\sectiongoal{期待する動きをコードにする前に言葉で決め、法則を実際に実行して検査する。}
+
+\section{「旗を二回押せば戻る」だけで十分？}
+第13章で作った旗の操作を思い出してください。閉じたマスに旗を立て、もう一度押せば閉じた状態へ戻りました。これを「二回操作すると元へ戻る」と言い表せます。
+
+しかし、ここで小さな落とし穴があります。\textbf{何もしない関数}も二回呼べば元の値のままです。それでは旗を立てる機能になりません。先にどの状態で何が起きてほしいかを考えましょう。
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+操作前 & 旗操作の後 & 期待する理由\\\midrule
+閉じたマス & 旗付き & 旗を立てる\\
+旗付き & 閉じたマス & 旗を外す\\
+公開済み & 公開済み & 数字を変えない\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+この三つが期待する動きです。さらに「二回操作すると元へ戻る」という一般的な性質も加えます。最初から複雑な証明を書く必要はありません。身近な操作の結果から考えればよいのです。
+
+\section{小さなlawを書いて確かめる}
+\sample{04_flag_laws.bend}{旗の操作を法則で表す}
+
+この例の状態の名前は\code{Hidden}、\code{Marked}、\code{Open}です。第13章の\code{Flag}や\code{Revealed}とは、\textbf{別の練習用の型}です。名前が異なるだけでなく、異なる型なので、そのまま引数に混ぜられるわけではありません。
+
+\code{toggle}は、三つの状態それぞれで動きを決めます。次の\code{law toggle_twice}は、「どんな\code{Cover}型の値でも、二回操作すれば同じ値になる」と宣言しています。
+
+\begin{lstlisting}[caption={任意の状態に対する旗操作の法則}]
+law toggle_twice:
+  for c: Cover
+  {toggle(toggle(c)) == c : Cover}
+\end{lstlisting}
+
+\code{for c: Cover}は特定の一例ではなく、\code{Cover}の任意の値を指します。続く\code{def toggle_twice(c)}では、\code{match}で三通りに分け、\code{{==}}で等式を確かめています。この\code{{==}}は「なんとなく同じ」という印ではなく、その場の等式が成立することを証明として示す記法です。
+
+\begin{lstlisting}[language={},caption={法則の証明を検査する}]
+bend examples/04_flag_laws.bend --verdict
+\end{lstlisting}
+
+Lean 4の証明カーネルを用意した環境で実行し、\code{ALL PROOFS CHECK}を確認してください。普通に\code{bend examples/04_flag_laws.bend}と実行して数値を見る場合とは、調べていることが違います。
+
+\section{正しいのに、仕様が足りないことがある}
+この例では、開いたマスが旗操作で変わらない法則\code{opened_stays_open}も検査します。ただし\code{toggle_twice}と\code{opened_stays_open}の二つだけでは、「閉じたマスが旗付きになる」という性質までは独立に指定していません。
+
+\textbf{証明が通ったことと、必要な仕様を全部書いたことは違います。} 実装を先に書いてから「通りそうな法則」を追加するよりも、「何を満たす必要があるか」を最初に言葉で確認すると抜けに気付きやすくなります。
+
+例えば「閉じたマスに旗を立てる」という要求なら、次のように書けます。
+
+\begin{lstlisting}[caption={もう一つ必要な法則の書き方}]
+law hidden_is_marked:
+  {toggle(Hidden{}) == Marked{} : Cover}
+\end{lstlisting}
+
+これは学習用の\code{04_flag_laws.bend}にはまだ追加していない\textbf{演習用の法則}です。実装した\code{toggle}に対して成立するはずなので、実際に追加して証明を書いてみましょう。
+
+\section{大きなプログラムではファイルを分ける}
+小さな例では、関数と法則と証明を一つのファイルに置くと読みやすくなります。ゲーム全体では数が増えるため、必要に応じて\code{LAWS.bend}に要求、\code{game.bend}などに実装、\code{PROOF.bend}に証明を分けます。役割が分かれていれば、\textbf{法則を弱く書き換えて実装を合格させる}という誤りを避けやすくなります。
+
+この後の章でも、まず一マスの操作を確かめ、次に盤面全体へ対象を広げます。どの操作を証明したのか、忘れずに確認してください。
+
+\exercise{\code{04_flag_laws.bend}に上の\code{hidden_is_marked}と、それに対応する\code{def hidden_is_marked()}の証明を追加し、\code{--verdict}で検査しましょう。次に\code{toggle}の\code{Hidden}の分岐を\code{Hidden{}}のままに変更すると、どの法則が失敗するか予想してください。}
+
+\chapter{等式、帰納法、補題と書き換え}
+\sectiongoal{場合分けで終わる証明から、いくらでも大きい値についての証明へ進む。}
+
+\section{二つの値なら場合分けで確かめられる}
+前章の旗操作には三つの状態がありました。今回はもっと小さい\code{Bool}から始めましょう。真を偽へ、偽を真へ反転する\code{Bool.not}を二回行うと元へ戻ります。
+
+\sample{24_bool_proofs.bend}{真と偽の二つについて法則を示す}
+
+\code{law not_twice}は\code{for b: Bool}を使い、任意の真偽値について性質を述べます。証明側では\code{True{}}と\code{False{}}の二つを\code{match}で扱っています。どちらも二回反転した値が元と等しくなるので、証明が終わります。
+
+\begin{lstlisting}[language={},caption={真偽値の証明を実行する}]
+bend examples/24_bool_proofs.bend --verdict
+\end{lstlisting}
+
+ここでは\textbf{取り得る値が二つだけ}なので、すべてのケースを調べられました。では、0、1、2、3、……といくらでも大きい\code{Nat}なら、どうすればよいでしょうか。
+
+\section{自然数を一つずつ確かめることはできない}
+例えば「どんな自然数でも、0を掛けると0になる」という性質です。\code{0n}と\code{1n}で確かめても、100や1000、さらに大きい値について正しいと示したことにはなりません。
+
+\term{数学的帰納法}では、自然数を二つの場合に分けます。
+
+\begin{enumerate}[leftmargin=*]
+\item 最初の値\code{0n}で成り立つことを示します。
+\item ある自然数\code{p}で成り立つと仮定して、次の\code{1n+p}でも成り立つことを示します。
+\end{enumerate}
+
+この二つを満たせば、0から始まるすべての自然数について性質が成り立ちます。Bendの\code{Nat}も\code{0n}と\code{1n+p}に\code{match}できるので、証明の形とコードの形を揃えられます。
+
+\sample{33_nat_induction.bend}{自然数の任意の値について0との乗算を証明する}
+
+まず\code{law times_zero}を見てください。
+
+\begin{lstlisting}[caption={任意の自然数に対する乗算の法則}]
+law times_zero:
+  for x: Nat
+  {Nat.mul(x, 0n) == 0n : Nat}
+\end{lstlisting}
+
+この\code{for x: Nat}があるため、0や3だけを検査する法則ではありません。続く証明の\code{case 0n}は最初の値、\code{case 1n+p}は次の値を表しています。
+
+\section{帰納法で何を再利用しているのか}
+\code{Nat.mul}は第一引数に対して再帰的に定義されています。\code{1n+p}に0を掛けると、定義に従って\code{Nat.add(0n, Nat.mul(p, 0n))}の形になります。\code{Nat.add(0n, t)}は\code{t}なので、残るのは\code{Nat.mul(p, 0n)}です。
+
+ここで「\code{p}については0になる」と示した結果を再利用します。それが証明内の次の行です。
+
+\begin{lstlisting}[caption={小さい値についての証明を呼び出す}]
+%times_zero(p) : {Nat.mul(p, 0n) == _ : Nat}
+{==}
+\end{lstlisting}
+
+\texttt{\%times\_zero(p)}は一つ小さい値\code{p}についての証明を呼び出します。記号\code{_}は、ここで等式の該当部分の値を推論させるためのものです。最後の\code{{==}}で、現在の等式が成立することを示します。この\textbf{小さな値の証明を使って次の値を示す}という流れが、帰納法の中心です。
+
+\begin{lstlisting}[language={},caption={自然数の帰納法を検査する}]
+bend examples/33_nat_induction.bend --verdict
+\end{lstlisting}
+
+\code{main}を普通に実行した結果は0ですが、それだけでは全自然数についての証明にはなりません。\code{--verdict}による検査と区別してください。
+
+\section{大きな証明では補題を使う}
+一つの式変形だけでは終わらないときは、別の小さな法則を先に示し、その結果を使うことができます。これを\term{補題}と呼びます。
+
+例えば紙の上で\(a=b\)と\(b=c\)が分かれば、\(a=c\)と結論できます。等式の向きを逆にする操作が\code{Equal.sym}、二つの等式をつなぐ操作が\code{Equal.trans}です。すぐに複雑な証明を書き始める必要はありません。まず「どの中間式が分かれば前へ進めるか」を書き出すと、補題の役割が見えてきます。
+
+\exercise{\code{33_nat_induction.bend}の\code{0n}の場合が何の計算だけで終わるか説明しましょう。次に\code{1n+p}の場合から\texttt{\%times\_zero(p)}の行を外し、\code{--verdict}の結果を調べてください。なぜ小さい値についての証明が必要なのでしょうか。}
+
+\chapter{盤面の不変条件}
+\sectiongoal{一マスの動作に関する法則から、盤面のどこを操作しても変えてはいけない情報へ進む。}
+
+\section{旗を立てたら地雷が移動する？}
+旗を立てたマスから、地雷が別の場所へ移動したらどうなるでしょうか。プレイヤーの考えたことが無意味になってしまいます。マインスイーパーでは、\textbf{旗を付けても、マスを開いても地雷の配置は変えない}という規則が必要です。
+
+このように、ある操作を行っても保たれるべき性質を\term{不変条件}と呼びます。まず「一マスの旗を切り替える」という操作を考えてみましょう。
+
+\begin{center}
+\begin{tikzpicture}[node distance=15mm]
+\node[draw=blue!45,fill=blue!4,rounded corners,minimum width=44mm,minimum height=13mm] (a) {\sffamily 地雷：固定、表示：Hidden};
+\node[draw=blue!45,fill=blue!4,rounded corners,minimum width=44mm,minimum height=13mm,right=of a] (b) {\sffamily 地雷：固定、表示：Flag};
+\draw[-{Latex[length=2mm]},thick,teal] (a) -- node[above,font=\small]{旗の切替} (b);
+\end{tikzpicture}
+\end{center}
+
+変わったのは表示状態だけです。では、この規則を16マスの盤面全体についてどのように述べればよいでしょうか。
+
+\section{まず二つの数値だけで試す}
+第13章では、表示状態を\code{Array}にまとめました。しかし、その大きな盤面について証明を書く前に、「地雷の配置」と「旗の配置」だけを持つ小さな構造から始めてみましょう。どちらも16ビットのマスクなら\code{U32}で表せます。
+
+\sample{34_mine_mask_law.bend}{旗は変わるが地雷は動かないことを確かめる}
+
+\code{MiniBoard}には\code{mines}と\code{flags}の二つの値が入っています。\code{toggle_first}は左上のマスの旗だけを切り替える関数です。\code{U32.xor(flags, 1)}は、一番下のビットが0なら1、1なら0へ反転させます。その間、地雷の位置を表す\code{mines}は受け取った値をそのまま返します。
+
+例えば地雷のマスクが5、旗が一つもない状態から始めると、操作後の旗のマスクは1になります。
+
+\begin{lstlisting}[language={},caption={一つ目の旗を立てる}]
+bend examples/34_mine_mask_law.bend
+\end{lstlisting}
+
+出力は\code{1}です。ところが、\textbf{これを実行しただけではどんな地雷配置でも安全かは分かりません}。そこで、次の法則を宣言しています。
+
+\begin{lstlisting}[caption={地雷の位置は操作前後で一致する}]
+law toggle_keeps_mines:
+  for mines: U32
+  for flags: U32
+  {mines_of(toggle_first(MiniBoard{mines, flags}))
+      == mines : U32}
+\end{lstlisting}
+
+\code{for mines: U32}は、特定の配置5だけでなく、任意の32ビットの値について主張します。\code{flags}についても同様です。証明は同じサンプルの\code{def toggle_keeps_mines}で与えられます。
+
+ただし、この法則だけでは「何も操作しない関数」も合格します。そこで\code{toggle_changes_flag}という別の法則で、旗のビットが実際に反転することも要求します。第15章で考えた\textbf{正しいだけでなく、十分な仕様であるか}という問題がここでも現れます。
+
+\begin{lstlisting}[language={},caption={二つの法則をまとめて検査する}]
+bend examples/34_mine_mask_law.bend --verdict
+\end{lstlisting}
+
+\section{16マスの配列へ広げる}
+今の例は、旗と地雷を\code{U32}の二つのビットマスクだけで表した最小例です。実際のゲームでは公開済みの数字も必要なので、第13章の\code{Board4.State}のように、内部の地雷マスクと可視状態の\code{Array}を組み合わせます。
+
+そこで要求するのは、\textbf{任意の位置で旗操作をしても、盤面全体の地雷マスクが同じであること}です。参考実装の\code{board4_toggle_keeps_all_mines}はこれを\code{LAWS.bend}で宣言して証明しています。読者用ZIPの小さな例を理解したら、リポジトリ側の\code{board4.bend}と\code{PROOF.bend}も比べてみてください。
+
+注意したいのは、\code{for mines: U32}が32ビットのあらゆる値を対象にすることと、ゲームとして地雷が16マスの範囲内だけに置かれることは\textbf{別の条件}だという点です。入力条件を取り違えないようにしましょう。
+
+\section{表示済みの数字は閉じてよい？}
+開いたマスに数字が出た後、別のマスをクリックしたら数字が消えたとします。それではプレイヤーが手掛かりを失ってしまいます。すでに開いたマスは、通常の公開操作によって再び閉じないようにしたいのです。
+
+公開済みのマスの集合を\(\operatorname{open}(b)\)とすると、この考えは
+\[
+  \operatorname{open}(b)\subseteq
+  \operatorname{open}(\operatorname{reveal}(b,p))
+\]
+と書けます。「新しい盤面では公開済みの集合が小さくならない」という意味です。これを\term{単調性}と呼びます。
+
+ただし、\textbf{リセット}で新しいゲームを始めるときは例外です。新しい盤面の公開済み集合は空になります。どんな操作について述べる不変条件かを明確にしておかなければ、正しい法則になりません。
+
+\section{数字の正しさは別の条件になる}
+地雷配置を変えない関数であっても、安全なマスの数字を間違える可能性があります。例えば左上の隣接地雷が1個なのに、表示数字を2へ書き換える実装です。地雷マスクは変わらないので、前の法則だけではこの間違いを検出できません。
+
+数字の計算は第13章の\code{10_board_neighbors.bend}で学びました。まずは一つの配置で手計算し、コードの結果と照合できます。さらに一般の盤面について数字が必ず一致すると主張するなら、数字に関する独立した法則が必要です。
+
+参考実装では、4×4の地雷マスクから数字を計算する関数と、クリック後に状態を進める関数を別々に持っています。細かい証明コードは参考資料にありますが、この章ではまず\textbf{何を変えず、何を更新し、何が別の法則を必要とするか}を説明できるようになりましょう。
+
+\exercise{(1) 旗を付けるたびに地雷位置を変更する実装、(2) 地雷位置は変えずに表示数字だけ間違える実装、(3) 新しいゲームを始めて公開済み集合を空にする操作を考えてください。それぞれ、どの不変条件に反するか、または反しないかを説明しましょう。}
+
+\chapter{証明の範囲と信頼境界}
+\sectiongoal{何を型検査・実行・形式的証明で確かめたかを区別し、結果を正確に伝えられるようになる。}
+
+\section{動いたからといって、全部正しい？}
+第13章の旗操作を実行すると1が返りました。これで「すべての盤面に対して旗操作が正しい」と言えるでしょうか。まだ言えません。実行したのは特定の入力だけだからです。
+
+第15章では\code{law}を、前章では盤面の不変条件を考えました。これらを比較するために、三つの確認方法を整理します。
+
+\begin{center}
+\begin{tabularx}{\linewidth}{@{}L{28mm}X@{}}
+\toprule
+確認方法 & 何を確かめるか\\\midrule
+型検査 & 引数・返り値の型、値の利用回数などの条件を満たすか\\
+実行テスト & 決めた入力で実際に動かし、結果が期待値と一致するか\\
+形式的証明 & 記述した\code{law}が、指定した値の範囲で成り立つことを検査する\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+例えば第16章の\code{33_nat_induction.bend}で\code{main}を実行して0が返ることと、任意の\code{Nat}で掛け算の法則が成り立つことは違います。\code{--verdict}の結果が必要なのは、後者の確認です。
+
+\section{正しい法則でも、問いが足りない場合}
+第15章では「旗を二回切り替えると元に戻る」法則を学びました。その法則が正しくても、何もしない関数は排除できませんでした。証明が成立したかどうかだけでなく、\textbf{本当に必要な規則を言葉にしたか}を確かめましょう。
+
+同じことはマインスイーパーの数字にも当てはまります。「地雷は移動しない」を証明しても、数字が正しいとは限りません。「数字が正しい」と「公開済みのマスが再び閉じない」も別の性質です。
+
+\section{実機でしか分からないこと}
+GUIの座標変換は純粋関数なので、ウィンドウを開かなくても\code{23_cell_hit_test.bend}で調べられます。しかし、OSから実際にクリックイベントが届くか、画面に意図した色で表示されるかは、ウィンドウのある環境で動かす必要があります。ファイル保存でも、正しい文字列を作れたからといって、ディスクへの書き込みが必ず成功するわけではありません。
+
+さらに、外部のC・JavaScriptの実装や\code{@unsafe}を用いる場合は、Bend側の証明に何を仮定しているか確認します。型検査が通ったことだけで外部システムの動作が保証されるわけではありません。
+
+\section{小さな確認から確かな説明へ}
+たとえば次のように記録できます。
+
+\begin{itemize}[leftmargin=*]
+\item 「隠れた一マスの旗操作を実行し、旗付きになることを確認しました」
+\item 「任意の\code{Bool}について、二回の反転で元に戻る法則を検査しました」
+\item 「4×4盤面の隣接関係を全256座標対で照合しました」
+\item 「GUIの入力例は型検査済みですが、実際のマウス操作は未検証です」
+\end{itemize}
+
+現在の開発用参考コードには、旗・盤面境界・ゲームの勝敗についての複数の法則と独立した実行テストがあります。初手安全については6件の法則と178件の独立した実行照合が追加されましたが、0の連鎖公開についても6件の法則を追加しましたが、完成したGUIの検証はまだ済んでいません。\textbf{どの処理を確かめたのか}を述べることが、信頼できる説明の基本です。
+
+\exercise{\code{04_flag_laws.bend}の\code{toggle_twice}について、「動作例が一つ正しい」「任意の状態で法則が正しい」「完成ゲームの旗操作が正しい」の三つの説明を比べてください。どの段階までをコードと証明が支えているか、理由とともに答えてみましょう。}
+
+\part{並列実行とその他の応用}
+\partchaptertoc
+\chapter{CPU、GPU、Array.atomic}
+\sectiongoal{純粋計算の並列呼び出し、IOの並行実行、共有配列の更新を区別し、必要なときだけ正しい機能を選ぶ。}
+
+前巻では一つの計算を複数に分ける書き方を学びました。ここでは\textbf{何を並列にできるのか}を先に考えます。同じ画面を描くために重い計算を二つ行う場合と、ファイルを待ちながら別の仕事をする場合では、適切な仕組みが違います。
+
+\section{計算を独立した二つの枝へ分ける}
+\sample{06_parallel.bend}{均等な二分木での並列呼び出し}
+このサンプルの中心は次の一行です。
+
+\begin{lstlisting}[caption={独立した二つの再帰呼び出し}]
+x y = count_leaves(k) count_leaves(k)
+\end{lstlisting}
+
+\code{count_leaves(0n)}は1を返し、深さを一つ増やすと左右の結果を足します。したがって深さ\(n\)の葉の数を\(f(n)\)と書けば、
+\[
+ f(0)=1,\qquad f(n+1)=f(n)+f(n)=2f(n)
+\]
+となり、\code{count_leaves(8n)}の結果は256です。左右へ同じ深さの仕事を渡しているので、並列にするときの\term{負荷の偏り}も小さくなります。
+
+実際のCPUターゲットで試す場合は、次のようにネイティブ実行ファイルを作り、スレッド数を変えて比べてみましょう。
+
+\begin{lstlisting}[language={},caption={CPUスレッド数を変えて同じ結果を確かめる}]
+bend examples/06_parallel.bend -o leaves
+./leaves --threads 1
+./leaves --threads 8
+\end{lstlisting}
+
+どちらも同じ計算なので、結果は256になるはずです。この実験では\textbf{結果が変わらないことを先に確かめ}、次に実行時間を比較します。関数の呼び出しや実行環境の準備にも費用があるため、短い例ではスレッド数を増やしても速くなるとは限りません。
+
+二つの呼び出しを同時に始められるからといって、必ず実行時間が半分になるわけではありません。仕事を分配・合流させる費用もあり、短い計算では並列化の方が遅くなる場合があります。Bendの並列呼び出しにとって大切なのは、\textbf{二つの処理が独立していること}と\textbf{処理時間がおおむね釣り合うこと}です。後者はプログラムを書く側が判断します。
+
+\section{GPU指定の感嘆符は高速化の約束ではない}
+Bend 2の公式GUIDEには、関数名の後ろに\code{!}を付けるGPU側の呼び出し構文があります。例えば、先ほどの関数を\code{count_leaves!(8n)}と呼ぶ形です。CPU上の並列実行とGPU上の実行は同じではありません。GPUがない環境ではCPUで処理され、JavaScriptターゲットでは並列呼び出しも逐次実行されます。
+
+GPUが得意なのは、多数の要素へ同じような数値計算を施す処理です。枝ごとの仕事量が異なる探索などでは、分岐の揃わなさが性能上の不利になります。「GPUで実行できること」と「GPUの方が速いこと」を分けて検証してください。また、CPUとGPUでの実行差を比較する際には、入力と結果が等しいことを最初に確かめましょう。
+
+このサンプルのCPUでの結果256はCIで確認していますが、\textbf{特定のGPUでの速度向上までは測定していません}。性能について報告するなら、実行ターゲット、入力の規模、計測条件を記録する必要があります。
+
+\section{IO.forkは別の仕事を待ちながら進める}
+\code{IO.fork}と先ほどの並列呼び出しは、目的が異なります。例えば外部通信の結果を待つ間に、ほかのIOを進めたい場合です。\code{IO.fork}はIOの計算を始め、その結果を受け取る\code{Chan}を返します。\code{IO.join}はその結果を待ちます。
+
+第9章で掲載した\file{21\_io\_fork.bend}をもう一度実行してください。この章では同じコードを重ねて載せず、処理の意味に注目します。
+この例は純粋な値7を返すIOを開始して待つので、表示されるのは7です。7を計算するために並列化する利点はありませんが、\textbf{返り値がどのように届くか}を理解する練習になります。実際に待ち時間のある通信やファイル処理では、計算の並列化ではなくIOの並行実行が適しています。
+
+\section{配列を独立に複製するか、共有するか}
+第3章の\code{Array.clone}は、二つの独立した配列が欲しいときに使いました。一方、\code{Array.fork}は同じ実体を参照する二つのハンドルを返します。BendのBaseでは\code{Array.fork}と\code{Array.join}は\code{@unsafe}の付いた実装であり、共有更新の性質まで純粋な法則だけから主張することはできません。
+
+複数の処理で同じ配列要素を更新すると、読み書きの競合が発生し得ます。そこで共有配列を扱うために\code{Array.atomic.add}や\code{Array.atomic.cas}などの\term{原子的操作}が用意されています。例えば加算のAPIでは、配列と更新前の要素値の組が返ります。どの更新方法を選ぶか、どの型と実行環境で使用可能かは\code{bend base}と公式Baseで確認してください。
+
+\begin{lstlisting}[language={},caption={共有更新APIの調べ方}]
+bend base Array.atomic.add
+bend base Array.atomic.cas
+bend base Array.fork
+\end{lstlisting}
+
+\textbf{マインスイーパーの通常の旗切替や公開操作には、共有配列や原子的更新は必要ありません。} 一手ずつ純粋関数で盤面を更新すれば、より単純で検証しやすくなります。一方、多数の独立した候補盤面を同時に検査するような処理では、並列計算を検討する価値があります。その際も最初は候補同士の状態を共有しない設計を選び、実際に共有が必要だと分かったときに原子的操作を導入しましょう。
+
+\exercise{次の三つを分類しましょう。(1) 1万個の独立した候補盤面の調査、(2) ネットワークの応答を待ちながら画面の更新を進める、(3) 一つの盤面の旗を切り替える。純粋計算の並列化、IOの並行実行、通常の順次更新のどれが自然でしょうか。さらに、共有配列が不要な理由も説明してみましょう。}
+
+
+\chapter{C・JavaScriptと外部連携}
+\sectiongoal{生成するプログラムとホスト環境の境界を知る。}
+Bend 2はCのネイティブ実行ターゲットとJavaScriptの実行ターゲットを持ちます。GPUやスレッドの振る舞い、使用できる外部機能はターゲット間で同じとは限りません。外部のC・JavaScript実装を読み込む仕組みを使えば、Bendだけでは用意されていない操作を追加できます。
+
+ただし、外部関数が返す結果や副作用はBend内の純粋な証明だけで保証できません。\code{@unsafe}などの安全性に関する境界とともに理解します。モジュールやパッケージの整理、ライセンス、BendHub等を使った配布は、まず公式の最新ガイドで対応状況を確かめて進めます。
+
+\section{作成するファイルの種類を選ぶ}
+前巻ではBendコードを\code{bend}で直接実行しました。同じソースから、実行ファイルやC・JavaScriptのソースを生成することもできます。\textbf{実行する}操作と、\textbf{他の処理系で扱うファイルを作る}操作は区別して覚えます。
+
+\begin{lstlisting}[language={},caption={Bend 2で生成先を選ぶ例}]
+bend examples/15_string_parse.bend
+bend examples/15_string_parse.bend -o parse.c
+bend examples/15_string_parse.bend -o parse.js
+bend examples/15_string_parse.bend -o parse.mjs
+\end{lstlisting}
+
+1行目はコードを実行します。2行目はCのソース、3行目はJavaScriptのソース、4行目はJavaScriptから読み込めるESモジュールを作ります。\code{.mjs}へ出力したモジュールからは、Bendの非IO関数を利用できます。ただし、外部言語と値を受け渡すときには\textbf{コピーされずに同じ配列を参照する}場合があり、所有権の前提を崩さないよう注意が必要です。
+
+なお、\code{bend ... -o parse.c}は\textbf{Cのソースを生成する}操作であり、それだけではCコンパイラが実行したことにはなりません。\code{parse.js}や\code{parse.mjs}も生成先の形式が違います。Cのソースは対応したコンパイラ、JavaScriptは対象ランタイムで別に確認します。
+
+\section{生成したC・JavaScriptを本当に動かす}
+先ほどは、\code{-o}でファイルを生成する方法を学びました。しかし、ファイルが書き出されたことと、そのプログラムが実際に動くことは別です。今度は\textbf{一つのBendプログラムを三通りで実行し、結果を比較}してみましょう。
+
+\sample{43_target_hello.bend}{Bend・C・JavaScriptで同じ42を表示する}
+
+この例では、\code{6 * 7}を\code{U32}として計算して文字列へ変換し、\code{IO.print}で出力します。GUIやGPUの機能を混ぜず、三つの実行方法で結果を見比べやすくしています。
+
+\begin{lstlisting}[caption={三つの実行方法で同じ値を確かめる}]
+bend examples/43_target_hello.bend
+bend examples/43_target_hello.bend -o hello
+./hello
+bend examples/43_target_hello.bend -o hello.js
+node hello.js
+\end{lstlisting}
+
+一行目はBendから実行します。二行目はCのネイティブ実行ファイルを作り、三行目で実行します。四行目はJavaScriptのコードを生成し、五行目でNode.jsから実行します。どれも表示される値は\code{42}です。
+
+ここで必要な環境は異なります。ネイティブ版を生成するときは\code{clang}などの対応するCコンパイラが必要で、JavaScriptの実行には\code{node}が必要です。環境にない場合は、まず公式のインストール案内と実行ターゲットの必要条件を確認しましょう。
+
+Cの\textbf{ソースコードだけ}を見たい場合は、次のようにも出力できます。
+
+\begin{lstlisting}[language={},caption={Cのソースだけを生成する}]
+bend examples/43_target_hello.bend -o hello.c
+\end{lstlisting}
+
+\code{hello.c}を作っただけでは、まだCの実行結果は得られません。ネイティブ版の生成と実行までを別に確認してください。本書の検証環境では、Bend・ネイティブC・生成JavaScriptの三つで実際に\code{42}が得られることをCIで確認しています。
+
+ただし、この検査から分かるのは\textbf{このIOと数値計算の例で三つの結果が一致すること}です。GPU処理、外部FFI、GUI表示、共有配列まで同じだとは主張できません。扱う機能が増えたら、その機能に対応した検査を追加しましょう。
+
+\section{二つのファイルへ分けてみる}
+ここまで一つのファイルに書いていた関数を、別のファイルから呼び出したい場面があります。マインスイーパーで「行と列から配列の番号を計算する」処理を別にしてみましょう。
+
+\sample{board_index.bend}{4×4盤面の添字を計算する小さなモジュール}
+\sample{42_module_board.bend}{別ファイルの関数をimportして利用する}
+
+まず\code{board_index.bend}には\code{index}という関数が入っています。行を\code{row}、列を\code{col}とすると、添字は\code{row * 4 + col}です。2行目の3列目なら11になります。
+
+もう一つのファイルでは、次のように読み込みます。
+
+\begin{lstlisting}[caption={モジュールへ別名を付けて呼び出す}]
+import Base
+import ./board_index.bend as Board
+
+def main() -> U32:
+  Board.index(2, 3)
+\end{lstlisting}
+
+\begin{lstlisting}[language={},caption={二つのファイルを一緒に使う}]
+bend examples/42_module_board.bend
+\end{lstlisting}
+
+実行結果は\code{11}です。名前の前に\code{Board.}を付けることで、どのモジュールの関数なのかが分かります。複雑なパッケージを作らなくても、二つのファイルだけでこの仕組みを試せます。
+
+\begin{pointbox}
+この例では\code{index}を呼ぶ前に座標が盤面内か確かめていません。実際の4×4盤面では、行・列が0〜3であることも検査してください。モジュールへ分けることと、入力の妥当性を保証することは別です。
+\end{pointbox}
+
+\section{モジュールをパッケージとして配るとき}
+開発中は相対パスで読み込むだけでも十分です。ほかの人へ再利用してもらう必要ができたら、BendHubのパッケージ管理を検討します。内容ハッシュや名前・バージョンで依存関係を参照できます。
+
+\code{--publish}は外部へ公開する操作です。練習として不用意に実行してはいけません。公開が永続的になることもあるので、依存するファイル、ライセンス、バージョン、動かし方を確認してから公開します。
+
+\section{生成したコードを動かすまでが検証}
+Cのソースを出力しただけで、対応する実行環境において同じ結果が得られたことにはなりません。JavaScriptのモジュールも同様です。例えば次のような確認項目を分けます。
+
+\begin{enumerate}[leftmargin=*]
+\item Bend上の実行で既知の入力に対して期待値が得られるか。
+\item 生成したCのコードが対象環境のコンパイラでビルドできるか。
+\item 生成したJavaScriptのコードが対象ランタイムで実行できるか。
+\item 入出力、例外、数値型、配列の共有など、環境に依存する振る舞いに違いはないか。
+\end{enumerate}
+
+特にJavaScriptの外側からBendの配列を渡すと、値がコピーされず同じ配列を参照する場合があります。Bend側のアフィン性が、外部言語のコードにも自動的に強制されるわけではありません。配列を別の場所でも保持したい場合は、\textbf{誰がそのデータを更新するか}を先に決め、必要なら明示的に複製します。
+
+\section{パッケージを公開する前に確かめる}
+開発中は相対パスによる\code{import}でモジュールを分割し、まずローカルで実行・検査できます。再利用しやすくなった後に、パッケージとして公開するか考えましょう。BendHubへ公開すると、利用者の依存先として参照され得ます。そのため、公開前には依存ファイル、バージョン、ライセンス、再現可能な実行例と検査方法を揃えます。
+
+本書の演習では、公開操作そのものは行いません。\code{--publish}は外部に成果物を送る操作であり、ローカルのファイル出力と同じ気軽さで試すべきではないからです。公開手順は公式GUIDEの現行版を確認してください。
+
+\section{外部実装と形式的証明の境界}
+Bendの外部効果は、ホスト側のC・JavaScriptコードと対応しています。必要な効果を追加することは可能ですが、それらの効果の実行はBendの純粋な計算に対する証明の範囲外です。\code{@unsafe}の指定も、停止性などの保証を外す境界になります。外部コードを取り込んだプログラムを「証明済み」と呼ぶときは、\textbf{何を証明でき、何を外部環境へ委ねたのか}を明示します。
+
+\section{Audioは開いてから書く}
+音を出すための機能も、ファイルと同じように\textbf{使い始めと使い終わり}があります。\code{Audio.open}はサンプルレート（1秒当たりのサンプル数）を指定してデバイスを開き、\code{Result}を返します。使い終えたら\code{Audio.close}で閉じます。
+
+\sample{26_audio_open.bend}{Audioデバイスのオープン・書き込み・クローズ}
+この例では44100 Hzの音声デバイスを開き、空のサンプル列を書き込み、閉じます。\code{Audio.write}は継続して使う\code{Audio}と書き込んだサンプル数を返します。\textbf{空の列なので音は鳴りません}。最初はリソースの順番と型を確認するための例です。音声デバイスがない環境では\code{Audio.open}が失敗し得ます。
+
+実際に音を鳴らすには、\code{List<&2,F32>}のサンプル列を用意して渡します。音量、波形、出力デバイスの対応状況も確認する必要があります。音声APIが型検査に通っても、実際にスピーカーから音が鳴ったとは判断できません。
+
+\begin{pointbox}
+\textbf{確認できる範囲を区別しましょう。} 音声、ネットワーク、GUIなどの機能では、型検査に成功した後でも外部デバイス・OS・実行ターゲットによって動作が変わります。環境のない自動テストでは、画面表示や音声出力の成功を保証しません。
+\end{pointbox}
+\exercise{同じサンプルをCターゲットとJavaScriptターゲットで動かす際、何を別々に検証する必要があるか列挙してみましょう。}
+
+\part{マインスイーパー統合と発展}
+\partchaptertoc
+\chapter{一人で遊べるアプリにする}
+\sectiongoal{法則で決めたゲームの規則から始め、初手安全・0の連鎖公開・GUI・保存を順に結び付ける。}
+
+ここまでで、\code{List}や\code{Array}、\code{IO}、\code{Image}、\code{App}、\code{law}といった機能を個別に見てきました。最終的にはそれらを組み合わせ、マインスイーパーを一人で遊べるアプリにします。ただし\textbf{個別の関数が正しく動いても、ゲーム全体が完成したとは限りません}。どこまで実装したかを追いながら組み立てます。
+
+\section{ゲームに必要な状態を先に決める}
+まず、一つのマスについて画面に見える状態は\code{Hidden}、\code{Flag}、\code{Open{clue}}の三種類です。内部の地雷位置は別に保持します。4×4の参考実装では、16ビットの地雷マスクと16要素の\code{Array}を用いる\code{Board4.State}を採用しました。
+
+クリックを扱うときは、盤面だけでは不十分です。ゲームが続いているか、勝ったか、負けたかも区別します。そこで\code{session.bend}では次の三種類を使用します。
+
+\begin{lstlisting}[caption={現在のゲーム進行を表す型}]
+type Phase is Data:
+  Playing{}
+  Won{}
+  Lost{}
+\end{lstlisting}
+
+ゲームを構成する要素としては、さらに「地雷数」「公開したマス」「最初のクリックが済んだか」「開始時刻」「表示に使う情報」が必要です。すべてを最初から一つの巨大な関数に押し込まず、\textbf{規則を決める純粋関数}と\textbf{環境から値を受け取るIO}を分けましょう。
+
+\section{クリックすると何が起きるかを表にする}
+左クリックについて、まず次の順序を要求します。
+
+\begin{enumerate}[leftmargin=*]
+\item クリック位置を盤面座標に変換し、範囲外なら何もしません。
+\item 終了状態\code{Won}・\code{Lost}なら、操作を受け付けません。
+\item 旗付き・公開済みのマスなら、表示を変更しません。
+\item 隠れた地雷なら\code{Lost}へ移ります。
+\item 隠れた安全なマスなら真の隣接地雷数を表示します。
+\item 安全なマスがすべて公開されたら\code{Won}へ移ります。
+\end{enumerate}
+
+旗を付け外しする右クリックも、公開済みの数字を書き換えてはいけません。規則の一つひとつを\code{LAWS.bend}に宣言してから実装することで、後から別の処理を書き加えても仕様が揺れにくくなります。
+
+開発用の参考実装では、例えば\code{Session.click(Session.new(1), 0)}が\code{Lost}となることや、旗付きの地雷をクリックしても敗北しないことを法則として定義しました。初手安全6件と連鎖公開6件を加えた合計43件の法則は\code{PROOF.bend --verdict}で検査しています。一方、\textbf{ゲーム全体の振る舞いを43件だけで証明したわけではありません}。この点を意識しながら先へ進みます。
+
+\section{一手目を安全にする}
+通常のマインスイーパーを遊ぶとき、一手目で何も分からないまま地雷を踏んでは不公平です。そのため、一手目が選ばれてから、その位置を避けて地雷を配置する方法があります。
+
+例えば4×4盤面で地雷を3個置く場合は、最初にクリックした添字を記録し、その添字以外の15か所から3個を選びます。これなら、最初のクリックで踏んだマスは必ず安全です。地雷数が15個以下であること、位置が0〜15であること、配置に重複がないことなども合わせて確認する必要があります。
+
+開発用参考実装では、初手安全を\code{start.bend}に追加しました。\code{Session.new(mines)}は\textbf{配置済みの盤面を表す低水準の関数}なので、地雷をクリックすれば従来どおり敗北します。プレイヤーは、新しい\code{Start.new(mines)}から始めます。こちらは\code{Fresh}という未開始状態を持ち、初めて左クリックした位置を確認してから\code{Active}へ進みます。
+
+\begin{lstlisting}[caption={実装より先に書いた初手安全の法則}]
+law start_relocates_clicked_mine:
+  {Start.mine_mask(Start.click(Start.new(1), 0))
+      == 2 : U32}
+
+law start_first_square_opened:
+  {Start.visible_at(Start.click(Start.new(1), 0), 0)
+      == Game.Open{1} : Game.Square}
+\end{lstlisting}
+
+地雷マスク1は左上（番号0）だけに地雷がある状態です。最初に0をクリックすると、地雷は空いている番号1へ移動するので、マスクは2になります。番号0には数字1が表示されます。これなら、一手目で地雷を踏まず、周囲の数字にも矛盾がありません。
+
+実装では\code{U32.and}や\code{U32.xor}で地雷マスクを更新します。空きマスを選ぶための\code{lowest_bit}は、一番小さい空きビットを取り出す補助関数です。まずは「移動前後でどのビットが変わったか」を理解し、その後で\href{https://github.com/Nasu726/bend2-intro-with-life/blob/feat/intermediate-minesweeper-textbook/intermediate/minesweeper/start.bend}{参考実装の全体}を読んでみましょう。
+
+範囲外の最初のクリックは無視します。また、4×4の16マスすべてに地雷があれば、地雷を減らさず安全な初手を作ることはできません。この設定では\code{Fresh}のまま開始を拒否します。\textbf{どんな不正な盤面でも強引に勝利や敗北へ進めるわけではありません}。
+
+この部分を含む43件の法則を形式的に検査し、初手の地雷配置・公開数字・開始前状態について178件の独立した実行照合に成功しています。ただし、初手安全について任意の地雷配置を量化した一般定理を全部証明したわけではありません。画面上で実際にクリックできるかも、まだGUI統合が必要です。
+
+初手だけを安全にすることと、\textbf{その後の全手が推測不要であること}も異なります。運ゲー無し版の条件は次章で別に扱います。
+
+\section{数字が0ならどこまで開いてよいか}
+マスを一つ開いて数字が0なら、周囲の8か所に地雷はありません。したがって、その周囲の安全なマスを自動公開できます。新しく開いたマスにも数字0が現れたら、そのマスの周囲をさらに調べます。これが\term{0の連鎖公開}です。
+
+考え方は、これから調べるマスの\term{作業リスト}を持つことです。
+
+\begin{enumerate}[leftmargin=*]
+\item 初めにクリックした安全なマスを作業リストへ入れます。
+\item 一つ取り出し、すでに公開済みなら重複処理を避けます。
+\item 未公開の安全なマスなら、その位置に対応する数字を計算して開きます。
+\item 数字が0の場合だけ、盤面内の隣接マスを作業リストへ追加します。
+\item 作業リストが空になるまで繰り返します。
+\end{enumerate}
+
+注意するのは、\textbf{同じマスを何度も追加しないこと}と、\textbf{旗付きのマスを勝手に公開しないこと}です。作業リストは\code{List}など標準の構造を使えます。すでに開いたかの判定は、盤面の公開状態と重複管理の方法を見て設計します。新しい汎用グラフ探索ライブラリを自作する必要はありません。
+
+例えば、右下の(3,3)に地雷が一つだけある4×4盤面なら、最初に左上(0,0)を開くと、0が連なる領域と、その周囲の数字付きマスが公開されます。
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}\hline
+0 & 0 & 0 & 0\\\hline
+0 & 0 & 0 & 0\\\hline
+0 & 0 & 1 & 1\\\hline
+0 & 0 & 1 & \textbf{地雷}\\\hline
+\end{tabular}
+\end{center}
+
+右下の地雷は隠れたままです。一方、数字1のマスは0の近傍にあるので開きますが、数字1からさらに新しいマスへ探索を広げることはありません。まずこの違いを盤面上で追ってください。
+
+\textbf{この動きを実装する前に}、空の盤面を一度開けば勝利する法則、地雷を開かない法則、旗を保持する法則、数字付きの非0マスからは広げない法則など、6件を\code{LAWS.bend}へ先に宣言しました。実装は\code{flood.bend}にまとめ、\code{Session.click}から呼び出します。
+
+どのマスを次に調べるかは標準の\code{List}で持ちます。候補を取り出したら、探索済みマスを16ビットのマスクで確認します。同じ候補が何度入っても、実際に調べるのは一回だけです。候補のマスが隠れている安全なマスなら数字を計算して開き、数字が0のときだけ周囲の候補を追加します。
+
+\begin{lstlisting}[caption={0のマスだけで次の候補を増やす}]
+def choose_queue(zero: Bool, index: U32,
+                 rest: List<U32>) -> List<U32>:
+  match zero:
+    case True{}:
+      enqueue_neighbors(index, rest)
+    case False{}:
+      rest
+\end{lstlisting}
+
+ここで\code{enqueue_neighbors}は4×4盤面の境界を検査し、隣接マスの添字だけをリストへ追加する補助関数です。単なる\code{List}で十分なので、独自の汎用グラフ探索コンテナは作りません。
+
+さらにBend 2では、停止しない再帰を通常の証明可能な関数として書けません。探索リストは途中で増えるため、その長さが毎回減るとは限りません。そこで、残りの処理回数を自然数\code{fuel: Nat}で持ち、一回進むたびに1減らします。4×4では0のマスが最大16個、各マスの隣が最大8個なので、最初の候補を含めて高々\(1+16\cdot8=129\)回分を用意すれば足ります。余分な候補は探索済みマスクで読み飛ばします。これは\textbf{アルゴリズムの停止性を型と再帰の形でも確かめられる}構成です。
+
+ただし、43件の法則を検査できても、あらゆる入力と操作列についてゲーム全体が正しいと証明したわけではありません。数字の正しさ、旗付きマスの扱い、ゼロ領域の広がりは独立したPythonの探索でも照合します。開発用の\code{flood.bend}と\code{PROOF.bend}はリポジトリ側で参照してください。GUIはまだ統合していません。
+
+\section{勝敗は「旗の数」で決めない}
+間違えやすい例として、地雷が3個ある盤面に旗を3個置くことを考えます。旗の位置が正しいかどうかは、プレイヤーにはまだ分かりません。仮にすべて正しくても、安全なマスが隠れたままなら勝利ではありません。
+
+勝利の条件は\textbf{地雷ではないすべてのマスが開かれていること}です。参考実装では、盤面を保持したまま\code{Array.clone}と\code{Array.to_list}で表示状態を調べます。既存の標準APIを使う方が自然な場面なので、独自の配列コピー処理を作らずに済みます。
+
+参考実装の\code{session.bend}では地雷を踏んだら\code{Lost}、すべての安全なマスを開いたら\code{Won}となり、どちらも以後のクリックを受け付けません。これは局所的な法則と独立テストで検査していますが、任意の盤面・任意の操作列に関する完全な全称証明ではありません。
+
+\section{操作をまとめて再生するCLI実習}
+これまでに作ったゲームの規則は、ウィンドウがなくても試せます。画面を用意する前に、\textbf{操作を文字列で表して、一手ずつ純粋関数へ渡す}方法を確かめましょう。
+
+配布ZIPには\file{examples/minesweeper/}というフォルダーを用意しました。ここには、4×4の盤面・勝敗・初手安全・0の連鎖公開を扱うBendのファイルと、実習用の\code{cli_replay.bend}が入っています。これらは別々のモジュールなので、\textbf{フォルダー内の相対的な配置を変えずに}実行します。
+
+最初に、まだ始めていない盤面を表示してみましょう。
+
+\begin{lstlisting}[language={},caption={最初の画面を確かめる}]
+bend examples/minesweeper/cli_replay.bend
+\end{lstlisting}
+
+次は、左上の番号0をクリックします。位置は左上から右へ0、1、2、3、次の行が4、5、6、7という順に数えます。
+
+\begin{lstlisting}[language={},caption={番号0をクリックする}]
+bend examples/minesweeper/cli_replay.bend c0
+\end{lstlisting}
+
+この実習では、初期の地雷マスクを\code{33}、すなわち番号0と5に地雷がある配置に固定しています。しかし最初に\code{c0}を指定すると、初手安全の規則によって番号0の地雷が番号1へ移ります。その結果、番号0には番号1と5に隣接する地雷の数\code{2}が表示されます。
+
+\begin{lstlisting}[language={},caption={クリック後の表示（点は隠れたマス）}]
+Playing
+2 . . .
+. . . .
+. . . .
+. . . .
+\end{lstlisting}
+
+\code{Playing}は進行中、\code{.}は隠れたマス、\code{F}は旗を表します。公開したマスは数字で示します。実行結果に地雷マスクそのものは表示しません。内部の正解を知らない状態で操作するためです。
+
+続けて旗を立て、旗付きのマスを左クリックしてみましょう。
+
+\begin{lstlisting}[language={},caption={複数の操作を順に適用する}]
+bend examples/minesweeper/cli_replay.bend c0 f1 c1
+\end{lstlisting}
+
+番号1には旗が立っているので、\code{c1}では開かれません。結果の一行目は\code{2 F . .}です。次に\code{c0 f1 f1}なら、同じマスに旗を二回付け外しするので、\code{c0}の後と同じ表示になります。一方、\code{c0 c1}では隠れた地雷を踏み、状態が\code{Lost}へ変わります。終了後の操作を追加しても盤面は変わりません。
+
+\begin{center}
+\begin{tabularx}{\linewidth}{@{}L{31mm}X@{}}
+\toprule
+文字列 & この実習での動作\\\midrule
+\code{c0}〜\code{c15} & 指定した番号を左クリックする\\
+\code{f0}〜\code{f15} & 開始後、旗を付ける／外す\\
+\code{r} & 初期の地雷配置へ戻し、開始前にする\\
+無効な文字列・範囲外 & 状態を変えずに読み飛ばす\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\textbf{ここでは一度の起動時に操作列をまとめて指定しています。} キー入力を待つ対話式のCLIではありません。また、ゲーム開始前の旗操作はこの実習では無視します。操作を一つずつ処理する部分だけを見てみましょう。
+
+\begin{lstlisting}[caption={操作のリストを先頭から処理する}]
+def replay(commands: List<String>, stage: Start.Stage) -> Start.Stage:
+  match commands:
+    case Nil{}:
+      stage
+    case command <> rest:
+      replay(rest, action(stage, command))
+\end{lstlisting}
+
+リストが空になれば現在の状態を返し、操作が残っていれば\code{action}で一手進めてから残りを処理します。\textbf{再帰の引数は\code{commands}を先頭に置いています。} Bend 2は停止性を確認するとき、引数を左から順に検査するためです。毎回短くなるリストを先に置き、途中で変わる\code{stage}を後ろに置けば、確実にリストの終わりへ進むことが明瞭になります。文字列の先頭の\code{c}と\code{f}を識別し、後ろの数字は\code{U32.read}で読みます。変換に失敗した文字列を勝手に番号0とみなさないよう、\code{Maybe}の結果を分岐します。第5章で学んだ失敗の型が、ゲームの操作にも役立つ例です。
+
+初手の配置、クリック、勝敗を別々に書いたまま利用しているので、CLI自体には地雷を数える関数を書き直す必要がありません。次のGUIでも同じ純粋関数を利用できます。
+
+\exercise{まず\code{c0 f1 f1}、\code{c0 c1 f2}、\code{c0 c16}、\code{c0 r}の結果を予想し、実行してみましょう。次に\code{cli_replay.bend}の\code{cell_symbol}で旗の表示文字を別の記号に変えてみましょう。地雷の位置や勝敗の判定に変更が不要なのはなぜか、説明してみましょう。}
+
+\section{GUIからゲームの規則へ入力を渡す}
+ここまでに、文字列で一手を表すCLIと、イベントを受け取る\code{App}を学びました。この二つは別のゲームを作る方法ではありません。\textbf{同じゲームの規則を、異なる入力方法から呼び出す}という関係です。
+
+配布ZIPの\file{examples/minesweeper/}には、先ほどのCLIのほかに\code{gui.bend}を収録しました。こちらは実際のウィンドウへ4×4盤面を描き、マウスで操作するアプリです。CLIと同じ\code{Start.click}・\code{Session.mark}を利用します。ゲームの地雷判定をGUI側へ重複実装していない点に注目してください。
+
+\subsection{まず起動してみる}
+GUIは画面を開ける環境が必要です。LinuxではBend 2のGUI実行にX11の開発用ライブラリが必要な場合があります。導入済みのデスクトップ環境から、次の順で試してみましょう。
+
+\begin{lstlisting}[language={},caption={ネイティブGUIをビルドして実行する}]
+bend examples/minesweeper/gui.bend -o minesweeper
+./minesweeper
+\end{lstlisting}
+
+ビルドに必要なOS側のライブラリが見つからないときは、\href{https://github.com/bendlang/bend/blob/main/guide/GUIDE.md}{Bend公式ガイド}で、そのOS向けの依存関係を確認してください。Linuxでは\code{libx11-dev}が必要です。画面のないCIでは\code{--check-only}による型検査と、GUIの純粋な座標・状態処理のテストを別に実施します。
+
+ウィンドウは256×256画素で、4×4盤面を描きます。各マスは64×64画素です。表示を次のように読んでください。
+
+\begin{center}
+\begin{tabularx}{\linewidth}{@{}L{43mm}X@{}}
+\toprule
+操作・表示 & 意味\\\midrule
+左クリック & 隠れたマスを公開する。最初のクリックは安全になる\\
+右クリック & ゲーム開始後、隠れたマスに旗を付ける／外す\\
+\code{R}キー & 初期配置に戻し、新しいゲームを始める\\
+\code{Esc}キー & ウィンドウを閉じる\\
+灰色のマス & まだ公開していない\\
+赤い印 & 地雷だと推測して立てた旗\\
+明るいマスと数字 & 公開済みのマスと周囲の地雷の個数\\
+格子線が緑／赤 & 勝利／敗北を表す。進行中は暗い色\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+数字はBendの\code{Image}だけで描いた小さな7セグメント表示です。専用のフォントや画像ファイルを読み込んでいるわけではありません。画面の描画状態は、表示される\code{Square}から計算しています。
+
+\subsection{クリック位置を番号へ直す}
+第14章の例は8×8盤面を扱いましたが、今回は4×4です。64画素単位で列と行を求め、\code{4 * row + column}という添字に変換します。
+
+\begin{lstlisting}[caption={256画素の画面から4×4の添字へ変換する}]
+def cell_at(+x: U32, +y: U32) -> Maybe<&2, U32>:
+  cell_if_valid(
+    Bool.and(U32.is_lt(x, 256), U32.is_lt(y, 256)),
+    x, y)
+\end{lstlisting}
+
+ここで\code{cell_if_valid}は、範囲内なら\code{y / 64 * 4 + x / 64}を返し、範囲外なら\code{None}を返す関数です。マスが表示されない位置を無理に番号0へ変換しない理由は、クリックした場所とゲーム内のマスを正確に対応させるためです。
+
+例えば画素\code{(63,0)}は番号0、\code{(64,0)}は番号1、\code{(255,255)}は番号15です。\code{(256,0)}は画面の外なので\code{None}です。これらの境界は実際のGUIを開かず、別のBendプログラムからも検査しています。
+
+\subsection{イベントを純粋な規則へつなぐ}
+マウスボタンが押されたら、範囲内の番号を取り出し、左クリックなら\code{Start.click}、右クリックなら\code{Session.mark}へ渡します。キー\code{R}では\code{Start.new}へ戻ります。ウィンドウの終了と\code{Esc}では、次の状態を\code{None}として返します。
+
+\begin{lstlisting}[caption={イベントをゲームの操作に変換する}]
+def event(e: Event, stage: Start.Stage) -> Maybe<Start.Stage>:
+  match e:
+    case Close{}:
+      None{}
+    case Key{27, True{}}:
+      None{}
+    case Key{114, True{}}:
+      Some{Start.new(33)}
+    case Mouse{x, y, button, True{}}:
+      Some{pointer(stage, x, y, button)}
+    case _:
+      Some{stage}
+\end{lstlisting}
+
+ここでは\code{button == 0}が左クリック、\code{button == 1}が右クリックに対応する環境を想定しています。ボタン番号と実際の操作の対応は、対象のデスクトップ環境で確認してください。左・右以外のマウスボタンをどう扱うかも、完成版の品質確認項目です。
+
+\subsection{画像を作り直してもゲームの状態は失わない}
+\code{App}の\code{view}は、現在の状態から描画用\code{Image}を作ります。しかし盤面の\code{Array}は自由にコピーできる値ではありません。そこで\code{Array.clone}を使い、一方を次のゲーム状態に保持し、もう一方を表示用の\code{List}へ変換します。
+
+\begin{lstlisting}[caption={Arrayを保持しつつ描画データを得る}]
+active_view(mines, phase, Array.clone(Game.Square, cells))
+\end{lstlisting}
+
+\code{gui.bend}では、表示するマスをそれぞれ\code{Pix}と\code{Qua}からなる小さな画像へ変換し、16マスを四分木に組み立てます。画面の数字と色は公開状態から決まり、\textbf{描画関数が内部の地雷マスクを表示して答えを漏らすことはありません}。
+
+GUI用の処理を追加しても、地雷数の計算や0領域の探索を新しく書き直さなかった点が、これまでに学んだ\term{純粋関数とIOの分離}の効果です。
+
+\exercise{\code{gui.bend}の\code{cell_at}で、座標\code{(0,0)}・\code{(63,0)}・\code{(64,0)}・\code{(255,255)}・\code{(256,0)}が何を返すか予想してみましょう。次にウィンドウを起動し、最初の左クリック、旗の付け外し、敗北後の操作、\code{R}によるリセットを確かめてみましょう。画面を開けない環境では、\code{gui_smoke.bend}という検証用ソースをリポジトリから参照してみましょう。}
+
+\section{時間・リセット・保存は境界の仕事}
+経過時間は現在時刻を読むIOと、時刻の差を計算する純粋関数に分けます。ゲーム終了時に時間を止め、リセット時に新しい開始時刻を設定します。リセットは公開済みのマスを空に戻す操作なので、「クリックで公開済み集合が減らない」という不変条件を無条件に適用してはいけません。
+
+\subsection{状態全体を保存する前に、操作履歴を保存しよう}
+「ゲームを保存する」と聞くと、16マスの情報や地雷マスクをそのままファイルへ書き込みたくなります。しかし、まずは\textbf{初期状態が固定されていれば操作列を再生するだけで同じ状態へ戻れる}ことを利用してみましょう。
+
+\code{cli_save.bend}は、前節のCLIに対して、\code{File.open}・\code{File.write}・\code{File.read}・\code{File.close}を使った保存・復元を追加した教材です。例の固定初期配置は、これまでと同じ地雷マスク33です。
+
+\begin{lstlisting}[language={},caption={操作列の保存と読み戻し}]
+bend examples/minesweeper/cli_save.bend save c0 f1
+bend examples/minesweeper/cli_save.bend load
+\end{lstlisting}
+
+最初のコマンドで、実行した\textbf{カレントディレクトリ}に\code{minesweeper_save.txt}が作られます。二つ目のコマンドは別の起動ですが、保存した\code{c0}と\code{f1}を初期状態から再生して、次のように表示します。
+
+\begin{lstlisting}[language={},caption={保存から復元した盤面}]
+Playing
+2 F . .
+. . . .
+. . . .
+. . . .
+\end{lstlisting}
+
+ファイルの内容は、人間が読める短い一行です。
+
+\begin{lstlisting}[language={},caption={保存形式の例}]
+BEND2-SAVE-1|c0|f1|END
+\end{lstlisting}
+
+先頭の\code{BEND2-SAVE-1}は\term{保存形式のバージョン}、続く\code{c0}と\code{f1}が操作列、最後の\code{END}が終端です。区切り文字を\code{|}に固定し、コマンドに区切り文字を含める入力は拒否します。これにより、どこまでが一つの操作かを解釈できます。
+
+\subsection{ファイルの中身は信用しない}
+ファイルは、編集されたり、途中で破損したりする可能性があります。\code{cli_save.bend}の読み込みでは、次のような検証をしてから一手も再生しないようにしています。
+
+\begin{enumerate}[leftmargin=*]
+\item 保存形式のバージョンが一致するかを調べます。
+\item 最後の\code{END}が正しい位置にあり、その後に余分な文字列がないかを確かめます。
+\item 各操作が\code{c0}〜\code{c15}、\code{f0}〜\code{f15}、\code{r}のいずれかか検査します。
+\item ファイルの長さと保存できる操作数に上限を設け、無制限の読み込みを避けます。
+\end{enumerate}
+
+条件に合わない場合は、\code{IO.die}でエラーを報告します。誤ったコマンドを黙って読み飛ばし、別の盤面として復元したふりをしてはいけません。
+
+また、\code{File.open}と\code{File.read}・\code{File.write}が成功するとは限りません。ファイルハンドルはBendの所有権のある値です。読み書きの結果が\code{Done}であっても\code{Fail}であっても、取得できたハンドルを\code{File.close}へ渡します。第6章の\code{Result}の解説が、具体的なゲームのデータ保存につながる場面です。
+
+\begin{pointbox}
+\textbf{保存方式の制限：} この例が復元できるのは、\textbf{固定初期地雷マスク33からのCLI操作履歴}です。ランダムに生成した別の盤面、実際にGUIでクリックした途中状態、経過時間をこの方法で保存しているわけではありません。これらを扱う場合は、初期配置や時刻なども含むバージョン付きの保存形式へ拡張し、復元時の整合性を検査する必要があります。
+\end{pointbox}
+
+\exercise{まず\code{save c0 f1 f1}で保存し、\code{load}すると旗がどこにも残らないことを確かめてみましょう。次に\code{minesweeper_save.txt}の最後の\code{END}を削除し、読み込みが失敗することを確認してみましょう。保存の失敗時にもファイルハンドルを閉じる必要がある理由を説明してみましょう。}
+
+\section{部品から完成へ進むための検査順}
+ここまでの参考実装には、旗・クリック・敗北・勝利と初手安全の純粋な処理、4×4の近傍判定があります。0の連鎖公開を実装しましたが、CLIの操作再生・固定盤面の保存、およびGUIのコードは追加しましたが、GUI上での保存操作・環境依存の実機検証は残っています。実装の進捗と、読者が遊べる完成品を混同しないでください。
+
+まず4×4盤面の全256座標対で近傍関係を調べ、次に地雷マスクと数字の計算、複数クリックでの勝敗を検査します。このように\textbf{正解を別の方法で計算するテスト}を使うと、実装とテストが同じ誤りを含む危険を減らせます。初手安全のテストに加えて0の連鎖公開も独立した探索で照合し、最後に実機の画面操作を確認します。
+
+\exercise{地雷が1個ある4×4盤面で、(1)地雷に旗を立ててから左クリック、(2)最後の安全なマスを公開、(3)公開済みの数字を再クリック、(4)盤面外をクリック、の四つについて期待する結果を説明しましょう。続いて初手安全と0の連鎖公開に必要な法則を一つずつ日本語で書き、どの\code{Array}・\code{List}の操作を使うと素直か考えてみましょう。}
+
+
+\chapter{発展：運ゲー無しマインスイーパー}
+\sectiongoal{「公開情報から確実に分かること」を形式化し、ソルバーによる盤面検証と生成を理解する。}
+
+\section{なぜ通常の盤面では推測が必要になるのか}
+通常のマインスイーパーでは、開いた数字が分かっても、隠れた地雷の位置まで決まるとは限りません。数字の1の周囲に未確定のマスが二つ残り、どちらか一方に地雷があるとしましょう。二つの候補は同じ数字1と両立します。片方を適当に開くのは、推論ではなく\term{推測}です。
+
+ところが、別の数字と合わせれば、どちらかのマスを安全だと確定できるかもしれません。本章では\textbf{まず一つの数字から分かること、次に二つの数字を合わせること、最後にすべての候補を比べること}の順に進めます。最初から大きなソルバーを書く必要はありません。
+
+運ゲー無し版では、\textbf{最初に開くマスが決まったあと、確実に安全と判定できる手だけを続けて勝利できる盤面}を採用します。Simon Tathamの『Mines』は、この考え方を使った公開実装です。実際にソルバーを用意し、候補の地雷配置を解かせて検証する方法が知られています。
+
+\section{最小の推論規則をBend 2で書く}
+開かれたマスに表示された数字を\(c\)、周囲で地雷と\textbf{確定した}マス数を\(f\)、まだ確定していないマス数を\(u\)とします。
+\[
+r=c-f
+\]
+は、未確定マスに残っている地雷数です。\(0\le r\le u\)が満たされるとき、次の二つの規則が使えます。
+\begin{itemize}[leftmargin=*]
+\item \(r=0\)：周囲の未確定マスはすべて安全です。
+\item \(r=u\)：周囲の未確定マスはすべて地雷です。
+\end{itemize}
+\(0<r<u\)であれば、その数字だけでは決まりません。\(r>u\)は矛盾です。また\(f>c\)も、すでに確定した地雷数が表示数字を超えるので矛盾です。\code{U32}の引き算で\(c-f\)を計算する\textbf{前}に検査しましょう。\code{infer}は計算済みの\code{remaining}を受け取る関数であり、この事前検査までは行いません。
+
+プレイヤーが旗を置いたマスを無条件で「確定した地雷」にしてはいけません。誤った旗は誤推論を引き起こすためです。
+
+\sample{14_local_inference.bend}{局所制約の判定と法則}
+実行する前に、四つの\code{infer}の結果を予想してみましょう。\code{tag}は\code{AllSafe}を1、\code{AllMines}を2、\code{Unknown}を3、\code{Inconsistent}を4へ変換します。\code{main}が計算するのは次の合計です。
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+呼び出し & 推論結果 & \code{tag}の値 \\
+\midrule
+\code{infer(0,3)} & \code{AllSafe} & 1 \\
+\code{infer(3,3)} & \code{AllMines} & 2 \\
+\code{infer(1,3)} & \code{Unknown} & 3 \\
+\code{infer(4,2)} & \code{Inconsistent} & 4 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\code{bend examples/14_local_inference.bend}の出力は\textbf{10}です。この値は安全マスの個数ではなく、四つの結果の\code{tag}を足したテスト用の値です。実際にゲームを進めるときは、\code{LocalRule}を\code{match}で調べて次の操作を決めます。\(r=u=0\)では\code{AllSafe}を返しますが、未確定マスは一つも残っていません。
+
+\code{infer}は残り地雷数と未確定マス数から結果を表すADTを返します。\code{AllSafe}や\code{AllMines}は推論の種類を表し、マスの座標自体を返すものではありません。\code{Unknown}の場合に勝手に安全マスを決めてはいけません。入力に矛盾があるときは\code{Inconsistent}で区別します。付属の\code{law}は、残り地雷数が0で未確定マスが3個ある場合の具体例です。任意のマス数や盤面全体を証明したものではありません。
+
+\exercise{未確定マスが4個、残り地雷数が0、2、4、5の場合に、それぞれ\code{infer}が何を返すべきか調べてみましょう。}
+
+\section{複数の数字から推論する}
+未確定のマスを\(x,y,z\)と呼びます。一つ目の公開数字から「\(x,y\)の中には地雷が1個」、二つ目から「\(x,y,z\)の中には地雷が1個」と分かったとしましょう。まず自分で、\(z\)が安全かどうか考えてみてください。
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+一つ目の条件 & \(x+y=1\)（地雷なら1、安全なら0） \\
+二つ目の条件 & \(x+y+z=1\) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+二つの式の差は\(z=0\)です。\textbf{\(x\)と\(y\)のどちらが地雷かは分からなくても、\(z\)は安全}と確定します。例えば、二つ目が\(x+y+z=2\)なら\(z=1\)なので、\(z\)は地雷です。
+
+これを集合で表すと\(A=\{x,y\}\)、\(B=\{x,y,z\}\)で、\(A\subseteq B\)です。集合\(A\)に地雷が\(a\)個、集合\(B\)に地雷が\(b\)個あるなら、
+\[
+\#\bigl((B\setminus A)\cap M\bigr)=b-a
+\]
+となります。\(b=a\)なら差集合はすべて安全で、\(b-a=|B\setminus A|\)ならすべて地雷です。この\term{部分集合の規則}は、第4章で学んだ\code{Set}の応用先になります。集合の要素が重複していないこと、二つの数字が同じ局面を表すことにも注意しましょう。
+
+\exercise{\(A=\{x,y\}\)には地雷が一つ、\(B=\{x,y,z,w\}\)には地雷が一つあるとします。\(z,w\)について分かることを説明してみましょう。続いて\(B\)の地雷数を3に変えたらどうなるか考えてみましょう。}
+
+\section{候補配置を手で比べてみる}
+部分集合の規則でも決まらない場合には、\term{公開情報と矛盾しない地雷配置の候補}を調べます。小さな盤面なら手計算でも試せます。
+
+4×4盤面には地雷がちょうど一つあり、左上のマス（添字0）を開いたら数字1が表示されたとしましょう。左上の隣にある添字は1、4、5の三つです。したがって、この公開情報に矛盾しない配置は\textbf{地雷が\{1\}、\{4\}、\{5\}の三通り}です。
+
+どの候補でも\textbf{添字15は地雷ではありません}。そこで15は確実に開けます。しかし1、4、5のどれか一つを選んで開くのは推測です。「可能性が低そう」ではなく「全候補で安全」であることを確認してから操作します。
+
+候補が一つもなければ、それは数字や総地雷数が矛盾する入力です。\textbf{候補が空のまま、安全なマスを発見したと扱ってはいけません}。候補の数が多すぎて列挙を打ち切った場合も、安全性の保証はまだ得られていません。
+
+\exercise{4×4の例で、添字2と5のどちらを確実に開けるか予想してみましょう。次に地雷の総数が二つなら、候補の集合はどう変わるか考えてみましょう。}
+
+\section{公開情報と真の地雷配置を分離する}
+公開状態\(V\)から矛盾なく置ける地雷配置の集合を\(\mathcal{C}(V)\)とします。ここには\textbf{開いたマスとその数字、盤面サイズ、総地雷数}だけが反映されます。未公開の本当の地雷位置は渡しません。
+
+\(\mathcal{C}(V)\ne\varnothing\)であり、未公開マス\(p\)がすべての候補で地雷でないなら、
+\[
+\forall M\in\mathcal{C}(V),\quad p\notin M,
+\]
+\(p\)は確実に安全です。候補集合が空の場合は、入力が矛盾しているものとしてエラーにします。空集合に対する全称命題を利用して「安全」と判定するのは誤りです。
+
+この区別をコードで守ることが重要です。
+\begin{itemize}[leftmargin=*]
+\item \textbf{ソルバー}：公開状態\(V\)だけを受け取り、確実な安全マスを返す。
+\item \textbf{ゲーム本体}：真の配置を保持し、実際に開いたマスの数字を計算する。
+\item \textbf{検証器}：ソルバーの提案した操作をゲーム本体で再生し、最後まで安全にクリアできるか検査する。
+\end{itemize}
+
+\section{候補生成と検証を繰り返す}
+初手\(p_0\)を決め、そのマスを必ず安全にするよう候補の地雷配置を作ります。より大きく開ける開始局面にしたい場合は、初手とその周囲8マスを地雷禁止領域にできます。その後、ソルバーに\textbf{公開状態だけ}を渡して確実な操作を繰り返させます。
+\begin{enumerate}[leftmargin=*]
+\item 初手が安全な地雷配置を生成します。
+\item 初手を開き、数字が0なら周囲を連鎖的に開きます。
+\item 公開数字と総地雷数から、確実な安全マスを探します。
+\item 安全マスが見つかれば開き、全安全マスを開けるまで続けます。
+\item 候補が残っているのに確実な手がなければ、その盤面は採用しません。
+\end{enumerate}
+生成の試行回数には上限を設けます。上限に達した場合は\textbf{生成失敗を明示}し、推測が必要な盤面を無断で運ゲー無し版として公開してはいけません。あらかじめ検証した盤面を別途用意して代替する方法もあります。
+
+\section{小盤面用の参考実装と検証}
+この節の発展用参考実装はリポジトリの
+\href{https://github.com/Nasu726/bend2-intro-with-life/tree/feat/intermediate-minesweeper-textbook/intermediate/solutions}{本書の参考実装}にあります。学習用ZIPには完成コードを入れず、読者が必要に応じて参照できます。
+
+小盤面用のPython検証器は、公開数字と総地雷数に矛盾しない候補配置を\textbf{全列挙}し、そのすべてで安全なマスだけを開きます。列挙数が上限を超えた場合は採用を保留します。これにより、限定した盤面サイズでは、局所規則で分からない確定手まで探せます。
+
+ただし、候補の全列挙は盤面が大きくなると指数的に重くなります。これは本書の学習・テスト用の独立した参考実装であり、実用サイズのBend版ソルバーやGUIアプリの完成を意味しません。Bendへの移植を進める際は、まず局所推論と集合の差分から取り組みましょう。
+
+\section{「運ゲー無し」の保証範囲}
+\textbf{解が一意}であることと、途中の局面で確実な手を選べることは異なります。また、局所規則しか知らないソルバーが手詰まりになっても、もっと強い推論で解ける可能性があります。したがって、ソルバーが最後まで解けた盤面だけを採用する方法は確実ですが、採用されなかった盤面が必ず運ゲーであるとは断言できません。
+
+この教材では「\textbf{固定した初手から、このソルバーが公開情報のみで全安全マスを開ける}」ことを明示的な合格条件にします。初手が変わっても常に同じ条件を満たす、すべての推論規則を網羅している、すべての盤面を等確率で生成する、といった強い条件は主張しません。
+
+\section*{参考資料}
+\begin{itemize}[leftmargin=*]
+\item Simon Tatham (2019), \href{https://www.chiark.greenend.org.uk/~sgtatham/quasiblog/mines-solver/}{Writing a soluble-grid generator for Mines}：候補の改変とソルバー検査。
+\item \href{https://github.com/DavidNHill/JSMinesweeper}{JSMinesweeper}：推測不要盤面の生成、ソルバー、分析。
+\item \href{https://github.com/AlexBuz/mindsweeper}{Mindsweeper}：公開されている別の無推測盤面生成の実装。
+\end{itemize}
+\exercise{公開状態と真の地雷配置を別の型で定義してみましょう。また、局所推論しか使わないソルバーが行き詰まるが、集合の差分を使えば先に進める例を考えてみましょう。}
+
+\section{公開情報だけで確定手を数え上げる}
+これまでの推論では、二つの数字の制約を差し引きました。さらに一歩進むと、\textbf{公開された数字と矛盾しないすべての地雷配置}を調べる方法があります。今回は4×4盤面に地雷がちょうど2個ある場合に限定して考えましょう。
+
+16マスから2個を選ぶ方法は
+\[
+\binom{16}{2}=120
+\]
+通りです。候補の一つひとつについて、すでに開かれたマスに地雷がなく、その周囲の地雷数が公開済みの数字と一致するかを検査します。矛盾する候補は捨てます。
+
+残った候補がすべて共通して「地雷ではない」と示すマスだけを、\term{確定した安全マス}として返します。反対に、候補によって地雷の有無が異なるマスは、まだ推測なしには開けません。
+
+\begin{pointbox}
+この推論には\textbf{実際に配置した地雷マスクを入力してはいけません}。参考実装の\code{Public}型が保持するのは、公開したマスの番号と、そのマスに表示された数字だけです。検査に使用する地雷マスクは、ソルバーが列挙した\textbf{仮説上の候補}であって、ゲームの正解ではありません。
+\end{pointbox}
+
+この限定版の実装を\code{examples/minesweeper/public_solver.bend}に用意しました。例えば左上の番号0に\code{0}が表示されたとき、隣接する番号1、4、5には地雷がありません。これらが確定した安全マスとなります。
+
+\begin{lstlisting}[language={},caption={地雷2個の公開情報ソルバー}]
+bend examples/minesweeper/public_solver.bend
+\end{lstlisting}
+
+実行結果は\code{50}です。これは数字を十進数で表示しただけで、マスの番号50を開くという意味ではありません。2進数で立っているビットを調べると、
+\[
+50=2^1+2^4+2^5
+\]
+なので、番号1、4、5が安全であることを表しています。
+
+実装内の\code{Summary}は、公開情報に一致した候補の個数と、その候補に含まれた地雷位置の和集合を記録します。どの候補にも地雷があり得ない位置が、確定した安全マスです。一致する候補がゼロ個なら\code{None}を返し、矛盾した公開情報を正常な盤面として扱いません。
+
+この方法は、確実性を優先するため\textbf{候補の全列挙}を利用します。今回の固定サイズでは120候補ですが、大きな盤面へそのまま拡張すると組合せ数が急激に増えます。一般的な大盤面の高速解法だと誤解してはいけません。
+
+ここまでの\code{public_solver.bend}は、一つの公開状態で安全なマスを求める関数です。この結果をゲームの一手に結び付ければ、\textbf{最後まで推測なしで解ける候補だけを採用する生成器}を組み立てられます。
+
+\exercise{\code{public_solver.bend}にある\code{Number{0, 0}}を\code{Number{0, 1}}へ変更し、確定した安全マスがどう変わるか予想してから実行してみましょう。次に\code{Number{0, 9}}という実際にはあり得ない数字を与えたとき、ソルバーが\code{None}を返すべき理由を説明してみましょう。}
+
+\section{候補盤面を実際に解いてから採用する}
+「ある時点で安全なマスが分かる」だけでは、運ゲー無しの盤面とは言えません。数手進めた後に安全なマスを一つも確定できなくなる場合があるからです。そこで、盤面を採用する前に\textbf{最初のクリックから勝利まで}を検証しましょう。
+
+配布ZIPの\code{examples/minesweeper/noguess_generator.bend}は、4×4・地雷2個という限定条件で、この考え方を実装したものです。プログラムは次の順で進みます。
+
+\begin{enumerate}[leftmargin=*]
+\item 地雷2個の組合せを、最大120通りの範囲で順に調べます。最初のマス0と、その周囲の1・4・5に地雷がある候補は採用対象から除きます。
+\item 実際のゲームエンジン\code{Session.click}で番号0を開きます。数字0なら、0の連鎖公開も通常のゲームと同じように行われます。
+\item 開かれたマスの番号と数字だけを\code{Public}へ変換し、\code{Solver.provably_safe}に渡します。ここで\textbf{地雷の正解をソルバーへ渡しません}。
+\item 確実に安全なマスがあれば一つ選んで開き、再び公開状態だけから推論します。安全な手が見つからなければ、\textbf{候補を不採用}にします。
+\item \code{Session.Won}まで到達した場合だけ、地雷マスクと実際のクリック列を\term{検証済みの証明書}として返します。探索回数には上限を設け、無限に候補を探しません。
+\end{enumerate}
+
+\begin{lstlisting}[language={},caption={推測不要な4×4盤面を一つ生成する}]
+bend examples/minesweeper/noguess_generator.bend
+\end{lstlisting}
+
+現在の決定的な探索順では、次の結果が得られます。
+
+\begin{lstlisting}[language={},caption={Bendの生成結果}]
+mines=40960;moves=0,12,14
+\end{lstlisting}
+
+\code{40960}は\code{2^13+2^15}に当たるため、地雷は番号13と15です。ただし、この地雷位置は\textbf{生成器の最終結果}として表示しているだけであり、推論器へ入力されません。番号0を公開した後、公開済みの数字から12、さらに14を確実な安全マスとして選び、勝利したことを表しています。ゲームの作成側が正解を持つことと、プレイヤー側の推論が正解を見ることは別です。
+
+実装中では、\code{Array.clone}で保持した盤面から可視状態を抽出し、推論へ渡すデータ型を切り替えます。また、\code{continue_play}は\code{Nat}の燃料を減らしながら進むので、解けない候補に遭遇しても計算を止められます。クリック列は\code{List}に記録しておき、成功時に\code{List.reverse}で実行順に戻します。失敗した場合に適当な盤面を返す処理はありません。
+
+\begin{pointbox}
+\textbf{保証の範囲：} このプログラムが確かめているのは、\textbf{4×4、地雷2個、最初に番号0を開く}という条件です。どこを初手に選んでも推測不要、任意サイズでも高速、という主張ではありません。また、候補列挙は指数的に増え得るため、一般サイズの完成アルゴリズムではありません。
+\end{pointbox}
+
+独立したPython版でも\code{40960}と\code{0,12,14}のクリック列をリプレイし、数字の計算、公開された安全情報、勝利をBendの実装とは別に照合しています。ソルバー単体の13ケースの独立テストに加え、\textbf{生成器が返した一つの盤面を最後まで検証するテスト}です。
+
+\exercise{まず地雷マスク\code{40960}を二進数に分解し、地雷の位置を4×4の盤面に書いてみましょう。次に番号0を公開したとき、0の連鎖によってどこまで開かれるか予想してみましょう。最後に、候補の途中で確実な安全マスが見つからなければ、その候補を不採用にしなければならない理由を説明してみましょう。}
+
+\chapter{API索引と次の学習}
+\sectiongoal{知らない機能に出会っても、標準ライブラリを探し、最小例で確かめ、使いどころを判断できる。}
+
+\section{答えを暗記するより、調べ方を身につけよう}
+本書では、\code{List}と\code{Array}の使い分けから始め、\code{Map}、\code{Set}、\code{IO}、\code{File}、\code{App}、形式的な\code{law}まで見てきました。一度にすべての関数を覚える必要はありません。これまでと同じように、\textbf{何が必要かを決め、関数の型を読み、小さく試す}習慣を身につけましょう。
+
+例えば「保存先のファイルが開けるか確かめたい」場合、\code{bend base File.open}を調べます。戻り値に\code{IO}と\code{Result}があるので、外部の操作であり、失敗もあり得ることが分かります。さらに開いた\code{File}を後で閉じる必要があります。型を読むだけでも、使い方の大切な部分が見えてきます。
+
+\section{機能から探すための索引}
+\begin{longtable}{@{}p{28mm}p{57mm}p{54mm}@{}}
+\toprule
+分類 & 主な名前 & 確認すること\\\midrule
+\endfirsthead
+\toprule 分類 & 主な名前 & 確認すること\\\midrule\endhead
+数値 & Nat, U32, F32, Word & 変換と丸め、上限\\
+文字 & Char, String & 分割、解析、文字境界\\
+列・配列 & List, Array & 走査、複製、所有権\\
+辞書・集合 & Map, Set & 文字列キー、検索結果\\
+結果型 & Maybe, Result, Either & 失敗の情報\\
+入出力 & IO, File, Process & ハンドル、終了コード\\
+通信 & TCP, UDP, Socket & 接続と切断\\
+並行処理 & Chan, IO.fork, IO.join & 同期とタイムアウト\\
+GUI & Image, App, Window, Event & 画面・イベントの環境\\
+音声 & Audio & デバイスと書込み\\
+証明 & law, Equal, Sigma & 仮定と結論、カーネル\\
+\bottomrule
+\end{longtable}
+
+\section{三つの確認を一緒にしない}
+読者が自分のプログラムを確かめるとき、\textbf{型検査}・\textbf{実行テスト}・\textbf{形式的証明}を区別しましょう。
+
+\begin{itemize}[leftmargin=*]
+\item 型検査は、引数の型や数量制約などに違反していないかを調べます。
+\item 実行テストは、指定した入力に対して期待する結果が得られるかを調べます。
+\item 形式的証明は、宣言した\code{law}がその量化範囲で成り立つかを検査します。
+\end{itemize}
+
+法則の証明が一つ通ったからといって、GUIの表示が正しいことや保存時のOSエラーが解決されるわけではありません。結果を使う場所と、何を検査したかを意識して説明しましょう。
+
+\section{これから一人で学ぶときの順序}
+知らない操作が必要になったら、まず\code{bend base}で公開APIの形を調べます。次に、必要な入力だけを持つ10〜20行ほどの最小例を作ります。期待する結果を先に予想し、実行して照合します。失敗し得るAPIなら、その失敗も検討します。動作を理解できたら、マインスイーパーなどの大きなプログラムに組み込みます。
+
+\textbf{標準の機能で十分な処理は、標準の機能を使ってください。} 特別な型や並列処理を使うこと自体は目標ではありません。必要になったとき、適切に選べることが目標です。
+
+公式の\href{https://github.com/bendlang/bend/blob/main/guide/GUIDE.md}{Bend 2 GUIDE}と\href{https://github.com/bendlang/bend/blob/main/bend2/base.bend}{Baseライブラリ}も手元に置いておきましょう。
+
+\exercise{本書でまだ使っていないBaseの公開関数を一つ選び、引数・返り値・所有権・失敗条件を調べてみましょう。次に、実行できる最小プログラムを作り、期待した結果と一致するか確かめてみましょう。}
+\end{document}
