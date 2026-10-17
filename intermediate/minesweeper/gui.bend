@@ -67,7 +67,7 @@ def tile_pixel(+code: U32, +x: U32, +y: U32, border: U32) -> U32:
         opened_color(code, x, y))))
 
 # A 64x64 tile. Each Pix covers an 8x8 block on screen.
-def tile_draw(d: Nat, +code: U32, +border: U32, +x: U32, +y: U32) -> Image:
+def tile_draw(+d: Nat, +code: U32, +border: U32, +x: U32, +y: U32) -> Image:
   match d:
     case 0n:
       Pix{tile_pixel(code, x, y, border)}
