@@ -49,6 +49,8 @@ jobs:
         run: bend version
       - name: Typecheck, run and verify proof examples
         run: python3 intermediate/scripts/test_examples.py
+      - name: Compile native C and execute JavaScript target
+        run: python3 intermediate/scripts/test_targets.py
 
   intermediate-pdf:
     name: Intermediate XeLaTeX PDF
