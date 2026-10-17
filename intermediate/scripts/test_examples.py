@@ -153,7 +153,7 @@ def verify_dense_board(game_dir):
     )
     with tempfile.TemporaryDirectory() as td:
         out = pathlib.Path(td)
-        for name in ("game.bend", "board.bend", "board4.bend", "session.bend"):
+        for name in ("game.bend", "board.bend", "board4.bend", "flood.bend", "session.bend"):
             shutil.copyfile(game_dir / name, out / name)
         f = out / "dense_oracle.bend"
         f.write_text(program, encoding="utf-8")
@@ -209,7 +209,7 @@ def verify_first_click(game_dir):
     )
     with tempfile.TemporaryDirectory() as td:
         dest = pathlib.Path(td)
-        for name in ("game.bend", "board.bend", "board4.bend", "session.bend", "start.bend"):
+        for name in ("game.bend", "board.bend", "board4.bend", "flood.bend", "session.bend", "start.bend"):
             shutil.copyfile(game_dir / name, dest / name)
         entry = dest / "check_start.bend"
         entry.write_text(source, encoding="utf-8")
@@ -217,6 +217,83 @@ def verify_first_click(game_dir):
         if actual != str(len(cases)):
             raise AssertionError(f"First-click oracle {actual} != {len(cases)}")
         print(f"PASS {len(cases)} independent first-click mask/visible/ready checks",flush=True)
+
+def oracle_flood(mask, first, flags=0):
+    """Independent reference BFS: include the numbered boundary, not mines or flags."""
+    if first >= 16 or mask & (1 << first) or flags & (1 << first):
+        return set()
+    revealed, pending = set(), [first]
+    while pending:
+        idx = pending.pop()
+        if idx in revealed or flags & (1 << idx) or mask & (1 << idx):
+            continue
+        revealed.add(idx)
+        x, y = idx % 4, idx // 4
+        nearby = [
+            j for j in range(16)
+            if j != idx and abs(x - j % 4) <= 1 and abs(y - j // 4) <= 1
+        ]
+        if all(not(mask & (1 << j)) for j in nearby):
+            pending.extend(nearby)
+    return revealed
+
+
+def verify_flood(game_dir):
+    """Compare zero-connected flood, numbered edge, flags, and win with Python BFS."""
+    checks = []
+    configs = [(0, 0, 0), (32768, 0, 0), (1, 5, 0),
+               (33, 15, 0), (65532, 0, 0), (0, 0, 2),
+               (32768, 0, 2)]
+    def clue(mask, idx):
+        x, y = idx % 4, idx // 4
+        return sum((mask >> j) & 1 for j in range(16)
+                   if j != idx and abs(x-j%4) <= 1 and abs(y-j//4) <= 1)
+    for mask, clicked, flags in configs:
+        open_set = oracle_flood(mask, clicked, flags)
+        total_safe = 16 - mask.bit_count()
+        should_win = len(open_set) == total_safe
+        expr = f"Session.new({mask})"
+        if flags:
+            expr = f"Session.mark({expr}, 1)"
+        expr = f"Session.click({expr}, {clicked})"
+        checks.append(f"bit(U32.is_eq(phase_code(Session.phase_of({expr})), {1 if should_win else 0}))")
+        for j in (0, 1, 5, 14, 15):
+            visible = (10+clue(mask,j) if j in open_set else
+                       (1 if flags & (1 << j) else 0))
+            checks.append(f"bit(U32.is_eq(square_code(Session.read_square({expr}, {j})), {visible}))")
+    program = (
+        "import Base\nimport ./game.bend as Game\n"
+        "import ./board.bend as Board\nimport ./board4.bend as Board4\n"
+        "import ./flood.bend as Flood\nimport ./session.bend as Session\n"
+        "def bit(b: Bool) -> U32:\n  match b:\n"
+        "    case True{}:\n      1\n    case False{}:\n      0\n"
+        "def phase_code(p: Session.Phase) -> U32:\n  match p:\n"
+        "    case Session.Playing{}:\n      0\n"
+        "    case Session.Won{}:\n      1\n    case Session.Lost{}:\n      2\n"
+        "def square_code(s: Game.Square) -> U32:\n  match s:\n"
+        "    case Game.Hidden{}:\n      0\n"
+        "    case Game.Flag{}:\n      1\n"
+        "    case Game.Open{clue}:\n      (10 + clue : U32)\n"
+        + "\n\n".join(
+            f"def check_{i}() -> U32:\n  ("
+            + " + ".join(checks[i:i+5]) + " : U32)"
+            for i in range(0,len(checks),5)
+        )
+        + "\n\ndef main() -> U32:\n  ("
+        + " + ".join(f"check_{i}()" for i in range(0,len(checks),5))
+        + " : U32)\n"
+    )
+    with tempfile.TemporaryDirectory() as td:
+        d = pathlib.Path(td)
+        for name in ("game.bend","board.bend","board4.bend","flood.bend","session.bend"):
+            shutil.copyfile(game_dir / name, d / name)
+        p = d / "flood_oracle.bend"
+        p.write_text(program, encoding="utf-8")
+        actual = run("bend", str(p)).splitlines()[-1]
+        if actual != str(len(checks)):
+            raise AssertionError(f"Zero flood oracle: {actual} != {len(checks)}")
+    print(f"PASS independent zero-flood BFS and flag boundary: {len(checks)} checks", flush=True)
+
 
 def verify_sessions(game_dir):
     """Check complete click transitions against a separate Python game oracle."""
@@ -232,7 +309,8 @@ def verify_sessions(game_dir):
         safe_count = sum(not (mines & (1 << i)) for i in range(16))
         for index in (0, 1, 5, 15, 16):
             mined = index < 16 and bool(mines & (1 << index))
-            phase = 0 if index >= 16 else (2 if mined else (1 if safe_count == 1 else 0))
+            flooded = oracle_flood(mines, index) if not mined else set()
+            phase = 0 if index >= 16 else (2 if mined else (1 if len(flooded) == safe_count else 0))
             expr = f"Session.click(Session.new({mines}), {index})"
             checks.append(f"bit(U32.is_eq(phase_code(Session.phase_of({expr})), {phase}))")
             if index < 16:
@@ -245,7 +323,7 @@ def verify_sessions(game_dir):
     # Two safe cells: one safe click is not a victory, both are. Flags are not
     # substitutes for opening the safe squares, and are reversible.
     checks += [
-        "bit(U32.is_eq(phase_code(Session.phase_of(Session.click(Session.new(65532), 0))), 0))",
+        "bit(U32.is_eq(phase_code(Session.phase_of(Session.click(Session.new(65532), 0))), 1))",
         "bit(U32.is_eq(phase_code(Session.phase_of(Session.click(Session.click(Session.new(65532), 0), 1))), 1))",
         "bit(U32.is_eq(phase_code(Session.phase_of(Session.click(Session.mark(Session.new(65534), 0), 0))), 0))",
         "bit(U32.is_eq(phase_code(Session.phase_of(Session.click(Session.mark(Session.mark(Session.new(65534), 0), 0), 0))), 1))",
@@ -278,7 +356,7 @@ def verify_sessions(game_dir):
     )
     with tempfile.TemporaryDirectory() as td:
         out = pathlib.Path(td)
-        for name in ("game.bend", "board.bend", "board4.bend", "session.bend"):
+        for name in ("game.bend", "board.bend", "board4.bend", "flood.bend", "session.bend"):
             shutil.copyfile(game_dir / name, out / name)
         filename = out / "session_oracle.bend"
         filename.write_text(program, encoding="utf-8")
@@ -346,17 +424,18 @@ def main():
     game_verdict = run("bend", str(game / "PROOF.bend"), "--verdict")
     if "ALL PROOFS CHECK" not in game_verdict:
         raise AssertionError(f"Minesweeper law proof gate failed:\n{game_verdict}")
-    print("PASS Minesweeper law proof gate (37 laws, including first-click safety)", flush=True)
+    print("PASS Minesweeper law proof gate (43 laws, including zero cascade)", flush=True)
     verify_full_neighbor_table(game)
     verify_dense_board(game)
     verify_sessions(game)
     verify_first_click(game)
+    verify_flood(game)
 
     # Mutation test: keeping the function well-typed must not suffice when
     # it violates an independently declared requirement.
     with tempfile.TemporaryDirectory() as td:
         mutant_dir = pathlib.Path(td)
-        for name in ("LAWS.bend", "PROOF.bend", "board.bend", "board4.bend", "session.bend", "start.bend"):
+        for name in ("LAWS.bend", "PROOF.bend", "board.bend", "board4.bend", "flood.bend", "session.bend", "start.bend"):
             shutil.copyfile(game / name, mutant_dir / name)
         original = (game / "game.bend").read_text(encoding="utf-8")
         mutant = original.replace("    case Hidden{}:\n      Flag{}",
