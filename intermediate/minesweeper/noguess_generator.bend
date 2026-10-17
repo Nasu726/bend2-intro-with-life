@@ -31,12 +31,16 @@ def opened_numbers(cells: List<Game.Square>, +index: U32) ->
           opened_numbers(rest, (index + 1 : U32))
 
 # Array.clone keeps the live board, while extracting its public projection.
+def from_clone(mines: U32, pair: Array<Game.Square> & Array<Game.Square>) ->
+  Board4.State & Solver.Public:
+  (keep, seen) = pair
+  (Board4.State{mines, keep},
+   Solver.Public{opened_numbers(Array.to_list(Game.Square, seen), 0)})
+
 def inspect_board(board: Board4.State) -> Board4.State & Solver.Public:
   match board:
     case Board4.State{mines, cells}:
-      (keep, seen) = Array.clone(Game.Square, cells)
-      (Board4.State{mines, keep},
-       Solver.Public{opened_numbers(Array.to_list(Game.Square, seen), 0)})
+      from_clone(mines, Array.clone(Game.Square, cells))
 
 def first_bit(fuel: Nat, +bits: U32, +index: U32) -> U32:
   match fuel:
