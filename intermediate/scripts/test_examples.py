@@ -473,6 +473,10 @@ def main():
     if "PASS 13 independent public solver cases" not in independent:
         raise AssertionError(f"Public solver independent oracle missing: {independent!r}")
     print("PASS public-only exact deduction and independent oracle", flush=True)
+    generator = run(sys.executable, str(ROOT / "scripts" / "test_noguess_generator.py"))
+    if "PASS independent Bend no-guess generator replay" not in generator:
+        raise AssertionError(f"No-guess generator independent oracle missing: {generator!r}")
+    print("PASS no-guess generator against independent Python game replay", flush=True)
 
     # Mutation test: keeping the function well-typed must not suffice when
     # it violates an independently declared requirement.
