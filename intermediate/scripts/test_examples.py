@@ -323,7 +323,7 @@ def verify_sessions(game_dir):
     # Two safe cells: one safe click is not a victory, both are. Flags are not
     # substitutes for opening the safe squares, and are reversible.
     checks += [
-        "bit(U32.is_eq(phase_code(Session.phase_of(Session.click(Session.new(65532), 0))), 1))",
+        "bit(U32.is_eq(phase_code(Session.phase_of(Session.click(Session.new(65532), 0))), 0))",
         "bit(U32.is_eq(phase_code(Session.phase_of(Session.click(Session.click(Session.new(65532), 0), 1))), 1))",
         "bit(U32.is_eq(phase_code(Session.phase_of(Session.click(Session.mark(Session.new(65534), 0), 0))), 0))",
         "bit(U32.is_eq(phase_code(Session.phase_of(Session.click(Session.mark(Session.mark(Session.new(65534), 0), 0), 0))), 1))",
