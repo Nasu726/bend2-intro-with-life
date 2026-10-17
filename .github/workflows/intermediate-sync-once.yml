@@ -1,4 +1,5 @@
 name: Temporary intermediate save and no-guess reader sync
+# Re-run after fixing ToC section-number width for 22.10.
 on:
   push:
     branches: [feat/intermediate-minesweeper-textbook]
