@@ -28,6 +28,9 @@ def clues_for(mines, opened):
 
 def oracle(opened):
     """65536 means inconsistent; otherwise return safely openable bitmask."""
+    if any(not (0 <= i < 16) or not (0 <= clue <= len(neighbors(i)))
+           for i, clue in opened):
+        return 65536
     valid = []
     for pair in combinations(range(16), 2):
         pair = set(pair)
