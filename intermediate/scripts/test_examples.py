@@ -366,6 +366,35 @@ def verify_sessions(game_dir):
             raise AssertionError(f"Session oracle expected {len(checks)} checks; got {observed}")
         print(f"PASS pure session oracle: {len(checks)} transition checks", flush=True)
 
+def verify_cli_replay(game_dir):
+    """The CLI must show public information and honor reset/flags/loss."""
+    entry = game_dir / "cli_replay.bend"
+    run("bend", str(entry), "--check-only")
+    fresh = run("bend", str(entry))
+    if fresh != "Fresh: first click with c0..c15":
+        raise AssertionError(f"Unexpected fresh CLI screen: {fresh!r}")
+    opened = run("bend", str(entry), "c0")
+    expected = "Playing\\n2 . . .\\n. . . .\\n. . . .\\n. . . ."
+    if opened != expected:
+        raise AssertionError(f"CLI first click mismatch:\\n{opened!r}")
+    flagged = run("bend", str(entry), "c0", "f1", "c1")
+    if flagged != expected.replace("2 . . .", "2 F . ."):
+        raise AssertionError(f"CLI flag protection mismatch: {flagged!r}")
+    unflagged = run("bend", str(entry), "c0", "f1", "f1")
+    if unflagged != expected:
+        raise AssertionError(f"CLI double flag toggle mismatch: {unflagged!r}")
+    invalid = run("bend", str(entry), "c0", "c16", "f16", "garbage", "cNaN")
+    if invalid != expected:
+        raise AssertionError(f"CLI invalid command mismatch: {invalid!r}")
+    ended = run("bend", str(entry), "c0", "c1", "f2")
+    if not ended.startswith("Lost\\n2 . . .\\n"):
+        raise AssertionError(f"CLI loss/terminal guard mismatch: {ended!r}")
+    reset = run("bend", str(entry), "c0", "f1", "r")
+    if reset != fresh:
+        raise AssertionError(f"CLI reset mismatch: {reset!r}")
+    print("PASS CLI replay: first click, flag, invalid indices, loss and reset", flush=True)
+
+
 def main():
     if not shutil.which("bend"):
         print("ERROR: bend not on PATH", file=sys.stderr)
@@ -431,6 +460,7 @@ def main():
     verify_sessions(game)
     verify_first_click(game)
     verify_flood(game)
+    verify_cli_replay(game)
 
     # Mutation test: keeping the function well-typed must not suffice when
     # it violates an independently declared requirement.
