@@ -1620,6 +1620,72 @@ def choose_queue(zero: Bool, index: U32,
 
 参考実装の\code{session.bend}では地雷を踏んだら\code{Lost}、すべての安全なマスを開いたら\code{Won}となり、どちらも以後のクリックを受け付けません。これは局所的な法則と独立テストで検査していますが、任意の盤面・任意の操作列に関する完全な全称証明ではありません。
 
+\section{操作をまとめて再生するCLI実習}
+これまでに作ったゲームの規則は、ウィンドウがなくても試せます。画面を用意する前に、\textbf{操作を文字列で表して、一手ずつ純粋関数へ渡す}方法を確かめましょう。
+
+配布ZIPには\file{examples/minesweeper/}というフォルダーを用意しました。ここには、4×4の盤面・勝敗・初手安全・0の連鎖公開を扱うBendのファイルと、実習用の\file{cli_replay.bend}が入っています。これらは別々のモジュールなので、\textbf{フォルダー内の相対的な配置を変えずに}実行します。
+
+最初に、まだ始めていない盤面を表示してみましょう。
+
+\begin{lstlisting}[language={},caption={最初の画面を確かめる}]
+bend examples/minesweeper/cli_replay.bend
+\end{lstlisting}
+
+次は、左上の番号0をクリックします。位置は左上から右へ0、1、2、3、次の行が4、5、6、7という順に数えます。
+
+\begin{lstlisting}[language={},caption={番号0をクリックする}]
+bend examples/minesweeper/cli_replay.bend c0
+\end{lstlisting}
+
+この実習では、初期の地雷マスクを\code{33}、すなわち番号0と5に地雷がある配置に固定しています。しかし最初に\code{c0}を指定すると、初手安全の規則によって番号0の地雷が番号1へ移ります。その結果、番号0には番号1と5に隣接する地雷の数\code{2}が表示されます。
+
+\begin{lstlisting}[language={},caption={クリック後の表示（点は隠れたマス）}]
+Playing
+2 . . .
+. . . .
+. . . .
+. . . .
+\end{lstlisting}
+
+\code{Playing}は進行中、\code{.}は隠れたマス、\code{F}は旗を表します。公開したマスは数字で示します。実行結果に地雷マスクそのものは表示しません。内部の正解を知らない状態で操作するためです。
+
+続けて旗を立て、旗付きのマスを左クリックしてみましょう。
+
+\begin{lstlisting}[language={},caption={複数の操作を順に適用する}]
+bend examples/minesweeper/cli_replay.bend c0 f1 c1
+\end{lstlisting}
+
+番号1には旗が立っているので、\code{c1}では開かれません。結果の一行目は\code{2 F . .}です。次に\code{c0 f1 f1}なら、同じマスに旗を二回付け外しするので、\code{c0}の後と同じ表示になります。一方、\code{c0 c1}では隠れた地雷を踏み、状態が\code{Lost}へ変わります。終了後の操作を追加しても盤面は変わりません。
+
+\begin{center}
+\begin{tabularx}{\linewidth}{@{}L{31mm}X@{}}
+\toprule
+文字列 & この実習での動作\\\midrule
+\code{c0}〜\code{c15} & 指定した番号を左クリックする\\
+\code{f0}〜\code{f15} & 開始後、旗を付ける／外す\\
+\code{r} & 初期の地雷配置へ戻し、開始前にする\\
+無効な文字列・範囲外 & 状態を変えずに読み飛ばす\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\textbf{ここでは一度の起動時に操作列をまとめて指定しています。} キー入力を待つ対話式のCLIではありません。また、ゲーム開始前の旗操作はこの実習では無視します。操作を一つずつ処理する部分だけを見てみましょう。
+
+\begin{lstlisting}[caption={操作のリストを先頭から処理する}]
+def replay(stage: Start.Stage, commands: List<String>) -> Start.Stage:
+  match commands:
+    case Nil{}:
+      stage
+    case command <> rest:
+      replay(action(stage, command), rest)
+\end{lstlisting}
+
+リストが空になれば現在の状態を返し、操作が残っていれば\code{action}で一手進めてから残りを処理します。文字列の先頭の\code{c}と\code{f}を識別し、後ろの数字は\code{U32.read}で読みます。変換に失敗した文字列を勝手に番号0とみなさないよう、\code{Maybe}の結果を分岐します。第5章で学んだ失敗の型が、ゲームの操作にも役立つ例です。
+
+初手の配置、クリック、勝敗を別々に書いたまま利用しているので、CLI自体には地雷を数える関数を書き直す必要がありません。次のGUIでも同じ純粋関数を利用できます。
+
+\exercise{まず\code{c0 f1 f1}、\code{c0 c1 f2}、\code{c0 c16}、\code{c0 r}の結果を予想し、実行してみましょう。次に\code{cli_replay.bend}の\code{cell_symbol}で旗の表示文字を別の記号に変えてみましょう。地雷の位置や勝敗の判定に変更が不要なのはなぜか、説明してみましょう。}
+
 \section{GUIからゲームの規則へ入力を渡す}
 画面の表示には\code{App}と\code{Image}を使えます。第12章の\code{07_gui_hello.bend}は\code{App.run}の基本形を示し、第14章の\code{23_cell_hit_test.bend}は画素座標を配列の添字へ変換します。
 
