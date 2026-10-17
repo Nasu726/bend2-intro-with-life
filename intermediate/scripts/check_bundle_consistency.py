@@ -24,11 +24,24 @@ def text_of_pdf(data: bytes) -> bytes:
                         stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
     return cp.stdout
 
+def cover_pixels(data: bytes) -> bytes:
+    """Render page 1 to catch cover artwork changes invisible to pdftotext."""
+    cp = subprocess.run(
+        ["pdftoppm", "-f", "1", "-l", "1", "-singlefile",
+         "-r", "72", "-png", "-"],
+        input=data, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    return cp.stdout
+
 def main() -> None:
     old_pdf, new_pdf = committed(PDF), (ROOT / PDF).read_bytes()
     old_text, new_text = text_of_pdf(old_pdf), text_of_pdf(new_pdf)
     if old_text != new_text:
         raise AssertionError("Reader-facing PDF text differs from committed PDF")
+    # A visually changed cover can have identical extractable text. Check the
+    # raster too, using the same Poppler binary for both PDFs.
+    new_cover = cover_pixels(new_pdf)
+    if cover_pixels(old_pdf) != new_cover:
+        raise AssertionError("Reader-facing PDF cover differs from committed PDF")
     if not old_text or len(old_text) < 5000:
         raise AssertionError("PDF has unexpectedly little extractable content")
     with zipfile.ZipFile(BytesIO(committed(ZIP))) as older, \
@@ -40,9 +53,11 @@ def main() -> None:
             if name.endswith("/textbook.pdf"):
                 if text_of_pdf(prev) != new_text or text_of_pdf(cur) != new_text:
                     raise AssertionError("ZIP textbook contents do not match source PDF")
+                if cover_pixels(prev) != new_cover or cover_pixels(cur) != new_cover:
+                    raise AssertionError("ZIP textbook cover differs from source PDF")
             elif prev != cur:
                 raise AssertionError(f"Reader ZIP file changed: {name}")
-    print("PASS: PDF text and all learner ZIP entries match the committed edition")
+    print("PASS: PDF text, cover pixels and learner ZIP entries match the committed edition")
 
 if __name__ == "__main__":
     try:

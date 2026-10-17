@@ -4,6 +4,7 @@ These tests check that the draft does not advertise material absent from Git.
 They do not certify game completion or GUI execution.
 """
 from pathlib import Path
+import hashlib
 import re
 import sys
 import unittest
@@ -19,6 +20,18 @@ class BookStructure(unittest.TestCase):
     def test_book_present(self):
         self.assertTrue(BOOK.exists())
         self.assertGreater(BOOK.stat().st_size, 10000)
+
+    def test_adopted_cover_is_unchanged(self):
+        # The reader-approved C cover is immutable unless explicitly revised.
+        cover = ROOT / "cover_art.tex"
+        raw = cover.read_bytes()
+        header = f"blob {len(raw)}\\0".encode("ascii")
+        git_blob_sha = hashlib.sha1(header + raw).hexdigest()
+        self.assertEqual(git_blob_sha, "ba9b5c4cb296e3adfd119ace6b55abc419c6faf1")
+        self.assertIn(
+            r"\\input{intermediate/cover_art.tex}",
+            BOOK.read_text(encoding="utf-8"),
+        )
 
     def test_sections(self):
         text = BOOK.read_text(encoding="utf-8")
