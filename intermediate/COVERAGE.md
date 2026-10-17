@@ -21,7 +21,7 @@
 | `Pair`, `Sigma`, `Exists`, `Or` | 第5・第16章 | 追加実習 | 依存する値・存在証明 |
 | `Kind`, `Quant`, 消去引数 | 第5・第16章 | 追加実習 | 型エラーとの対比 |
 | `IO`, `IO.try`, `IO.die` | 第6章＋[詳細補稿](manuscript/06_IOと失敗を読む.md)（PDFに一部反映、残りは補稿） | `08_args.bend` | 失敗時の終了コード |
-| `File`（文字列・バイト） | 第7章＋[IO章補稿](manuscript/06_IOと失敗を読む.md)（PDFに一部反映、残りは補稿） | `12_file_write.bend`、`13_file_read.bend` | 保存・読出し・閉鎖を実行検証、bytesは今後 |
+| `File`（文字列・バイト） | 第7章と第21章（操作履歴の保存・復元） | `12_file_write.bend`、`13_file_read.bend`、`minesweeper/cli_save.bend` | 実ファイルの保存・読出し・両分岐での閉鎖、バージョン・破損拒否を実行照合。bytes、GUI任意状態保存は今後 |
 | 引数・環境変数・乱数・時刻 | 第8章 | `08_args.bend`、`11_random_io.bend`、`19_environment.bend` | 乱数IO・環境変数の例。now/sleepは今後 |
 | `Process.run` | 第8章 | `20_process_run.bend` | Linuxでの終了コード実行例。stderr・失敗は今後 |
 | `IO.fork/join`, `Chan` | 第9章 | `21_io_fork.bend`、`28_chan_roundtrip.bend` | fork/joinとChan送受信・closeの実行照合。失敗・時間制限の実践は今後 |
@@ -43,8 +43,8 @@
 | 16マスArray・地雷マスク・隣接地雷数・境界検査 | `minesweeper/LESSON.md`に解説草稿（第13・17章に一部統合） | `minesweeper/board4.bend`、`LAWS.bend`、`PROOF.bend` | 地雷マスク不変・空盤面の数字・具体的な数字・配列外操作の8法則を証明。Python独立オラクルで154ケースを実行。一般の隣接数の全称証明、公開時の安全判定は未完成 |
 | 旗の基本操作・局所法則 | 第13・15・17章 | `09_minesweeper_status.bend`, `04_flag_laws.bend`, `34_mine_mask_law.bend` | 最小の地雷マスク不変と旗ビット変更を `--verdict` で検査。全盤面の他条件は別途 |
 | クリック・旗・敗北・勝利の純粋ゲーム進行（G-02/G-03部分） | `minesweeper/LESSON.md`に追記（第17・21章に一部統合） | `minesweeper/session.bend`・`LAWS.bend`・`PROOF.bend` | 7法則を証明。初手と0領域の処理を別モジュールへ追加。43法則を先行宣言し、Bend検査と独立オラクルを利用。GUIの実機動作は未検証 |
-| 通常版マインスイーパー（GUI統合） | 第21章にCLI・GUIの起動方法、座標とイベント、Array.clone、7セグメント描画を収録 | `minesweeper/start.bend`、`cli_replay.bend`、`gui.bend`（同じエンジン） | CLI出力、GUIの12件の純粋入力検査とLinuxのネイティブビルド成功。実機ウィンドウでのクリック試験、保存・復元は未了 |
-| 運ゲー無し版 | 第22章に局所推論と地雷2個の公開モデル120候補列挙を収録 | `14_local_inference.bend`、`minesweeper/public_solver.bend`、`solutions/noguess_reference.py`（Python参考） | Bendで公開数字だけを受け取る限定ソルバーを追加。独立Pythonオラクル13例をCIで照合。Bendでの盤面生成・リプレイ統合は未完 |
+| 通常版マインスイーパー（GUI統合） | 第21章にCLI・GUIの起動方法、座標とイベント、Array.clone、7セグメント描画を収録 | `minesweeper/start.bend`、`cli_replay.bend`、`gui.bend`（同じエンジン） | CLI出力、GUIの13件の純粋入力検査とLinuxのネイティブビルド成功。実機ウィンドウでのクリック試験、GUIの保存・復元は未了。固定CLI操作履歴保存は別途実装・検証済み |
+| 運ゲー無し版 | 第22章に公開モデル120候補、実際に勝利まで追う限定版生成を収録 | `14_local_inference.bend`、`minesweeper/public_solver.bend`、`minesweeper/noguess_generator.bend`、`solutions/noguess_reference.py` | 公開情報だけを使うBendソルバーは独立13ケース照合、限定版生成はBendゲームで勝利しPython別実装でも `40960 / 0,12,14` を検証。一般サイズ・GUIへの導入は未了 |
 
 ## CIの判定範囲
 
@@ -67,3 +67,9 @@ G-04（0の連鎖公開）：`flood.bend` を `session.bend` から呼び出す�
 - GUIは既存の`Start`・`Session`を使い、`App.run`で操作を受け取ります。色・数字は`Image`四分木に描きます。Bendの型検査とLinuxネイティブビルド、座標・状態の12例を確認しました。
 - `public_solver.bend` は4×4・地雷2個の候補120通りを列挙します。入力は公開された`Number{index,clue}`のみで、真の地雷マスクは受け取りません。矛盾した公開状態を`None`にする設計で、独立オラクルをCIへ追加しました。
 - GUIの実際のウィンドウ操作、保存・復元、任意個数の地雷のソルバー、盤面自動生成は未完成です。
+
+## 2026-10-18：限定版生成とファイルIOの検証
+
+- 公開ソルバーだけでなく `noguess_generator.bend` で候補を列挙し、`Session.Won` を実際に確認できたものだけ返す。Python独立ゲームでマスク40960・クリック列0→12→14を照合。
+- `cli_save.bend` は固定マスク33のコマンド履歴を一度書き出し、別プロセスで再読込して盤面を復元。欠落ファイル、異なるバージョン、範囲外操作、終端改変、操作数超過などを拒否。
+- GUIの左・右以外のボタンは無効化し、ヘッドレス検査を13項目に拡充。ウィンドウ実機試験とGUI状態の保存は未完了。
