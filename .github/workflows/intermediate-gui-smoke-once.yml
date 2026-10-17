@@ -1,0 +1,24 @@
+name: Temporary intermediate GUI smoke
+on:
+  push:
+    branches: [feat/intermediate-minesweeper-textbook]
+    paths: ['.github/workflows/intermediate-gui-smoke-once.yml']
+permissions:
+  contents: read
+jobs:
+  gui-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/intermediate-minesweeper-textbook
+      - name: Install Bend
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://bend-lang.com/install.sh -o /tmp/install-bend.sh
+          sh /tmp/install-bend.sh
+          echo "$HOME/.bend/bin" >> "$GITHUB_PATH"
+      - name: Typecheck GUI
+        run: bend intermediate/minesweeper/gui.bend --check-only
