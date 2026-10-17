@@ -461,6 +461,11 @@ def main():
     verify_first_click(game)
     verify_flood(game)
     verify_cli_replay(game)
+    run("bend", str(game / "gui.bend"), "--check-only")
+    gui_result = run("bend", str(game / "gui_smoke.bend")).splitlines()[-1]
+    if gui_result != "12":
+        raise AssertionError(f"GUI logic check expected 12; got {gui_result}")
+    print("PASS GUI 12 geometry, digit and state-transition checks", flush=True)
 
     # Mutation test: keeping the function well-typed must not suffice when
     # it violates an independently declared requirement.
