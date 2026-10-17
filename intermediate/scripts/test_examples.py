@@ -41,6 +41,7 @@ EXPECTED = {
     "39_array_to_list.bend": "10",
     "40_list_map.bend": "9",
     "42_module_board.bend": "11",
+    "44_message_boundary.bend": "2n",
 }
 
 def run(*args):
