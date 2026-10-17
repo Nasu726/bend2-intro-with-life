@@ -44,7 +44,7 @@ bend examples/04_flag_laws.bend --verdict
 [制作ロードマップ](ROADMAP.md)に計画書から引き継いだ内容と完成条件をまとめています。
 [法則から実装へ進む教材草稿](minesweeper/LESSON.md)に加え、
 [ListとArrayの章別補稿](manuscript/03_ListとArrayを選ぶ.md)と
-[IO・Result・Fileの章別補稿](manuscript/06_IOと失敗を読む.md)を書き進めています。
+[IO・Result・Fileの章別補稿](manuscript/06_IOと失敗を読む.md)、\n[第22章の確実な一手を考えるハンズオン補稿](manuscript/22_運ゲー無しを確定手から学ぶ.md)を書き進めています。
 [執筆進捗と優先順位](manuscript/STATUS.md)で本文と実行サンプルの対応を管理します。
 2026-10-16の本文改稿で、第3・6・13・15・17・21章の説明を増補し、
 **同じTeXからPDFと学習用ZIPを再生成済み**です。
