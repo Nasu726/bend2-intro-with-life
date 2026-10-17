@@ -31,9 +31,12 @@ ZIPを展開すると、教科書PDF、実習用コード、使い始めるた�
 bend examples/01_set.bend
 bend examples/02_map.bend
 bend examples/04_flag_laws.bend --verdict
+bend examples/minesweeper/cli_replay.bend c0 f1 c1
 ```
 
 サンプルは**Bend 2.0.37**を基準に検証しています。`--verdict`による証明の確認にはLean 4も必要です。GUIの例はデスクトップ環境で動かしてください。
+
+第21章では、同梱の `examples/minesweeper/cli_replay.bend` と関連6モジュールで4×4ゲームの操作を再生できます。`c0` は番号0のクリック、`f1` は番号1の旗、`r` はリセットです。これは**引数を一括指定する実習**であり、まだ対話式CLIではありません。固定の地雷配置で初手安全・勝敗・0連鎖を学びます。
 
 現在は**執筆途中のプレビュー版**で、教材全体はまだ未完成です。マインスイーパーの完成したGUIアプリや、運ゲー無し盤面のBendによる生成はまだ収録していません。演習の参考実装や追加の技術資料は、必要に応じて[リポジトリ内の参考コード](solutions/)から参照できます。
 
