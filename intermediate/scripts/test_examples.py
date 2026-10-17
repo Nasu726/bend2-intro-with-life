@@ -224,7 +224,7 @@ def oracle_flood(mask, first, flags=0):
         return set()
     revealed, pending = set(), [first]
     while pending:
-        idx = pending.pop()
+        idx = pending.pop(0)  # breadth-first; small 4x4 reference oracle
         if idx in revealed or flags & (1 << idx) or mask & (1 << idx):
             continue
         revealed.add(idx)
