@@ -477,6 +477,10 @@ def main():
     if "PASS independent Bend no-guess generator replay" not in generator:
         raise AssertionError(f"No-guess generator independent oracle missing: {generator!r}")
     print("PASS no-guess generator against independent Python game replay", flush=True)
+    storage = run(sys.executable, str(ROOT / "scripts" / "test_cli_storage.py"))
+    if "PASS CLI save/load" not in storage:
+        raise AssertionError(f"CLI save/load test gate missing: {storage!r}")
+    print("PASS CLI versioned File save/load and corrupted-file refusal", flush=True)
 
     # Mutation test: keeping the function well-typed must not suffice when
     # it violates an independently declared requirement.
