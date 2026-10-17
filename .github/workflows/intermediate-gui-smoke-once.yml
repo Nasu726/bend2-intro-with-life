@@ -36,3 +36,4 @@ jobs:
           bend intermediate/minesweeper/public_solver.bend --check-only
           safe=$(bend intermediate/minesweeper/public_solver.bend | tail -n 1)
           test "$safe" = 50
+          python3 intermediate/scripts/test_public_solver.py
