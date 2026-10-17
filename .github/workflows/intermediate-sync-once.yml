@@ -31,7 +31,7 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           found = Path("/tmp/cli-output.txt").read_text().strip()
-          expected = "Playing\\n2 . . .\\n. . . .\\n. . . .\\n. . . ."
+          expected = "Playing\n2 . . .\n. . . .\n. . . .\n. . . ."
           assert found == expected, (found, expected)
           PY
 
