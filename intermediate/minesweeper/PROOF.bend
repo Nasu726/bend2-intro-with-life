@@ -4,6 +4,7 @@ import ./game.bend as Game
 import ./board.bend as Board
 import ./board4.bend as Board4
 import ./session.bend as Session
+import ./start.bend as Start
 import ./LAWS.bend as Laws
 
 def Laws.hidden_is_flagged():
@@ -121,4 +122,23 @@ def Laws.session_last_safe_cell_wins():
   {==}
 
 def Laws.session_safe_click_shows_true_clue():
+  {==}
+
+# G-01: first-click controller proofs; pre-existing active-session laws remain.
+def Laws.start_relocates_clicked_mine():
+  {==}
+
+def Laws.start_preserves_other_mines():
+  {==}
+
+def Laws.start_keeps_safe_placement():
+  {==}
+
+def Laws.start_first_square_opened():
+  {==}
+
+def Laws.start_ignores_outside_first_click():
+  {==}
+
+def Laws.start_rejects_impossible_full_board():
   {==}

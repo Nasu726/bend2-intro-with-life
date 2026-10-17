@@ -36,6 +36,12 @@ NAMES = (
     "session_won_is_terminal",
     "session_last_safe_cell_wins",
     "session_safe_click_shows_true_clue",
+    "start_relocates_clicked_mine",
+    "start_preserves_other_mines",
+    "start_keeps_safe_placement",
+    "start_first_square_opened",
+    "start_ignores_outside_first_click",
+    "start_rejects_impossible_full_board",
 )
 
 class LawDrivenContractTests(unittest.TestCase):
@@ -53,7 +59,7 @@ class LawDrivenContractTests(unittest.TestCase):
         self.assertEqual(actual_proofs, list(NAMES))
 
     def test_proof_gate_cannot_be_short_circuited(self):
-        for name in ("LAWS.bend", "game.bend", "board.bend", "board4.bend", "session.bend", "PROOF.bend"):
+        for name in ("LAWS.bend", "game.bend", "board.bend", "board4.bend", "session.bend", "start.bend", "PROOF.bend"):
             content = (HERE / name).read_text(encoding="utf-8")
             self.assertNotIn("@unsafe", content)
             self.assertNotIn("?TODO", content)

@@ -163,6 +163,61 @@ def verify_dense_board(game_dir):
         print(f"PASS dense board oracle: {expected} clue/index checks", flush=True)
 
 
+def verify_first_click(game_dir):
+    """Independent first-click mine relocation oracle for fresh 4x4 boards."""
+    masks = (0, 1, 2, 3, 33, 257, 21845, 32768, 65534, 65535, 65536, 65537, 65538)
+    positions = (0, 1, 5, 15, 16)
+    cases = []
+    for raw_mask in masks:
+        mines = raw_mask & 65535
+        for index in positions:
+            start = f"Start.click(Start.new({raw_mask}), {index})"
+            valid = index < 16 and mines != 65535
+            target = mines
+            if valid and (mines & (1 << index)):
+                destination = next(i for i in range(16) if not (mines & (1 << i)))
+                target ^= (1 << index) | (1 << destination)
+            cases.append(f"bit(U32.is_eq(Start.mine_mask({start}), {target}))")
+            cases.append(f"bit(Bool.eq(Start.is_fresh({start}), {'False{}' if valid else 'True{}'}))")
+            if valid:
+                x,y = index % 4, index // 4
+                clue = sum(
+                    bool(target & (1 << (4*v+u)))
+                    for v in range(4) for u in range(4)
+                    if (x,y)!=(u,v) and abs(x-u)<=1 and abs(y-v)<=1
+                )
+                cases.append(f"bit(U32.is_eq(square_code(Start.visible_at({start}, {index})), {10+clue}))")
+    source = (
+        "import Base\\nimport ./game.bend as Game\\n"
+        "import ./board.bend as Board\\n"
+        "import ./board4.bend as Board4\\n"
+        "import ./session.bend as Session\\n"
+        "import ./start.bend as Start\\n"
+        "def bit(b: Bool) -> U32:\\n  match b:\\n"
+        "    case True{}:\\n      1\\n    case False{}:\\n      0\\n"
+        "def square_code(s: Game.Square) -> U32:\\n  match s:\\n"
+        "    case Game.Hidden{}:\\n      0\\n"
+        "    case Game.Flag{}:\\n      1\\n"
+        "    case Game.Open{clue}:\\n      (10 + clue : U32)\\n\\n"
+        + "\\n\\n".join(
+            f"def group_{i}() -> U32:\\n  ("
+            + " + ".join(cases[i:i+7]) + " : U32)"
+            for i in range(0, len(cases), 7)
+        )
+        + "\\n\\ndef main() -> U32:\\n  ("
+        + " + ".join(f"group_{i}()" for i in range(0,len(cases),7)) + " : U32)\\n"
+    )
+    with tempfile.TemporaryDirectory() as td:
+        dest = pathlib.Path(td)
+        for name in ("game.bend", "board.bend", "board4.bend", "session.bend", "start.bend"):
+            shutil.copyfile(game_dir / name, dest / name)
+        entry = dest / "check_start.bend"
+        entry.write_text(source, encoding="utf-8")
+        actual = run("bend", str(entry)).splitlines()[-1]
+        if actual != str(len(cases)):
+            raise AssertionError(f"First-click oracle {actual} != {len(cases)}")
+        print(f"PASS {len(cases)} independent first-click mask/visible/ready checks",flush=True)
+
 def verify_sessions(game_dir):
     """Check complete click transitions against a separate Python game oracle."""
     def clue(mask, index):
@@ -291,16 +346,17 @@ def main():
     game_verdict = run("bend", str(game / "PROOF.bend"), "--verdict")
     if "ALL PROOFS CHECK" not in game_verdict:
         raise AssertionError(f"Minesweeper law proof gate failed:\n{game_verdict}")
-    print("PASS Minesweeper law proof gate (31 laws, including whole-board mine invariants and clues)", flush=True)
+    print("PASS Minesweeper law proof gate (37 laws, including first-click safety)", flush=True)
     verify_full_neighbor_table(game)
     verify_dense_board(game)
     verify_sessions(game)
+    verify_first_click(game)
 
     # Mutation test: keeping the function well-typed must not suffice when
     # it violates an independently declared requirement.
     with tempfile.TemporaryDirectory() as td:
         mutant_dir = pathlib.Path(td)
-        for name in ("LAWS.bend", "PROOF.bend", "board.bend", "board4.bend"):
+        for name in ("LAWS.bend", "PROOF.bend", "board.bend", "board4.bend", "session.bend", "start.bend"):
             shutil.copyfile(game / name, mutant_dir / name)
         original = (game / "game.bend").read_text(encoding="utf-8")
         mutant = original.replace("    case Hidden{}:\n      Flag{}",
