@@ -138,12 +138,29 @@ def save_if_valid(ok: Bool, commands: List<&2, String>) -> IO(Unit):
 def save(+commands: List<&2, String>) -> IO(Unit):
   save_if_valid(valid_save(commands), commands)
 
+# IO.args / the CLI engine use an affine List<String>; String.split
+# returns a data-kinded List<&2,String>. Copy elements structurally at
+# the boundary instead of assuming the two list kinds are equal.
+def to_affine(xs: List<&2, String>) -> List<String>:
+  match xs:
+    case Nil{}:
+      Nil{}
+    case item <> rest:
+      item <> to_affine(rest)
+
+def to_data(xs: List<String>) -> List<&2, String>:
+  match xs:
+    case Nil{}:
+      Nil{}
+    case item <> rest:
+      item <> to_data(rest)
+
 def show_restored(parsed: Maybe<&2, List<&2, String>>) -> IO(Unit):
   match parsed:
     case None{}:
       IO.die(Unit, 1, "Corrupt/unsupported saved command history")
     case Some{commands}:
-      IO.print(Replay.show_board(Replay.replay(commands, Start.new(33))))
+      IO.print(Replay.show_board(Replay.replay(to_affine(commands), Start.new(33))))
 
 def closed_read(result: File & Result<&1, &1, U32 & String, String>) ->
   IO(String):
@@ -194,4 +211,4 @@ def execute(args: List<&2, String>) -> IO(Unit):
 def main() -> IO(Unit):
   do IO<Unit>:
     args: List<String> <- IO.args()
-    execute(Replay.without_program(args))
+    execute(to_data(Replay.without_program(args)))
