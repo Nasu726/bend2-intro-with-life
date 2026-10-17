@@ -153,19 +153,23 @@ def flag(stage: Start.Stage, index: U32) -> Start.Stage:
     case Start.Active{session}:
       Start.Active{Session.mark(session, index)}
 
-def mouse_mode(right: Bool, stage: Start.Stage, index: U32) -> Start.Stage:
-  match right:
-    case True{}:
-      flag(stage, index)
-    case False{}:
+# Never treat middle/unknown mouse buttons as left clicks.
+def mouse_mode(left: Bool, right: Bool,
+               stage: Start.Stage, index: U32) -> Start.Stage:
+  match left right:
+    case True{} _:
       Start.click(stage, index)
+    case False{} True{}:
+      flag(stage, index)
+    case False{} False{}:
+      stage
 
-def mouse_index(index: Maybe<&2, U32>, stage: Start.Stage, button: U32) -> Start.Stage:
+def mouse_index(index: Maybe<&2, U32>, stage: Start.Stage, +button: U32) -> Start.Stage:
   match index:
     case None{}:
       stage
     case Some{i}:
-      mouse_mode(U32.is_eq(button, 1), stage, i)
+      mouse_mode(U32.is_eq(button, 0), U32.is_eq(button, 1), stage, i)
 
 def pointer(stage: Start.Stage, x: U32, y: U32, button: U32) -> Start.Stage:
   mouse_index(cell_at(x, y), stage, button)
