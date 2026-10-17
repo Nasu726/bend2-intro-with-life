@@ -87,8 +87,7 @@ def tile(square: Game.Square, border: U32) -> Image:
 # Consume each of the 16 visible cells once; never inspect the mine mask.
 def board_picture(cells: List<Game.Square>, +border: U32) -> Image:
   match cells:
-    case a <> b <> c <> d <> e <> f <> g <> h <>
-         i <> j <> k <> l <> m <> n <> o <> p <> rest:
+    case a <> b <> c <> d <> e <> f <> g <> h <> i <> j <> k <> l <> m <> n <> o <> p <> rest:
       Qua{
         Qua{tile(a, border), tile(b, border),
             tile(e, border), tile(f, border)},
@@ -109,7 +108,7 @@ def fresh_picture() -> Image:
     Game.Hidden{}, Game.Hidden{}, Game.Hidden{}, Game.Hidden{}], 2697513)
 
 # Open state preserves its affine Array via Array.clone.
-def active_view(+mines: U32, phase: Session.Phase,
+def active_view(+mines: U32, +phase: Session.Phase,
                 pair: Array<Game.Square> & Array<Game.Square>) ->
                 Start.Stage & Image:
   (keep, inspect) = pair
@@ -184,16 +183,16 @@ def event(e: Event, stage: Start.Stage) -> Maybe<Start.Stage>:
     case _:
       Some{stage}
 
-def events(events: List<Event>, stage: Start.Stage) -> Maybe<Start.Stage>:
+def handle_events(events: List<Event>, stage: Start.Stage) -> Maybe<Start.Stage>:
   match events:
     case Nil{}:
       Some{stage}
     case e <> rest:
       Maybe.bind(&1, Start.Stage, Start.Stage, event(e, stage),
-        next => events(rest, next))
+        next => handle_events(rest, next))
 
 def tick(events: List<Event>, stage: Start.Stage) -> IO(Maybe<Start.Stage>):
-  IO.pure(Maybe<Start.Stage>, events(events, stage))
+  IO.pure(Maybe<Start.Stage>, handle_events(events, stage))
 
 def main() -> IO(Unit):
   App.run(~Start.Stage, ~App{view, tick}, "Minesweeper: left/right click, R restart",
