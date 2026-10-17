@@ -60,6 +60,19 @@ def candidate_index(safe: Maybe<&2, U32>) -> Maybe<&2, U32>:
     case Some{bits}:
       index_if_nonzero(U32.is_eq(bits, 0), bits)
 
+# Continuation avoids destructuring an expression: only parameter
+# pairs are destructured by Bend's structural checker.
+def step_from_public(pair: Board4.State & Solver.Public,
+                     trace: List<&2, U32>,
+                     resume: Session.Session -> List<&2, U32> ->
+                       Maybe<&2, List<&2, U32>>) -> Maybe<&2, List<&2, U32>>:
+  (keep, visible) = pair
+  Maybe.bind(&2, U32, List<&2, U32>,
+    candidate_index(Solver.provably_safe(visible)),
+    move => resume(
+      Session.click(Session.Session{keep, Session.Playing{}}, move),
+      move <> trace))
+
 # Every recursive call strictly decreases fuel, while the live
 # Session/trace are permitted to change.
 def continue_play(fuel: Nat, session: Session.Session,
@@ -76,15 +89,9 @@ def continue_play(fuel: Nat, session: Session.Session,
             case Session.Lost{}:
               None{}
             case Session.Playing{}:
-              (keep, visible) = inspect_board(board)
-              next = candidate_index(Solver.provably_safe(visible))
-              match next:
-                case None{}:
-                  None{}
-                case Some{move}:
-                  continue_play(k,
-                    Session.click(Session.Session{keep, Session.Playing{}}, move),
-                    move <> trace)
+              step_from_public(inspect_board(board), trace,
+                next_session => next_trace =>
+                  continue_play(k, next_session, next_trace))
 
 def enough_moves(trace: List<&2, U32>, +mask: U32) -> Maybe<&2, Certified>:
   match trace:
