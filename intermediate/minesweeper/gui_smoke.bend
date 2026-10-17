@@ -58,6 +58,7 @@ def main() -> U32:
     bit(Start.is_fresh(Gui.pointer(Start.new(33), 0, 0, 1))) +
     bit(U32.is_eq(square_code(Start.visible_at(
       Gui.pointer(Gui.pointer(Start.new(33), 0, 0, 0), 64, 0, 1), 1)), 1)) +
-    bit(is_lost(Gui.pointer(Gui.pointer(Start.new(33), 0, 0, 0), 64, 0, 0)))
+    bit(is_lost(Gui.pointer(Gui.pointer(Start.new(33), 0, 0, 0), 64, 0, 0))) +
+    bit(Start.is_fresh(Gui.pointer(Start.new(33), 0, 0, 2)))
     : U32
   )
