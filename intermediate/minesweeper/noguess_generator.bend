@@ -38,17 +38,6 @@ def inspect_board(board: Board4.State) -> Board4.State & Solver.Public:
       (Board4.State{mines, keep},
        Solver.Public{opened_numbers(Array.to_list(Game.Square, seen), 0)})
 
-def safe_move_or_stop(bits: U32, session: Session.Session,
-                      trace: List<&2, U32>, fuel: Nat) ->
-                      Maybe<&2, List<&2, U32>>:
-  match U32.is_eq(bits, 0):
-    case True{}:
-      None{}
-    case False{}:
-      # Index of lowest set bit, i.e., the first proven-safe hidden cell.
-      move = first_bit(16n, bits, 0)
-      continue_play(fuel, Session.click(session, move), move <> trace)
-
 def first_bit(fuel: Nat, +bits: U32, +index: U32) -> U32:
   match fuel:
     case 0n:
@@ -60,15 +49,22 @@ def first_bit(fuel: Nat, +bits: U32, +index: U32) -> U32:
         case False{}:
           first_bit(k, bits, (index + 1 : U32))
 
-def choose_public(next: Maybe<&2, U32>, session: Session.Session,
-                  trace: List<&2, U32>, fuel: Nat) ->
-                  Maybe<&2, List<&2, U32>>:
-  match next:
+def index_if_nonzero(zero: Bool, bits: U32) -> Maybe<&2, U32>:
+  match zero:
+    case True{}:
+      None{}
+    case False{}:
+      Some{first_bit(16n, bits, 0)}
+
+def candidate_index(safe: Maybe<&2, U32>) -> Maybe<&2, U32>:
+  match safe:
     case None{}:
       None{}
-    case Some{safe}:
-      safe_move_or_stop(safe, session, trace, fuel)
+    case Some{bits}:
+      index_if_nonzero(U32.is_eq(bits, 0), bits)
 
+# Every recursive call strictly decreases fuel, while the live
+# Session/trace are permitted to change.
 def continue_play(fuel: Nat, session: Session.Session,
                   trace: List<&2, U32>) -> Maybe<&2, List<&2, U32>>:
   match fuel:
@@ -84,25 +80,35 @@ def continue_play(fuel: Nat, session: Session.Session,
               None{}
             case Session.Playing{}:
               (keep, visible) = inspect_board(board)
-              choose_public(Solver.provably_safe(visible),
-                Session.Session{keep, Session.Playing{}}, trace, k)
+              next = candidate_index(Solver.provably_safe(visible))
+              match next:
+                case None{}:
+                  None{}
+                case Some{move}:
+                  continue_play(k,
+                    Session.click(Session.Session{keep, Session.Playing{}}, move),
+                    move <> trace)
 
 def enough_moves(trace: List<&2, U32>, +mask: U32) -> Maybe<&2, Certified>:
   match trace:
     case first <> second <> rest:
-      Some{Certified{mask, trace}}
+      Some{Certified{mask, first <> second <> rest}}
     case _:
       None{}
+
+def result_if_solved(result: Maybe<&2, List<&2, U32>>, mask: U32) ->
+  Maybe<&2, Certified>:
+  match result:
+    case None{}:
+      None{}
+    case Some{trace}:
+      enough_moves(trace, mask)
 
 def verified_mask(+mask: U32) -> Maybe<&2, Certified>:
   # Zero opening at index 0 is guaranteed by excluding 0,1,4,5.
   # The game engine, not the solver, uses the actual mine locations.
   stage = Session.click(Session.new(mask), 0)
-  match continue_play(16n, stage, [0]):
-    case None{}:
-      None{}
-    case Some{trace}:
-      enough_moves(trace, mask)
+  result_if_solved(continue_play(16n, stage, [0]), mask)
 
 def choose_if_valid(valid: Bool, mask: U32) -> Maybe<&2, Certified>:
   match valid:
@@ -112,7 +118,7 @@ def choose_if_valid(valid: Bool, mask: U32) -> Maybe<&2, Certified>:
       None{}
 
 def consider(+i: U32, +j: U32) -> Maybe<&2, Certified>:
-  mask = U32.or(U32.shln(1, U32.to_nat(i)),
+  +mask = U32.or(U32.shln(1, U32.to_nat(i)),
                 U32.shln(1, U32.to_nat(j)))
   allowed = Bool.and(U32.is_lt(i, j),
     U32.is_eq(U32.and(mask, 51), 0))
@@ -150,8 +156,7 @@ def result_text(certificate: Maybe<&2, Certified>) -> String:
       "NO VERIFIED BOARD"
     case Some{Certified{mines, trace}}:
       "mines=" ++ U32.show(mines) ++ ";moves=" ++
-      String.join(List.map(&2, U32, String,
-        i => U32.show(i), trace), ",")
+      String.join(List.map(~U32, ~String, i => U32.show(i), trace), ",")
 
 def main() -> IO(Unit):
   do IO<Unit>:
