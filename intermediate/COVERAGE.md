@@ -26,7 +26,7 @@
 | `Process.run` | 第8章 | `20_process_run.bend` | Linuxでの終了コード実行例。stderr・失敗は今後 |
 | `IO.fork/join`, `Chan` | 第9章 | `21_io_fork.bend`、`28_chan_roundtrip.bend` | fork/joinとChan送受信・closeの実行照合。失敗・時間制限の実践は今後 |
 | `IO.within`, `Poll` | 第9章 | `29_io_within.bend` | withinのSome/None処理を型検査。時間制限の実機挙動とPollは今後 |
-| TCP/UDP/Socket/Listener | 第10章 | `27_tcp_connect.bend` | TCP接続の型・成功失敗分岐例。送受信・UDPループバックは今後 |
+| TCP/UDP/Socket/Listener | 第10章（TCPとUDPのローカル送受信実習を追加） | `27_tcp_connect.bend`、`47_tcp_loopback.bend`、`48_udp_loopback.bend` | 127.0.0.1でlisten/connect/accept/send/recv、UDP.bind/send_to/recv_fromとcloseを実行検査。長文フレーミング、外部ネットワーク、UDP損失の実機検査は今後 |
 | `Image`, `Pix`, `Qua` | 第11章を改稿（図・最小コード・出力・演習） | `31_image_quadrants.bend`、`07_gui_hello.bend` | 四分木の左上色を実行検査。ウィンドウ実機表示は別検査 |
 | `App`, `Event`, `Window` | 第12章を改稿（view/tickとMouseイベント）、第14章 | `07_gui_hello.bend`、`23_cell_hit_test.bend`、`32_mouse_events.bend` | Image/Viewの型検査、マウス押下と画素位置の純粋な実行検査。実機入力・Windowは今後 |
 | `Audio` | 第20章 | `26_audio_open.bend` | open/write/closeの型検査。実機での再生確認は今後 |

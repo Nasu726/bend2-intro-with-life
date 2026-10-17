@@ -826,8 +826,58 @@ match r:
 
 \code{TCP.connect}が返す\code{Result}を\code{match}で処理します。\code{Done}には利用できる\code{Socket}が、\code{Fail}にはエラー情報が入ります。接続に成功した分岐では\code{Socket.close}を呼びます。これは接続の成否を確かめる最小例です。ポート1で待ち受ける相手がいれば成功する可能性もあり、\textbf{失敗を保証する例ではありません}。送受信の方法そのものは、まだ試していません。
 
+\section{TCPで一文字を届ける}
+前節の接続例では、送受信はまだ試していません。ここでは\textbf{自分のコンピュータの中だけで、送信から受信まで}を動かしてみましょう。
+
+\sample{47_tcp_loopback.bend}{TCPの待ち受け・接続・送受信・終了}
+
+\begin{lstlisting}[language={},caption={最小のTCP往復を実行する}]
+bend examples/47_tcp_loopback.bend
+\end{lstlisting}
+
+期待する表示は、文字\code{B}の一行です。コードは\code{127.0.0.1}で待ち受ける\code{Listener}を作り、そのポートへ\code{TCP.connect}で接続します。\code{TCP.accept}で受け取った\code{Socket}と、接続側の\code{Socket}は別々のハンドルです。
+
+\begin{lstlisting}[caption={送信側と受信側は異なるSocketを使う}]
+TCP.send(client, "B")
+TCP.recv(server, 1)
+\end{lstlisting}
+
+送りたいデータをまず\textbf{一文字、一バイト}に限定したのは、TCPの受信単位とアプリのメッセージ境界を混同しないためです。\code{TCP.recv(server, 1)}は最大1バイトだけを受け取り、成功時には\code{Some}、相手の送信が終わった後のEOFでは\code{None}を返します。文字列を受け取っても、複数バイトの完全な文章だとは限りません。
+
+この実装は\code{TCP.listen}の失敗時、少しずつポート番号を変えて試し、24候補で止めます。待ち受けを無期限に繰り返しません。接続・送信・受信の失敗も\code{Result}で分岐し、取得した\code{Listener}と二つの\code{Socket}を閉じてから終了します。
+
+\begin{pointbox}
+\textbf{ループバックで成功しても、インターネット全体で成功するという意味ではありません。} ここでは一つのプロセス内で自分へ接続し、一バイトを送っています。大きな文章を送るときは、前述の改行区切りや長さの取り決めが必要です。ネットワークが禁止された実行環境では、ループバックの待ち受け自体に失敗する場合もあります。
+\end{pointbox}
+
+\exercise{\code{47_tcp_loopback.bend}の\code{"B"}を\code{"7"}に変えて、表示がどうなるか予想してみましょう。その後で\code{"BEND"}に変えた場合、\code{TCP.recv(server, 1)}が受け取れるのは何バイトまでか確かめ、残りの文字を読むには何を追加すべきか考えてみましょう。}
+
+\section{UDPで一つのデータグラムを受け取る}
+次に、接続を作らないUDPも同じループバックで試します。
+
+\sample{48_udp_loopback.bend}{UDPを同じアドレスへ送って受け取る}
+
+\begin{lstlisting}[language={},caption={UDPの一回の送受信を試す}]
+bend examples/48_udp_loopback.bend
+\end{lstlisting}
+
+表示は\code{BEND-UDP}です。受信側の\code{UDP.bind}で得た\code{Socket}へ、\code{UDP.send_to}で自分自身宛てにデータグラムを送信します。
+
+\begin{lstlisting}[caption={UDPは送信先を指定し、受信元も受け取る}]
+UDP.send_to(socket, "127.0.0.1", port, "BEND-UDP")
+UDP.recv_from(socket, 64)
+\end{lstlisting}
+
+\code{UDP.recv_from}が成功すると、受信した文字列だけでなく、送信元のアドレスとポートを組で受け取ります。この例では文字列を表示するだけですが、誰から届いたのか確認する処理も追加できます。UDPは一回の受信で一つのデータグラムを扱うのに対し、TCPは受信するたびに任意の長さの断片を得る違いがあります。
+
+\begin{pointbox}
+\textbf{UDPが常に届くわけではありません。} この例は同じコンピュータ上の小さなデータグラムを試すものです。送信先が別のコンピュータになったり、パケットが失われたり、受信バッファより大きいデータを送ったりした場合まで保証しているわけではありません。
+\end{pointbox}
+
+\exercise{\code{48_udp_loopback.bend}のメッセージを\code{"HELLO"}に変えてみましょう。次に、\code{UDP.recv_from}の最大受信量を小さくした場合にどのような注意が必要か、TCPの場合と比較して説明してみましょう。}
+
 \section{安全に試すには}
-最初の通信実験では外部のサービスへ接続せず、同じコンピュータの\term{ループバック（loopback）}を使いましょう。受信側を開始し、送信側を起動し、届いた内容を表示する順番です。ただし、この節ではAPIの基本的な意味を説明する段階です。TCP・UDPの送受信を一通り動かす独立実習は、続く改訂で追加します。
+最初の通信実験では外部のサービスへ接続せず、同じコンピュータの\term{ループバック（loopback）}を使いましょう。受信側を開始し、送信側を起動し、届いた内容を表示する順番です。前節の\code{47_tcp_loopback.bend}と\code{48_udp_loopback.bend}が、この順序を一つのプログラムにまとめた最小実習です。複数のコンピュータにまたがる通信や本格的なメッセージ境界の処理は、そこから先の課題です。
 
 \begin{pointbox}
 \textbf{試す順番を決めておきましょう。} 接続が失敗したら、すぐに外部のサーバーへ接続先を変えるのではなく、(1)受信側の起動、(2)アドレスとポートの一致、(3)通信を許可する環境か、の順に調べます。\code{127.0.0.1}は自分のコンピュータを指しますが、そのアドレスで待ち受けるプログラムがあることまでは保証しません。

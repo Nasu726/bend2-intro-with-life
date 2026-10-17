@@ -458,6 +458,17 @@ def main():
         raise AssertionError(f"Environment example did not return a numeric length: {env_output!r}")
     print("PASS environment variable Result example", flush=True)
 
+    # Both sockets stay on localhost. The TCP example transfers only ONE
+    # byte; it makes no false assumption about multi-byte recv boundaries.
+    for sample, expected in (
+        ("47_tcp_loopback.bend", "B"),
+        ("48_udp_loopback.bend", "BEND-UDP"),
+    ):
+        got = run("bend", str(SAMPLES / sample))
+        if got != expected:
+            raise AssertionError(f"{sample} expected {expected!r}; got {got!r}")
+        print(f"PASS localhost networking {sample} = {got}", flush=True)
+
     # The game requirements are NOT sample-local examples: import every claim,
     # and check the independent PROOF.bend with Bend's small verified kernel.
     game = ROOT / "minesweeper"

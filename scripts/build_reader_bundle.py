@@ -52,6 +52,7 @@ INTERMEDIATE_EXAMPLES = (
     "board_index.bend", "42_module_board.bend",
     "43_target_hello.bend", "44_message_boundary.bend",
     "45_binary_file.bend", "46_elapsed_clock.bend",
+    "47_tcp_loopback.bend", "48_udp_loopback.bend",
 )
 
 # Runnable 4x4 replay lesson and its exact relative-import dependencies.

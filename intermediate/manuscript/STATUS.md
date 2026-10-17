@@ -183,3 +183,17 @@ IO取得と純粋な加工、Fileの読み戻し、外部プロセス・Chan・T
 - 第8章へ `46_elapsed_clock.bend` と `IO.now`・`IO.sleep`、純粋な時間差計算、数値が毎回変化する実例と演習を追加。
 - 通常サンプルは44→46本、ゲーム関連11本と合わせ57ファイル。読者ZIPはPDF/README/LICENSE込み60エントリ。XeLaTeXによるPDFは98ページ。検証用ブランチで型検査・実行・組版警告・ZIP内容検査が成功。
 - 参考解答はソースの同梱対象から外した `solutions/05_10_io_exercises.md` へ追記。原稿と生成物をまとめて1コミットでPRへ反映する。
+
+## 2026-10-18：第10章TCP・UDPループバック実習の追加
+
+- 採用済みの表紙`intermediate/cover_art.tex`を変更せず、本文第10章に実際のTCP・UDPソケット送受信を追加。
+- `47_tcp_loopback.bend`はlocalhostでTCP.listen→connect→accept→send→recvを実行し、1バイト`B`を確認する最小例。`48_udp_loopback.bend`はbind→send_to→recv_fromで`BEND-UDP`というデータグラムを受け取る。
+- 接続失敗・送受信失敗と所有権を持つ`Socket`、`Listener`のclose、ポート競合時の有界再試行、TCPストリームとUDPデータグラムの違いを本文に統合。
+- 試行用の検証ブランチでBend型検査・ループバック実行・TeX組版を完了してから、PDF・ZIPを同一の意味単位コミットでPRへ反映する。
+
+## 第10章の実通信実習：検証・配布（2026-10-18）
+
+- 検証ブランチで`47_tcp_loopback.bend`および`48_udp_loopback.bend`の型検査と実際のループバック送受信が成功。
+- 第10章の説明を実行コマンド・1バイトと1データグラムの相違・受信上限・ハンドルの後始末・演習へ接続。
+- XeLaTeXの最終PDFは**102ページ**、読者ZIPは**62エントリ**（通常Bend48本＋ゲーム11本＋PDF/README/LICENSE）。組版警告検査、ZIPのallowlist検査、構造テストに合格。
+- 採用済み`cover_art.tex`はblob SHA `ba9b5c4c`のまま保持。検証用ワークフローはPRへ持ち込まず、本文・コード・PDF・ZIPを一括反映。
