@@ -60,7 +60,7 @@ def opened_color(+code: U32, +x: U32, +y: U32) -> U32:
 def flag_color(+x: U32, +y: U32) -> U32:
   choose(rect(x, y, 3, 6, 2, 5), 14704438, 11579568)
 
-def tile_pixel(code: U32, x: U32, y: U32, border: U32) -> U32:
+def tile_pixel(+code: U32, +x: U32, +y: U32, border: U32) -> U32:
   choose(Bool.or(U32.is_eq(x, 0), U32.is_eq(y, 0)), border,
     choose(U32.is_eq(code, 9), 8689825,
       choose(U32.is_eq(code, 10), flag_color(x, y),
