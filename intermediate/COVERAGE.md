@@ -42,9 +42,9 @@
 | 盤面境界・局所不変性 B-01/B-02/B-03/B-05 | `minesweeper/REQUIREMENTS.md`（第13・17章に一部統合） | `minesweeper/LAWS.bend`・`board.bend`・`PROOF.bend` | 4×4非トーラス境界と単一セルの地雷値保持・公開状態維持について9件の法則を証明。独立オラクルで全256セル対も照合。盤面全体の扱いは次行、B-04の一般全称証明は未了 |
 | 16マスArray・地雷マスク・隣接地雷数・境界検査 | `minesweeper/LESSON.md`に解説草稿（第13・17章に一部統合） | `minesweeper/board4.bend`、`LAWS.bend`、`PROOF.bend` | 地雷マスク不変・空盤面の数字・具体的な数字・配列外操作の8法則を証明。Python独立オラクルで154ケースを実行。一般の隣接数の全称証明、公開時の安全判定は未完成 |
 | 旗の基本操作・局所法則 | 第13・15・17章 | `09_minesweeper_status.bend`, `04_flag_laws.bend`, `34_mine_mask_law.bend` | 最小の地雷マスク不変と旗ビット変更を `--verdict` で検査。全盤面の他条件は別途 |
-| クリック・旗・敗北・勝利の純粋ゲーム進行（G-02/G-03部分） | `minesweeper/LESSON.md`に追記（第17・21章に一部統合） | `minesweeper/session.bend`・`LAWS.bend`・`PROOF.bend` | 7法則を証明。初手と0領域の処理を別モジュールへ追加。43法則を先行宣言し、Bend検査と独立オラクルを利用。GUIは未実装 |
-| プレイ可能な通常版マインスイーパー | 第21章を改稿し初手安全の法則・結果も収録 | `minesweeper/start.bend`（Fresh→Active）と既存のsession/board | 初手の再配置を6法則・178独立ケースで検査。0展開を新規6法則・有界List探索で追加。GUI、保存、実機操作は未完成 |
-| 運ゲー無し版 | 第22章 | `14_local_inference.bend`（局所推論）・`solutions/noguess_reference.py`（Python参考実装） | Bend版生成とGUIは未実装。Python参考実装は全列挙・失敗明示・小盤面テスト |
+| クリック・旗・敗北・勝利の純粋ゲーム進行（G-02/G-03部分） | `minesweeper/LESSON.md`に追記（第17・21章に一部統合） | `minesweeper/session.bend`・`LAWS.bend`・`PROOF.bend` | 7法則を証明。初手と0領域の処理を別モジュールへ追加。43法則を先行宣言し、Bend検査と独立オラクルを利用。GUIの実機動作は未検証 |
+| 通常版マインスイーパー（GUI統合） | 第21章にCLI・GUIの起動方法、座標とイベント、Array.clone、7セグメント描画を収録 | `minesweeper/start.bend`、`cli_replay.bend`、`gui.bend`（同じエンジン） | CLI出力、GUIの12件の純粋入力検査とLinuxのネイティブビルド成功。実機ウィンドウでのクリック試験、保存・復元は未了 |
+| 運ゲー無し版 | 第22章に局所推論と地雷2個の公開モデル120候補列挙を収録 | `14_local_inference.bend`、`minesweeper/public_solver.bend`、`solutions/noguess_reference.py`（Python参考） | Bendで公開数字だけを受け取る限定ソルバーを追加。独立Pythonオラクル13例をCIで照合。Bendでの盤面生成・リプレイ統合は未完 |
 
 ## CIの判定範囲
 
@@ -60,4 +60,10 @@
 
 初手安全 G-01：別モジュール `minesweeper/start.bend` で地雷配置済みの `Session.new` とプレイヤー入口を分離。先行コミットで仕様6法則を宣言した後、実装・証明。計37法則と初手178件の独立オラクルをCIで検証。一般の初手安全の全称証明やGUI上での入力は未検証。
 
-G-04（0の連鎖公開）：`flood.bend` を `session.bend` から呼び出す方式で実装。6法則（空盤面の勝利、境界数字、地雷／旗の保護、非0非連鎖）を先行定義し、独立Python BFSを追加。停止性は`Nat`燃料と探索済みマスクで管理。一般の全称定理・GUI統合は未実装。
+G-04（0の連鎖公開）：`flood.bend` を `session.bend` から呼び出す方式で実装。6法則（空盤面の勝利、境界数字、地雷／旗の保護、非0非連鎖）を先行定義し、独立Python BFSを追加。停止性は`Nat`燃料と探索済みマスクで管理。一般の全称定理・GUIの実機動作は未検証。
+
+## 2026-10-17 GUI・公開情報ソルバーの追加
+
+- GUIは既存の`Start`・`Session`を使い、`App.run`で操作を受け取ります。色・数字は`Image`四分木に描きます。Bendの型検査とLinuxネイティブビルド、座標・状態の12例を確認しました。
+- `public_solver.bend` は4×4・地雷2個の候補120通りを列挙します。入力は公開された`Number{index,clue}`のみで、真の地雷マスクは受け取りません。矛盾した公開状態を`None`にする設計で、独立オラクルをCIへ追加しました。
+- GUIの実際のウィンドウ操作、保存・復元、任意個数の地雷のソルバー、盤面自動生成は未完成です。
