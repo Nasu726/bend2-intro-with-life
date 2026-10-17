@@ -21,8 +21,8 @@
 | `Pair`, `Sigma`, `Exists`, `Or` | 第5・第16章 | 追加実習 | 依存する値・存在証明 |
 | `Kind`, `Quant`, 消去引数 | 第5・第16章 | 追加実習 | 型エラーとの対比 |
 | `IO`, `IO.try`, `IO.die` | 第6章＋[詳細補稿](manuscript/06_IOと失敗を読む.md)（PDFに一部反映、残りは補稿） | `08_args.bend` | 失敗時の終了コード |
-| `File`（文字列・バイト） | 第7章と第21章（操作履歴の保存・復元） | `12_file_write.bend`、`13_file_read.bend`、`minesweeper/cli_save.bend` | 実ファイルの保存・読出し・両分岐での閉鎖、バージョン・破損拒否を実行照合。bytes、GUI任意状態保存は今後 |
-| 引数・環境変数・乱数・時刻 | 第8章 | `08_args.bend`、`11_random_io.bend`、`19_environment.bend` | 乱数IO・環境変数の例。now/sleepは今後 |
+| `File`（文字列・バイト） | 第7章と第21章（保存・復元） | `12_file_write.bend`、`13_file_read.bend`、`45_binary_file.bend`、`minesweeper/cli_save.bend` | 文字列・バイト列の保存と閉鎖、実ファイルの `00 0A 0D FF` 照合。大容量の反復読取・GUI保存は未完成 |
+| 引数・環境変数・乱数・時刻 | 第8章 | `08_args.bend`、`11_random_io.bend`、`19_environment.bend`、`46_elapsed_clock.bend` | IO.now/sleepの実行検証。経過時間を固定せず数値形式を照合 |
 | `Process.run` | 第8章 | `20_process_run.bend` | Linuxでの終了コード実行例。stderr・失敗は今後 |
 | `IO.fork/join`, `Chan` | 第9章 | `21_io_fork.bend`、`28_chan_roundtrip.bend` | fork/joinとChan送受信・closeの実行照合。失敗・時間制限の実践は今後 |
 | `IO.within`, `Poll` | 第9章 | `29_io_within.bend` | withinのSome/None処理を型検査。時間制限の実機挙動とPollは今後 |

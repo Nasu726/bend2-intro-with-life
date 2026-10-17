@@ -435,6 +435,24 @@ def main():
             raise AssertionError(f"Unexpected read content: {read.stdout!r}")
         print("PASS file read/open/close", flush=True)
 
+    # Side-effecting samples require isolated, real IO checks.
+    with tempfile.TemporaryDirectory() as td:
+        p = subprocess.run(
+            ["bend", str(SAMPLES / "45_binary_file.bend")],
+            capture_output=True, text=True, timeout=180, cwd=td,
+            env=dict(os.environ, BEND_NO_TELEMETRY="1"))
+        if p.returncode != 0 or p.stdout.strip() != "4":
+            raise AssertionError(f"Binary File example failed: {p.stdout!r} {p.stderr!r}")
+        raw = (pathlib.Path(td) / "sample_bytes.bin").read_bytes()
+        if raw != bytes((0, 10, 13, 255)):
+            raise AssertionError(f"Incorrect binary bytes: {raw!r}")
+        print("PASS binary File write/read 00 0A 0D FF", flush=True)
+
+    clock = run("bend", str(SAMPLES / "46_elapsed_clock.bend"))
+    if not clock.isdecimal() or int(clock) >= 60000:
+        raise AssertionError(f"Invalid elapsed clock output: {clock!r}")
+    print("PASS variable numeric IO.now/IO.sleep measurement", flush=True)
+
     env_output = run("bend", str(SAMPLES / "19_environment.bend"))
     if not env_output.splitlines()[-1].isdigit():
         raise AssertionError(f"Environment example did not return a numeric length: {env_output!r}")

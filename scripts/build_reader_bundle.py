@@ -51,6 +51,7 @@ INTERMEDIATE_EXAMPLES = (
     "38_list_sort.bend",     "39_array_to_list.bend",     "40_list_map.bend",
     "board_index.bend", "42_module_board.bend",
     "43_target_hello.bend", "44_message_boundary.bend",
+    "45_binary_file.bend", "46_elapsed_clock.bend",
 )
 
 # Runnable 4x4 replay lesson and its exact relative-import dependencies.

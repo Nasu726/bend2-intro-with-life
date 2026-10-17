@@ -638,6 +638,32 @@ bend examples/13_file_read.bend
 
 \code{File.read(file,4096)}の数値は、一度に読み取る最大量です。大きなファイルを読んだときに、一度の呼び出しで必ず全体が戻ると思ってはいけません。終端まで繰り返す必要がある場合もあります。また、\code{File.read_bytes}と\code{File.write_bytes}は、文字列ではなくバイト列を扱うAPIです。
 
+\section{文字ではなくバイトを保存する}
+これまでは文字列をファイルに書きました。画像、圧縮データ、独自形式のファイルには、文字では表せない値が含まれます。そこでBendの\code{File.write_bytes}と\code{File.read_bytes}を使い、\term{バイト列（byte sequence）}を扱ってみましょう。
+
+\sample{45_binary_file.bend}{4バイトを書いて読み戻す}
+\begin{lstlisting}[language={},caption={バイトの保存と読み戻し}]
+bend examples/45_binary_file.bend
+\end{lstlisting}
+
+このプログラムは\code{sample_bytes.bin}を作り、\code{[0, 10, 13, 255]}という四つの値を順に書き込みます。開き直して\code{File.read_bytes}で読み込んだ後、要素の個数を表示するので結果は\code{4}です。
+
+\begin{lstlisting}[caption={バイト列を書き込む部分}]
+File.write_bytes(file, [0, 10, 13, 255])
+\end{lstlisting}
+
+\code{File.write_bytes}の引数は\code{List<&2, U32>}ですが、一つのバイトとして書く値は0〜255です。\code{0}はNUL、\code{10}は改行、\code{13}は復帰、\code{255}は文字として表示できるとは限らない値です。\textbf{4バイトと4文字は同じではありません。} テキスト用の\code{File.read}で表示するのではなく、バイナリ用APIを選びます。
+
+\code{File.read_bytes(input, 16)}の\code{16}は一度に読み取る最大量です。4バイトのファイルからは4要素が返りますが、任意のファイルから必ず16バイトを読み取れるわけではありません。また、要素数が4でも、値と順序が正しいとは限りません。
+
+\begin{pointbox}
+本書のCIでは、Bendの出力\code{4}だけでなく、\textbf{実際のファイルの4バイト}が\code{00 0A 0D FF}であることを別のプログラムで確かめています。読み取れた「量」と読み取れた「内容」を分けて確認するためです。
+\end{pointbox}
+
+文字列用APIと同じく、バイト列用の読み書きも\code{File & Result<...>}を返します。\code{Done}と\code{Fail}のいずれの分岐でも戻された\code{File}を\code{File.close}へ渡します。\textbf{どんなデータを保存するか}と\textbf{ハンドルをどう扱うか}は別の問題です。
+
+\exercise{\code{45_binary_file.bend}のリストを\code{[1, 2, 3]}に変え、実行結果を確かめてみましょう。次に4バイトの順序を逆にした場合、個数を数えるだけでは変更を検出できない理由を説明してみましょう。}
+
 \section{マインスイーパーの保存に応用する}
 実際の戦績を保存するときは、盤面サイズ、地雷数、勝利数などを別の項目にします。読み込んだ文字列は外部から渡されたデータです。値が欠けている、数字として読めない、範囲から外れている場合には、ゲームの内部状態として採用せず、\code{Maybe}や\code{Result}で失敗を表します。読み込みに成功したことと、\textbf{内容が正しいこと}は別です。
 
@@ -659,7 +685,34 @@ match value:
 
 \code{IO.get_env}の結果は\code{Result}です。\code{Done}の場合は文字列を受け取り、\code{Fail}の場合は例のように既定動作へ分岐できます。エラー内容が必要なら、\code{Fail}の値を捨てずに利用します。環境変数の中身をそのままログに出すと、パスワードなどの機密情報を漏らす可能性があります。この例では値そのものではなく長さだけを出力します。
 
-\code{IO.now}は現在時刻、\code{IO.sleep}は時間待ち、\code{IO.random_u32}は乱数を扱います。乱数を使ったテストは、実際の乱数に依存させず、固定した地雷配置を入力にする方法と分けて実施します。
+\code{IO.now}は時間の計測、\code{IO.sleep}は待機、\code{IO.random_u32}は乱数を扱います。いずれも外部環境に関わりますが、返り値の型と確認する方法は違います。まず時計から試しましょう。
+
+\section{時計と待機を組み合わせる}
+ゲームの経過時間を表示するとき、時計を読む部分と差を求める計算を分けるとテストしやすくなります。\code{IO.now()}で時計を読み、\code{IO.sleep(ms)}で待ってからもう一度時計を読みましょう。
+
+\sample{46_elapsed_clock.bend}{待機前後の経過ミリ秒を求める}
+\begin{lstlisting}[language={},caption={20ミリ秒の待機を試す}]
+bend examples/46_elapsed_clock.bend
+\end{lstlisting}
+
+\code{IO.now()}の返り値は\code{IO(Nat)}、\code{IO.sleep(20)}は\code{IO(Unit)}です。どちらも外部環境に関わるので\code{do IO<Unit>}の中で呼び、数値を取り出した後は純粋な関数で差を計算します。
+
+\begin{lstlisting}[caption={時刻の取得はIO、差の計算は純粋関数}]
+start: Nat <- IO.now()
+Unit <- IO.sleep(20)
+finish: Nat <- IO.now()
+IO.print(Nat.show(Nat.sub(finish, start)))
+\end{lstlisting}
+
+現行のネイティブ・JavaScript実装では\code{IO.now}はミリ秒単位で経過時間を測るための時計値を返します。\textbf{年月日や日本時間の時刻ではありません}。\code{Nat.sub(130n, 100n)}の結果は常に\code{30n}ですが、時計から取得する値は実行ごとに異なります。
+
+\code{IO.sleep(20)}は20ミリ秒の待機を要求します。実際の経過時間にはOSのスケジューリングなども含まれるため、\textbf{表示が毎回ちょうど20になるとは限りません}。CIでも出力が数値であることを確認し、20との一致を要求しません。
+
+\begin{pointbox}
+ゲームにタイマーを追加するなら、最初の有効なクリックで計測を開始し、勝敗が決まった時点で終了する構成が考えられます。勝敗の判断は純粋な関数として保ち、時計の取得と表示をアプリ側へ置きます。
+\end{pointbox}
+
+\exercise{\code{46_elapsed_clock.bend}の待機時間を\code{0}、\code{20}、\code{100}に変えて何度か実行してみましょう。出力が毎回同じにならない理由と、\code{Nat.sub}自体が毎回同じ結果を返す理由を説明してみましょう。}
 
 \section{乱数の取得と失敗の伝播}
 \code{IO.random_u32()}の型は\code{IO(Result<..., U32>)}であり、単に\code{U32}が返るわけではありません。外部機能が失敗する可能性を明示するためです。\code{IO.try}を使うと成功した\code{U32}を取り出せますが、失敗したときは後続の\code{IO.print}へは進みません。
