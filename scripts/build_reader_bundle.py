@@ -81,8 +81,8 @@ https://github.com/Nasu726/bend2-intro-with-life/tree/main/src
     return """# Bend 2を使いこなす — 学習用セット（執筆途中）
 
 PDFを読み、examples/ 内のコードを実行してください。
-初稿は執筆途中です。完成版マインスイーパーや
-「運ゲー無し」盤面生成はまだ収録していません。
+初稿は執筆途中です。通常版マインスイーパーのGUI教材コードは収録しましたが、
+保存・対話CLIと「運ゲー無し」盤面生成はまだ完成していません。
 
 公式ガイド: https://github.com/bendlang/bend/blob/main/guide/GUIDE.md
 
@@ -91,6 +91,14 @@ PDFを読み、examples/ 内のコードを実行してください。
 bend examples/minesweeper/cli_replay.bend c0 f1 c1
 操作 c番号=左クリック、f番号=旗、r=リセット。
 初期地雷マスク33は固定で、表示する盤面には隠れた地雷位置を出しません。
+
+4×4マインスイーパーのGUIをネイティブビルドして起動:
+bend examples/minesweeper/gui.bend -o minesweeper
+./minesweeper
+左クリックで公開、右クリックで旗、Rでリセット、Escで終了。
+Linuxではlibx11-dev等の環境依存ライブラリが必要です。
+GUIのBend型検査・ネイティブコンパイル・純粋な座標処理はCI検査済みですが、
+実際のデスクトップ環境でのウィンドウ操作・見た目は別途確認してください。
 
 07_gui_hello.bend はウィンドウ表示が可能な環境が必要です。
 証明例: bend examples/04_flag_laws.bend --verdict
