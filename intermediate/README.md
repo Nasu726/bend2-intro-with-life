@@ -44,14 +44,15 @@ bend examples/04_flag_laws.bend --verdict
 [制作ロードマップ](ROADMAP.md)に計画書から引き継いだ内容と完成条件をまとめています。
 [法則から実装へ進む教材草稿](minesweeper/LESSON.md)に加え、
 [ListとArrayの章別補稿](manuscript/03_ListとArrayを選ぶ.md)と
-[IO・Result・Fileの章別補稿](manuscript/06_IOと失敗を読む.md)、\n[第22章の確実な一手を考えるハンズオン補稿](manuscript/22_運ゲー無しを確定手から学ぶ.md)を書き進めています。
+[IO・Result・Fileの章別補稿](manuscript/06_IOと失敗を読む.md)、
+[第22章の確実な一手を考えるハンズオン補稿](manuscript/22_運ゲー無しを確定手から学ぶ.md)を書き進めています。
 [執筆進捗と優先順位](manuscript/STATUS.md)で本文と実行サンプルの対応を管理します。
 2026-10-16の本文改稿で、第3・6・13・15・17・21章の説明を増補し、
 **同じTeXからPDFと学習用ZIPを再生成済み**です。
 引き続き第19・20・21章を増補し、さらに第11・12章を『はじめてのBend2』と同じ
 **小さなコード→実行結果→仕組みの解説→演習**の流れに沿って改稿しました。
 新たに `31_image_quadrants.bend`、`32_mouse_events.bend`、
-`33_nat_induction.bend` と `34_mine_mask_law.bend` を追加し、学習用コードは**43ファイル**になりました。
+`33_nat_induction.bend` と `34_mine_mask_law.bend` を追加し、学習用コードは**44ファイル**になりました。
 第13〜18章は、マスの状態→座標の境界→旗操作の `law`→自然数の帰納法→
 盤面全体の不変条件→検証範囲の順に書き直し、本文の重複も整理しました。
 章別補稿とマインスイーパー草稿の全文が統合済みという意味ではなく、
@@ -90,7 +91,7 @@ IOの外部入力、Chanの受け渡し、TCP接続の成否を示す小さな�
 第1・2・4・23章の再編集では、入門書の編集方針に沿って、
 **必要性→実行可能な短い例→結果と型→解説→演習**の流れを強化しました。
 `35_string_fields.bend`（文字列分割）、`36_map_missing.bend`（Mapにキーがあるか）、
-`37_u32_dimension.bend`（Nat/U32変換と比較）を追加し、教材コードは**43ファイル**です（うち1ファイルはimport用モジュール）。
+`37_u32_dimension.bend`（Nat/U32変換と比較）を追加し、教材コードは**44ファイル**です（うち1ファイルはimport用モジュール）。
 
 今回の第3章改稿では `38_list_sort.bend`、`39_array_to_list.bend`、`40_list_map.bend` を追加し、
 標準の `List.sort`・`List.map`・`List.foldl`・`Array.to_list` を自分で動かして比較できます。
@@ -105,3 +106,5 @@ JavaScript実行にはNode.jsが別途必要です。
 
 第21章では0マスの連鎖公開を具体盤面から学べるよう追記し、
 仕様を先行して固定した6法則、`List`による作業リスト、`Nat`による停止性検査も説明しています。
+
+第10章には `44_message_boundary.bend` を追加し、`String.split` を使って区切り記号と受信単位の違いを確かめられるようにしました。ソケットを使った完全なTCP送受信プログラムではありません。
