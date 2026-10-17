@@ -1,4 +1,5 @@
 name: Temporary intermediate GUI smoke
+# Pixel-affinity fix
 on:
   push:
     branches: [feat/intermediate-minesweeper-textbook]
