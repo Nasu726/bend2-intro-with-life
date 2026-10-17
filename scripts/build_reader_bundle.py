@@ -53,6 +53,13 @@ INTERMEDIATE_EXAMPLES = (
     "43_target_hello.bend", "44_message_boundary.bend",
 )
 
+# Runnable 4x4 replay lesson and its exact relative-import dependencies.
+# This is a game engine example, not a solution to the book exercises.
+INTERMEDIATE_GAME_FILES = (
+    "game.bend", "board.bend", "board4.bend", "flood.bend",
+    "session.bend", "start.bend", "cli_replay.bend",
+)
+
 def readme(track: str) -> str:
     if track == "intro":
         return """# Bend 2 入門 — 学習用セット
@@ -80,6 +87,11 @@ PDFを読み、examples/ 内のコードを実行してください。
 公式ガイド: https://github.com/bendlang/bend/blob/main/guide/GUIDE.md
 
 例: bend examples/01_set.bend
+4×4盤面のCLIリプレイ実習（対話入力ではなく引数を一括指定）:
+bend examples/minesweeper/cli_replay.bend c0 f1 c1
+操作 c番号=左クリック、f番号=旗、r=リセット。
+初期地雷マスク33は固定で、表示する盤面には隠れた地雷位置を出しません。
+
 07_gui_hello.bend はウィンドウ表示が可能な環境が必要です。
 証明例: bend examples/04_flag_laws.bend --verdict
 帰納法: bend examples/33_nat_induction.bend --verdict
@@ -104,7 +116,9 @@ def build(track: str, outdir: Path) -> Path:
         example_names = INTERMEDIATE_EXAMPLES
         output = "bend2-intermediate-reader-preview.zip"
 
-    for path in (pdf, ROOT / "LICENSE", *(examples_dir / name for name in example_names)):
+    game_dir = ROOT / "intermediate/minesweeper" if track == "intermediate" else None
+    game_paths = tuple(game_dir / name for name in INTERMEDIATE_GAME_FILES) if game_dir else ()
+    for path in (pdf, ROOT / "LICENSE", *(examples_dir / name for name in example_names), *game_paths):
         if not path.is_file():
             raise FileNotFoundError("Required learner file missing: " + str(path))
     root_name = "bend2-" + ("intro" if track == "intro" else "intermediate") + "-reader"
@@ -117,6 +131,8 @@ def build(track: str, outdir: Path) -> Path:
     }
     for name in example_names:
         entries["examples/" + name] = (examples_dir / name).read_bytes()
+    for path in game_paths:
+        entries["examples/minesweeper/" + path.name] = path.read_bytes()
 
     # Strict allowlist prevents shipping tests, solutions, TeX and maintainer docs.
     with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
