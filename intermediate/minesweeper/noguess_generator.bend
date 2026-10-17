@@ -69,7 +69,7 @@ def step_from_public(pair: Board4.State & Solver.Public,
   (keep, visible) = pair
   Maybe.bind(&2, U32, List<&2, U32>,
     candidate_index(Solver.provably_safe(visible)),
-    move => resume(
+    +move => resume(
       Session.click(Session.Session{keep, Session.Playing{}}, move),
       move <> trace))
 
