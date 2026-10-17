@@ -29,23 +29,32 @@ def flag_number(stage: Start.Stage, value: Maybe<&2, U32>) -> Start.Stage:
     case None{}:
       stage
 
-def choose_action(stage: Start.Stage, +command: String) -> Start.Stage:
-  match String.starts_with(command, "c"):
+def choose_flag(stage: Start.Stage, command: String, is_flag: Bool) -> Start.Stage:
+  match is_flag:
+    case True{}:
+      flag_number(stage, U32.read(String.drop(command, 1n)))
+    case False{}:
+      stage
+
+def choose_click(stage: Start.Stage, +command: String, is_click: Bool) -> Start.Stage:
+  match is_click:
     case True{}:
       click_number(stage, U32.read(String.drop(command, 1n)))
     case False{}:
-      match String.starts_with(command, "f"):
-        case True{}:
-          flag_number(stage, U32.read(String.drop(command, 1n)))
-        case False{}:
-          stage
+      choose_flag(stage, command, String.starts_with(command, "f"))
 
-def action(stage: Start.Stage, command: String) -> Start.Stage:
-  match String.eq(command, "r"):
+def choose_action(stage: Start.Stage, +command: String) -> Start.Stage:
+  choose_click(stage, command, String.starts_with(command, "c"))
+
+def reset_or_action(stage: Start.Stage, command: String, reset: Bool) -> Start.Stage:
+  match reset:
     case True{}:
       Start.new(33)
     case False{}:
       choose_action(stage, command)
+
+def action(stage: Start.Stage, +command: String) -> Start.Stage:
+  reset_or_action(stage, command, String.eq(command, "r"))
 
 def replay(stage: Start.Stage, commands: List<String>) -> Start.Stage:
   match commands:
@@ -63,12 +72,15 @@ def cell_symbol(square: Game.Square) -> String:
     case Game.Open{clue}:
       U32.show(clue)
 
-def spacing(column: U32) -> String:
-  match U32.is_eq(U32.mod((column + 1 : U32), 4), 0):
+def spacing_for(is_end: Bool) -> String:
+  match is_end:
     case True{}:
       "\n"
     case False{}:
       " "
+
+def spacing(column: U32) -> String:
+  spacing_for(U32.is_eq(U32.mod((column + 1 : U32), 4), 0))
 
 def show_cells(cells: List<Game.Square>, +column: U32) -> String:
   match cells:
