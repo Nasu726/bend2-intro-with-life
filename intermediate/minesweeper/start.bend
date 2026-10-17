@@ -12,6 +12,10 @@ type Stage is Type:
 def new(mines: U32) -> Stage:
   Fresh{U32.and(mines, 65535)}
 
+# The lowest set bit of a nonzero word gives the first available cell.
+def lowest_bit(+word: U32) -> U32:
+  U32.and(word, U32.sub(0, word))
+
 # A mine under the first click moves to the lowest unoccupied index.
 # 16 mines cannot be safely placed on 16 cells: callers remain Fresh.
 def relocate_if_needed(is_mine: Bool, +mines: U32, bit: U32) -> U32:
@@ -20,7 +24,7 @@ def relocate_if_needed(is_mine: Bool, +mines: U32, bit: U32) -> U32:
       mines
     case True{}:
       free = U32.and(U32.not(mines), 65535)
-      destination = U32.and(free, U32.sub(0, free))
+      destination = lowest_bit(free)
       U32.xor(U32.xor(mines, bit), destination)
 
 def relocate_normalized(+mines: U32, +bit: U32) -> U32:
