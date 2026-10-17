@@ -14,7 +14,7 @@ type Public is Data:
 type Summary is Data:
   Summary{count: U32, union: U32}
 
-def test_numbers(entries: List<&2, Number>, +candidate: U32) -> Bool:
+def test_numbers(+entries: List<&2, Number>, +candidate: U32) -> Bool:
   match entries:
     case Nil{}:
       True{}
@@ -40,7 +40,7 @@ def add_if(ok: Bool, summary: Summary, +candidate: U32) -> Summary:
           Summary{(count + 1 : U32), U32.or(union, candidate)}
 
 # Structural descent on the FIRST Nat argument.
-def columns(fuel: Nat, +i: U32, +view: Public, summary: Summary) -> Summary:
+def columns(+fuel: Nat, +i: U32, +view: Public, summary: Summary) -> Summary:
   match fuel:
     case 0n:
       summary
@@ -50,7 +50,7 @@ def columns(fuel: Nat, +i: U32, +view: Public, summary: Summary) -> Summary:
       ok = Bool.and(U32.is_lt(i, j), valid(view, mask))
       columns(k, i, view, add_if(ok, summary, mask))
 
-def rows(fuel: Nat, +view: Public, summary: Summary) -> Summary:
+def rows(+fuel: Nat, +view: Public, summary: Summary) -> Summary:
   match fuel:
     case 0n:
       summary
@@ -65,14 +65,17 @@ def opened_bits(entries: List<&2, Number>) -> U32:
     case Number{index, clue} <> rest:
       U32.or(U32.shln(1, U32.to_nat(index)), opened_bits(rest))
 
+def safe_for_count(zero: Bool, union: U32, already: U32) -> Maybe<&2, U32>:
+  match zero:
+    case True{}:
+      None{}
+    case False{}:
+      Some{U32.and(U32.not(U32.or(union, already)), 65535)}
+
 def safe_result(result: Summary, already: U32) -> Maybe<&2, U32>:
   match result:
     case Summary{count, union}:
-      match U32.is_eq(count, 0):
-        case True{}:
-          None{}
-        case False{}:
-          Some{U32.and(U32.not(U32.or(union, already)), 65535)}
+      safe_for_count(U32.is_eq(count, 0), union, already)
 
 def provably_safe(+view: Public) -> Maybe<&2, U32>:
   match view:
