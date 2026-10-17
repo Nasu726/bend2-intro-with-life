@@ -6,6 +6,7 @@ import ./game.bend as Game
 import ./board.bend as Board
 import ./board4.bend as Board4
 import ./session.bend as Session
+import ./start.bend as Start
 
 # C-01: A hidden cell acquires a flag.
 law hidden_is_flagged:
@@ -170,3 +171,25 @@ law session_last_safe_cell_wins:
 # a caller-supplied number, and it never changes already-visible numbers.
 law session_safe_click_shows_true_clue:
   {Session.read_square(Session.click(Session.new(1), 5), 5) == Game.Open{1} : Game.Square}
+
+# G-01 (separate entry point): the first left-click must not be a loss.
+# Active Session.new is deliberately a low-level, ALREADY-PLACED board.
+# These contracts introduce a Fresh controller instead of changing G-02.
+# Valid setup has 0..15 mines; the full 16-mine board is rejected.
+law start_relocates_clicked_mine:
+  {Start.mine_mask(Start.click(Start.new(1), 0)) == 2 : U32}
+
+law start_preserves_other_mines:
+  {Start.mine_mask(Start.click(Start.new(33), 0)) == 34 : U32}
+
+law start_keeps_safe_placement:
+  {Start.mine_mask(Start.click(Start.new(1), 5)) == 1 : U32}
+
+law start_first_square_opened:
+  {Start.visible_at(Start.click(Start.new(1), 0), 0) == Game.Open{1} : Game.Square}
+
+law start_ignores_outside_first_click:
+  {Start.is_fresh(Start.click(Start.new(1), 16)) == True{} : Bool}
+
+law start_rejects_impossible_full_board:
+  {Start.is_fresh(Start.click(Start.new(65535), 0)) == True{} : Bool}
