@@ -1687,11 +1687,86 @@ def replay(commands: List<String>, stage: Start.Stage) -> Start.Stage:
 \exercise{まず\code{c0 f1 f1}、\code{c0 c1 f2}、\code{c0 c16}、\code{c0 r}の結果を予想し、実行してみましょう。次に\code{cli_replay.bend}の\code{cell_symbol}で旗の表示文字を別の記号に変えてみましょう。地雷の位置や勝敗の判定に変更が不要なのはなぜか、説明してみましょう。}
 
 \section{GUIからゲームの規則へ入力を渡す}
-画面の表示には\code{App}と\code{Image}を使えます。第12章の\code{07_gui_hello.bend}は\code{App.run}の基本形を示し、第14章の\code{23_cell_hit_test.bend}は画素座標を配列の添字へ変換します。
+ここまでに、文字列で一手を表すCLIと、イベントを受け取る\code{App}を学びました。この二つは別のゲームを作る方法ではありません。\textbf{同じゲームの規則を、異なる入力方法から呼び出す}という関係です。
 
-ただし第14章のサンプルは\textbf{8×8盤面・32画素のマス}を想定しています。4×4の参考エンジンに接続するなら、幅と高さを128画素にし、\code{index = 4 * row + column}として整合させる必要があります。サンプルごとに盤面の寸法が違うのに、そのままつないでしまうと別のマスが開かれます。
+配布ZIPの\file{examples/minesweeper/}には、先ほどのCLIのほかに\code{gui.bend}を収録しました。こちらは実際のウィンドウへ4×4盤面を描き、マウスで操作するアプリです。CLIと同じ\code{Start.click}・\code{Session.mark}を利用します。ゲームの地雷判定をGUI側へ重複実装していない点に注目してください。
 
-\code{App}のイベント処理からは、座標と「左クリックか右クリックか」をゲームの純粋関数へ渡す設計にします。ゲーム側から画面用の色や座標を決定しない方が、GUIを起動しなくても規則をテストできます。実際にクリックが届くか、右クリックイベントがOSでどう扱われるか、描画が意図した位置に出るかは、\textbf{ウィンドウのある実機で別途確認}する必要があります。
+\subsection{まず起動してみる}
+GUIは画面を開ける環境が必要です。LinuxではBend 2のGUI実行にX11の開発用ライブラリが必要な場合があります。導入済みのデスクトップ環境から、次の順で試してみましょう。
+
+\begin{lstlisting}[language={},caption={ネイティブGUIをビルドして実行する}]
+bend examples/minesweeper/gui.bend -o minesweeper
+./minesweeper
+\end{lstlisting}
+
+ビルドに必要なOS側のライブラリが見つからないときは、\href{https://github.com/bendlang/bend/blob/main/guide/GUIDE.md}{Bend公式ガイド}で、そのOS向けの依存関係を確認してください。Linuxでは\code{libx11-dev}が必要です。画面のないCIでは\code{--check-only}による型検査と、GUIの純粋な座標・状態処理のテストを別に実施します。
+
+ウィンドウは256×256画素で、4×4盤面を描きます。各マスは64×64画素です。表示を次のように読んでください。
+
+\begin{center}
+\begin{tabularx}{\linewidth}{@{}L{43mm}X@{}}
+\toprule
+操作・表示 & 意味\\\midrule
+左クリック & 隠れたマスを公開する。最初のクリックは安全になる\\
+右クリック & ゲーム開始後、隠れたマスに旗を付ける／外す\\
+\code{R}キー & 初期配置に戻し、新しいゲームを始める\\
+\code{Esc}キー & ウィンドウを閉じる\\
+灰色のマス & まだ公開していない\\
+赤い印 & 地雷だと推測して立てた旗\\
+明るいマスと数字 & 公開済みのマスと周囲の地雷の個数\\
+格子線が緑／赤 & 勝利／敗北を表す。進行中は暗い色\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+数字はBendの\code{Image}だけで描いた小さな7セグメント表示です。専用のフォントや画像ファイルを読み込んでいるわけではありません。画面の描画状態は、表示される\code{Square}から計算しています。
+
+\subsection{クリック位置を番号へ直す}
+第14章の例は8×8盤面を扱いましたが、今回は4×4です。64画素単位で列と行を求め、\code{4 * row + column}という添字に変換します。
+
+\begin{lstlisting}[caption={256画素の画面から4×4の添字へ変換する}]
+def cell_at(+x: U32, +y: U32) -> Maybe<&2, U32>:
+  cell_if_valid(
+    Bool.and(U32.is_lt(x, 256), U32.is_lt(y, 256)),
+    x, y)
+\end{lstlisting}
+
+ここで\code{cell_if_valid}は、範囲内なら\code{y / 64 * 4 + x / 64}を返し、範囲外なら\code{None}を返す関数です。マスが表示されない位置を無理に番号0へ変換しない理由は、クリックした場所とゲーム内のマスを正確に対応させるためです。
+
+例えば画素\code{(63,0)}は番号0、\code{(64,0)}は番号1、\code{(255,255)}は番号15です。\code{(256,0)}は画面の外なので\code{None}です。これらの境界は実際のGUIを開かず、別のBendプログラムからも検査しています。
+
+\subsection{イベントを純粋な規則へつなぐ}
+マウスボタンが押されたら、範囲内の番号を取り出し、左クリックなら\code{Start.click}、右クリックなら\code{Session.mark}へ渡します。キー\code{R}では\code{Start.new}へ戻ります。ウィンドウの終了と\code{Esc}では、次の状態を\code{None}として返します。
+
+\begin{lstlisting}[caption={イベントをゲームの操作に変換する}]
+def event(e: Event, stage: Start.Stage) -> Maybe<Start.Stage>:
+  match e:
+    case Close{}:
+      None{}
+    case Key{27, True{}}:
+      None{}
+    case Key{114, True{}}:
+      Some{Start.new(33)}
+    case Mouse{x, y, button, True{}}:
+      Some{pointer(stage, x, y, button)}
+    case _:
+      Some{stage}
+\end{lstlisting}
+
+ここでは\code{button == 0}が左クリック、\code{button == 1}が右クリックに対応する環境を想定しています。ボタン番号と実際の操作の対応は、対象のデスクトップ環境で確認してください。左・右以外のマウスボタンをどう扱うかも、完成版の品質確認項目です。
+
+\subsection{画像を作り直してもゲームの状態は失わない}
+\code{App}の\code{view}は、現在の状態から描画用\code{Image}を作ります。しかし盤面の\code{Array}は自由にコピーできる値ではありません。そこで\code{Array.clone}を使い、一方を次のゲーム状態に保持し、もう一方を表示用の\code{List}へ変換します。
+
+\begin{lstlisting}[caption={Arrayを保持しつつ描画データを得る}]
+active_view(mines, phase, Array.clone(Game.Square, cells))
+\end{lstlisting}
+
+\code{gui.bend}では、表示するマスをそれぞれ\code{Pix}と\code{Qua}からなる小さな画像へ変換し、16マスを四分木に組み立てます。画面の数字と色は公開状態から決まり、\textbf{描画関数が内部の地雷マスクを表示して答えを漏らすことはありません}。
+
+GUI用の処理を追加しても、地雷数の計算や0領域の探索を新しく書き直さなかった点が、これまでに学んだ\term{純粋関数とIOの分離}の効果です。
+
+\exercise{\code{gui.bend}の\code{cell_at}で、座標\code{(0,0)}・\code{(63,0)}・\code{(64,0)}・\code{(255,255)}・\code{(256,0)}が何を返すか予想してみましょう。次にウィンドウを起動し、最初の左クリック、旗の付け外し、敗北後の操作、\code{R}によるリセットを確かめてみましょう。画面を開けない環境では、\code{gui_smoke.bend}という検証用ソースをリポジトリから参照してみましょう。}
 
 \section{時間・リセット・保存は境界の仕事}
 経過時間は現在時刻を読むIOと、時刻の差を計算する純粋関数に分けます。ゲーム終了時に時間を止め、リセット時に新しい開始時刻を設定します。リセットは公開済みのマスを空に戻す操作なので、「クリックで公開済み集合が減らない」という不変条件を無条件に適用してはいけません。
