@@ -178,7 +178,7 @@ def verify_first_click(game_dir):
                 destination = next(i for i in range(16) if not (mines & (1 << i)))
                 target ^= (1 << index) | (1 << destination)
             cases.append(f"bit(U32.is_eq(Start.mine_mask({start}), {target}))")
-            cases.append(f"bit(Bool.eq(Start.is_fresh({start}), {'False{}' if valid else 'True{}'}))")
+            cases.append(f"bit(U32.is_eq(bit(Start.is_fresh({start})), {0 if valid else 1}))")
             if valid:
                 x,y = index % 4, index // 4
                 clue = sum(
@@ -188,24 +188,24 @@ def verify_first_click(game_dir):
                 )
                 cases.append(f"bit(U32.is_eq(square_code(Start.visible_at({start}, {index})), {10+clue}))")
     source = (
-        "import Base\\nimport ./game.bend as Game\\n"
-        "import ./board.bend as Board\\n"
-        "import ./board4.bend as Board4\\n"
-        "import ./session.bend as Session\\n"
-        "import ./start.bend as Start\\n"
-        "def bit(b: Bool) -> U32:\\n  match b:\\n"
-        "    case True{}:\\n      1\\n    case False{}:\\n      0\\n"
-        "def square_code(s: Game.Square) -> U32:\\n  match s:\\n"
-        "    case Game.Hidden{}:\\n      0\\n"
-        "    case Game.Flag{}:\\n      1\\n"
-        "    case Game.Open{clue}:\\n      (10 + clue : U32)\\n\\n"
-        + "\\n\\n".join(
-            f"def group_{i}() -> U32:\\n  ("
+        "import Base\nimport ./game.bend as Game\n"
+        "import ./board.bend as Board\n"
+        "import ./board4.bend as Board4\n"
+        "import ./session.bend as Session\n"
+        "import ./start.bend as Start\n"
+        "def bit(b: Bool) -> U32:\n  match b:\n"
+        "    case True{}:\n      1\n    case False{}:\n      0\n"
+        "def square_code(s: Game.Square) -> U32:\n  match s:\n"
+        "    case Game.Hidden{}:\n      0\n"
+        "    case Game.Flag{}:\n      1\n"
+        "    case Game.Open{clue}:\n      (10 + clue : U32)\n\n"
+        + "\n\n".join(
+            f"def group_{i}() -> U32:\n  ("
             + " + ".join(cases[i:i+7]) + " : U32)"
             for i in range(0, len(cases), 7)
         )
-        + "\\n\\ndef main() -> U32:\\n  ("
-        + " + ".join(f"group_{i}()" for i in range(0,len(cases),7)) + " : U32)\\n"
+        + "\n\ndef main() -> U32:\n  ("
+        + " + ".join(f"group_{i}()" for i in range(0,len(cases),7)) + " : U32)\n"
     )
     with tempfile.TemporaryDirectory() as td:
         dest = pathlib.Path(td)
