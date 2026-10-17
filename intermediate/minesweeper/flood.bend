@@ -87,16 +87,15 @@ def visit_if_new(valid: Bool, board: Board4.State, +mines: U32,
     case False{}:
       Task{board, mines, rest, seen}
     case True{}:
-      bit = U32.shln(1, U32.to_nat(index))
-      visit_if_safe(Board4.bit_is_set(mines, bit),
-                    board, mines, index, rest, U32.or(seen, bit))
+      visit_if_safe(Board4.bit_is_set(mines, U32.shln(1, U32.to_nat(index))),
+                    board, mines, index, rest,
+                    U32.or(seen, U32.shln(1, U32.to_nat(index))))
 
 def step(board: Board4.State, +mines: U32, +index: U32,
          rest: List<U32>, +seen: U32) -> Task:
-  bit = U32.shln(1, U32.to_nat(index))
   visit_if_new(
     Bool.and(U32.is_lt(index, 16),
-             Bool.not(Board4.bit_is_set(seen, bit))),
+             Bool.not(Board4.bit_is_set(seen, U32.shln(1, U32.to_nat(index))))),
     board, mines, index, rest, seen)
 
 # One recursive function only; the first argument strictly decreases.
