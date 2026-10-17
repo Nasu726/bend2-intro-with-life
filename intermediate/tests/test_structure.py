@@ -25,11 +25,11 @@ class BookStructure(unittest.TestCase):
         # The reader-approved C cover is immutable unless explicitly revised.
         cover = ROOT / "cover_art.tex"
         raw = cover.read_bytes()
-        header = f"blob {len(raw)}\\0".encode("ascii")
+        header = f"blob {len(raw)}".encode("ascii") + bytes([0])
         git_blob_sha = hashlib.sha1(header + raw).hexdigest()
         self.assertEqual(git_blob_sha, "ba9b5c4cb296e3adfd119ace6b55abc419c6faf1")
         self.assertIn(
-            r"\\input{intermediate/cover_art.tex}",
+            chr(92) + "input{intermediate/cover_art.tex}",
             BOOK.read_text(encoding="utf-8"),
         )
 
