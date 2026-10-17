@@ -184,11 +184,14 @@ def dispatch(saving: Bool, loading: Bool, commands: List<&2, String>) -> IO(Unit
 def command_mode(+mode: String, commands: List<&2, String>) -> IO(Unit):
   dispatch(String.eq(mode, "save"), String.eq(mode, "load"), commands)
 
+def execute(args: List<&2, String>) -> IO(Unit):
+  match args:
+    case Nil{}:
+      IO.die(Unit, 1, "Usage: cli_save.bend save c0 f1 | load")
+    case mode <> commands:
+      command_mode(mode, commands)
+
 def main() -> IO(Unit):
   do IO<Unit>:
     args: List<String> <- IO.args()
-    match Replay.without_program(args):
-      case Nil{}:
-        IO.die(Unit, 1, "Usage: cli_save.bend save c0 f1 | load")
-      case mode <> commands:
-        command_mode(mode, commands)
+    execute(Replay.without_program(args))
