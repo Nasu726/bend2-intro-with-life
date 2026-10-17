@@ -128,28 +128,28 @@ def consider(+i: U32, +j: U32) -> Maybe<&2, Certified>:
     U32.is_eq(U32.and(mask, 51), 0))
   choose_if_valid(allowed, mask)
 
+def prefer(current: Maybe<&2, Certified>, fallback: Unit -> Maybe<&2, Certified>) ->
+  Maybe<&2, Certified>:
+  match current:
+    case Some{certificate}:
+      Some{certificate}
+    case None{}:
+      fallback(Unit{})
+
 def search_columns(fuel: Nat, +i: U32) -> Maybe<&2, Certified>:
   match fuel:
     case 0n:
       None{}
     case 1n+k:
       +j = U32.from_nat(k)
-      match consider(i, j):
-        case Some{certificate}:
-          Some{certificate}
-        case None{}:
-          search_columns(k, i)
+      prefer(consider(i, j), unused => search_columns(k, i))
 
 def search_rows(fuel: Nat) -> Maybe<&2, Certified>:
   match fuel:
     case 0n:
       None{}
     case 1n+k:
-      match search_columns(16n, U32.from_nat(k)):
-        case Some{certificate}:
-          Some{certificate}
-        case None{}:
-          search_rows(k)
+      prefer(search_columns(16n, U32.from_nat(k)), unused => search_rows(k))
 
 def generate() -> Maybe<&2, Certified>:
   search_rows(16n)
