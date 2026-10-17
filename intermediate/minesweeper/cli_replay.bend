@@ -56,12 +56,14 @@ def reset_or_action(stage: Start.Stage, command: String, reset: Bool) -> Start.S
 def action(stage: Start.Stage, +command: String) -> Start.Stage:
   reset_or_action(stage, command, String.eq(command, "r"))
 
-def replay(stage: Start.Stage, commands: List<String>) -> Start.Stage:
+# The structurally decreasing list comes FIRST: Bend checks recursion
+# parameters from left to right, so the state may change after it.
+def replay(commands: List<String>, stage: Start.Stage) -> Start.Stage:
   match commands:
     case Nil{}:
       stage
     case command <> rest:
-      replay(action(stage, command), rest)
+      replay(rest, action(stage, command))
 
 def cell_symbol(square: Game.Square) -> String:
   match square:
@@ -122,4 +124,4 @@ def without_program(args: List<String>) -> List<String>:
 def main() -> IO(Unit):
   do IO<Unit>:
     args: List<String> <- IO.args()
-    IO.print(show_board(replay(Start.new(33), without_program(args))))
+    IO.print(show_board(replay(without_program(args), Start.new(33))))
