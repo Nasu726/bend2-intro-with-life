@@ -33,7 +33,7 @@ def relocate_normalized(+mines: U32, +bit: U32) -> U32:
 def relocate(mines: U32, index: U32) -> U32:
   relocate_normalized(U32.and(mines, 65535), U32.shln(1, U32.to_nat(index)))
 
-def start_if_valid(valid: Bool, mines: U32, index: U32) -> Stage:
+def start_if_valid(valid: Bool, mines: U32, +index: U32) -> Stage:
   match valid:
     case False{}:
       Fresh{mines}
