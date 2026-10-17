@@ -466,6 +466,13 @@ def main():
     if gui_result != "12":
         raise AssertionError(f"GUI logic check expected 12; got {gui_result}")
     print("PASS GUI 12 geometry, digit and state-transition checks", flush=True)
+    public_mask = run("bend", str(game / "public_solver.bend")).splitlines()[-1]
+    if public_mask != "50":
+        raise AssertionError(f"Public two-mine deduction expected 50, got {public_mask!r}")
+    independent = run(sys.executable, str(ROOT / "scripts" / "test_public_solver.py"))
+    if "PASS 13 independent public solver cases" not in independent:
+        raise AssertionError(f"Public solver independent oracle missing: {independent!r}")
+    print("PASS public-only exact deduction and independent oracle", flush=True)
 
     # Mutation test: keeping the function well-typed must not suffice when
     # it violates an independently declared requirement.
