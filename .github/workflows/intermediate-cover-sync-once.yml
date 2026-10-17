@@ -5,6 +5,7 @@ on:
       - feat/intermediate-minesweeper-textbook
     paths:
       - intermediate/cover_art.tex
+      - .github/workflows/intermediate-cover-sync-once.yml
 
 permissions:
   contents: write
@@ -41,7 +42,6 @@ jobs:
           fi
           python3 scripts/build_reader_bundle.py intermediate
           python3 -m unittest discover -s tests -p test_reader_bundle.py -v
-          pdfinfo 'intermediate/Bend2を使いこなす_プレビュー.pdf' | grep -E '^Pages:|^Page size:'
       - name: Commit PDF, reader ZIP, and remove one-shot workflow
         shell: bash
         run: |
