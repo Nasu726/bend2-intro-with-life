@@ -107,15 +107,6 @@ def fresh_picture() -> Image:
     Game.Hidden{}, Game.Hidden{}, Game.Hidden{}, Game.Hidden{},
     Game.Hidden{}, Game.Hidden{}, Game.Hidden{}, Game.Hidden{}], 2697513)
 
-# Open state preserves its affine Array via Array.clone.
-def active_view(+mines: U32, +phase: Session.Phase,
-                pair: Array<Game.Square> & Array<Game.Square>) ->
-                Start.Stage & Image:
-  (keep, inspect) = pair
-  border = phase_border(phase)
-  (Start.Active{Session.Session{Board4.State{mines, keep}, phase}},
-    board_picture(Array.to_list(Game.Square, inspect), border))
-
 def phase_border(phase: Session.Phase) -> U32:
   match phase:
     case Session.Playing{}:
@@ -124,6 +115,15 @@ def phase_border(phase: Session.Phase) -> U32:
       3030856
     case Session.Lost{}:
       12066878
+
+# Open state preserves its affine Array via Array.clone.
+def active_view(+mines: U32, +phase: Session.Phase,
+                pair: Array<Game.Square> & Array<Game.Square>) ->
+                Start.Stage & Image:
+  (keep, inspect) = pair
+  border = phase_border(phase)
+  (Start.Active{Session.Session{Board4.State{mines, keep}, phase}},
+    board_picture(Array.to_list(Game.Square, inspect), border))
 
 def view(stage: Start.Stage) -> Start.Stage & Image:
   match stage:
