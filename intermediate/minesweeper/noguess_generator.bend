@@ -136,7 +136,7 @@ def prefer(current: Maybe<&2, Certified>, fallback: Unit -> Maybe<&2, Certified>
     case None{}:
       fallback(Unit{})
 
-def search_columns(fuel: Nat, +i: U32) -> Maybe<&2, Certified>:
+def search_columns(+fuel: Nat, +i: U32) -> Maybe<&2, Certified>:
   match fuel:
     case 0n:
       None{}
@@ -144,7 +144,7 @@ def search_columns(fuel: Nat, +i: U32) -> Maybe<&2, Certified>:
       +j = U32.from_nat(k)
       prefer(consider(i, j), unused => search_columns(k, i))
 
-def search_rows(fuel: Nat) -> Maybe<&2, Certified>:
+def search_rows(+fuel: Nat) -> Maybe<&2, Certified>:
   match fuel:
     case 0n:
       None{}
