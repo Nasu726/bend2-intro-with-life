@@ -13,7 +13,7 @@ def include(yes: Bool, i: U32, rest: List<U32>) -> List<U32>:
     case False{}:
       rest
 
-def maybe_neighbor(x: U32, y: U32, i: U32, rest: List<U32>) -> List<U32>:
+def maybe_neighbor(x: U32, y: U32, +i: U32, rest: List<U32>) -> List<U32>:
   include(Board.neighbor(x, y, U32.mod(i, 4), U32.div(i, 4)), i, rest)
 
 # The 16 explicit positions are intentional: the book's board is 4x4,
