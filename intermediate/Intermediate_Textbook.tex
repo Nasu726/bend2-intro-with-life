@@ -27,6 +27,12 @@
 \usepackage{needspace}
 \usepackage{etoc}
 \usepackage{float}
+% The book reaches section 22.10: standard Book ToC number boxes (2.3em)
+% clip a five-character section label. Expand the section/subsection columns.
+\makeatletter
+\renewcommand*{\l@section}{\@dottedtocline{1}{1.5em}{3.0em}}
+\renewcommand*{\l@subsection}{\@dottedtocline{2}{4.5em}{4.0em}}
+\makeatother
 \definecolor{ink}{HTML}{17263C}
 \definecolor{blue}{HTML}{176A9A}
 \definecolor{teal}{HTML}{167A72}
