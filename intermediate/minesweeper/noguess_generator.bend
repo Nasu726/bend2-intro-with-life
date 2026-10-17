@@ -42,23 +42,16 @@ def inspect_board(board: Board4.State) -> Board4.State & Solver.Public:
     case Board4.State{mines, cells}:
       from_clone(mines, Array.clone(Game.Square, cells))
 
-def first_bit(fuel: Nat, +bits: U32, +index: U32) -> U32:
-  match fuel:
-    case 0n:
-      16
-    case 1n+k:
-      match Board4.bit_is_set(bits, U32.shln(1, U32.to_nat(index))):
-        case True{}:
-          index
-        case False{}:
-          first_bit(k, bits, (index + 1 : U32))
+# log2 of a nonzero isolated lowest bit gives its 0-based index.
+def first_bit(+bits: U32) -> U32:
+  U32.from_nat(U32.log2(U32.and(bits, U32.sub(0, bits))))
 
 def index_if_nonzero(zero: Bool, bits: U32) -> Maybe<&2, U32>:
   match zero:
     case True{}:
       None{}
     case False{}:
-      Some{first_bit(16n, bits, 0)}
+      Some{first_bit(bits)}
 
 def candidate_index(safe: Maybe<&2, U32>) -> Maybe<&2, U32>:
   match safe:
