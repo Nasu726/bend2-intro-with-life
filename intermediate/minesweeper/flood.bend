@@ -1,10 +1,13 @@
-# G-04: zero-connected safe reveal on the finite 4x4 board.
-# This is a pure work-list traversal; every index is processed at most once.
-# The work list may contain duplicates, but the seen bitset bounds processing.
+# G-04: zero cascade for the fixed 4x4 board, without unsafe recursion.
+# A Nat fuel argument guarantees termination even when the work list grows.
+# At most 16 zero squares enqueue 8 neighbors each: 1+16*8 = 129 jobs.
 import Base
 import ./board.bend as Board
 import ./board4.bend as Board4
 import ./game.bend as Game
+
+type Task is Type:
+  Task{board: Board4.State, mines: U32, work: List<U32>, seen: U32}
 
 def include(yes: Bool, i: U32, rest: List<U32>) -> List<U32>:
   match yes:
@@ -16,8 +19,6 @@ def include(yes: Bool, i: U32, rest: List<U32>) -> List<U32>:
 def maybe_neighbor(x: U32, y: U32, +i: U32, rest: List<U32>) -> List<U32>:
   include(Board.neighbor(x, y, U32.mod(i, 4), U32.div(i, 4)), i, rest)
 
-# The 16 explicit positions are intentional: the book's board is 4x4,
-# and a standard list serves as the queue. No custom collection is needed.
 def enqueue_all(+x: U32, +y: U32, rest: List<U32>) -> List<U32>:
   w0 = maybe_neighbor(x, y, 0, rest)
   w1 = maybe_neighbor(x, y, 1, w0)
@@ -40,66 +41,80 @@ def enqueue_all(+x: U32, +y: U32, rest: List<U32>) -> List<U32>:
 def enqueue_neighbors(+index: U32, rest: List<U32>) -> List<U32>:
   enqueue_all(U32.mod(index, 4), U32.div(index, 4), rest)
 
-# A zero cell adds all its valid neighbors. A numbered boundary does not.
-def continue_after_reveal(zero: Bool, board: Board4.State, +mines: U32,
-                          index: U32, work: List<U32>, seen: U32) -> Board4.State:
+def choose_queue(zero: Bool, index: U32, rest: List<U32>) -> List<U32>:
   match zero:
     case True{}:
-      explore(board, mines, enqueue_neighbors(index, work), seen)
+      enqueue_neighbors(index, rest)
     case False{}:
-      explore(board, mines, work, seen)
+      rest
 
-def read_and_reveal(+mines: U32, +index: U32, work: List<U32>,
-                    seen: U32, read: Array<Game.Square> & Game.Square) -> Board4.State:
-  (cells, square) = read
+def open_hidden(+mines: U32, +index: U32, +clue: U32,
+                cells: Array<Game.Square>, work: List<U32>, seen: U32) -> Task:
+  updated = Array.set(Game.Square, cells, index, Game.Open{clue})
+  Task{Board4.State{mines, updated}, mines,
+       choose_queue(U32.is_eq(clue, 0), index, work), seen}
+
+def read_one(+mines: U32, +index: U32, work: List<U32>,
+             seen: U32, pair: Array<Game.Square> & Game.Square) -> Task:
+  (cells, square) = pair
   match square:
     case Game.Hidden{}:
-      clue = Board4.clue(mines, U32.mod(index, 4), U32.div(index, 4))
-      updated = Array.set(Game.Square, cells, index, Game.Open{clue})
-      continue_after_reveal(U32.is_eq(clue, 0),
-        Board4.State{mines, updated}, mines, index, work, seen)
+      open_hidden(mines, index,
+        Board4.clue(mines, U32.mod(index, 4), U32.div(index, 4)),
+        cells, work, seen)
     case Game.Flag{}:
-      explore(Board4.State{mines, cells}, mines, work, seen)
+      Task{Board4.State{mines, cells}, mines, work, seen}
     case Game.Open{clue}:
-      explore(Board4.State{mines, cells}, mines, work, seen)
+      Task{Board4.State{mines, cells}, mines, work, seen}
 
 def visit_unmined(board: Board4.State, +mines: U32, +index: U32,
-                  work: List<U32>, seen: U32) -> Board4.State:
+                  rest: List<U32>, seen: U32) -> Task:
   match board:
     case Board4.State{internal_mines, cells}:
-      read_and_reveal(mines, index, work, seen,
-        Array.get(Game.Square, cells, index))
+      read_one(mines, index, rest, seen, Array.get(Game.Square, cells, index))
 
-def visit_if_safe(mine: Bool, board: Board4.State, +mines: U32, index: U32,
-                  work: List<U32>, seen: U32) -> Board4.State:
-  match mine:
+def visit_if_safe(is_mine: Bool, board: Board4.State, +mines: U32,
+                  index: U32, rest: List<U32>, seen: U32) -> Task:
+  match is_mine:
     case True{}:
-      explore(board, mines, work, seen)
+      Task{board, mines, rest, seen}
     case False{}:
-      visit_unmined(board, mines, index, work, seen)
+      visit_unmined(board, mines, index, rest, seen)
 
-def visit_if_new(eligible: Bool, board: Board4.State, +mines: U32,
-                 +index: U32, work: List<U32>, seen: U32) -> Board4.State:
-  match eligible:
+def visit_if_new(valid: Bool, board: Board4.State, +mines: U32,
+                 +index: U32, rest: List<U32>, seen: U32) -> Task:
+  match valid:
     case False{}:
-      explore(board, mines, work, seen)
+      Task{board, mines, rest, seen}
     case True{}:
       bit = U32.shln(1, U32.to_nat(index))
-      visit_if_safe(Board4.bit_is_set(mines, bit), board, mines, index,
-        work, U32.or(seen, bit))
+      visit_if_safe(Board4.bit_is_set(mines, bit),
+                    board, mines, index, rest, U32.or(seen, bit))
 
-def explore(board: Board4.State, +mines: U32, work: List<U32>,
-            +seen: U32) -> Board4.State:
-  match work:
-    case Nil{}:
-      board
-    case index <> rest:
-      bit = U32.shln(1, U32.to_nat(index))
-      visit_if_new(Bool.and(U32.is_lt(index, 16),
-                          Bool.not(Board4.bit_is_set(seen, bit))),
-                   board, mines, index, rest, seen)
+def step(board: Board4.State, +mines: U32, +index: U32,
+         rest: List<U32>, +seen: U32) -> Task:
+  bit = U32.shln(1, U32.to_nat(index))
+  visit_if_new(
+    Bool.and(U32.is_lt(index, 16),
+             Bool.not(Board4.bit_is_set(seen, bit))),
+    board, mines, index, rest, seen)
 
-# The active Session verifies that the initial click was on a hidden safe
-# square. This function independently skips mines and flags for safety.
-def reveal(board: Board4.State, +mines: U32, index: U32) -> Board4.State:
-  explore(board, mines, [index], 0)
+# One recursive function only; the first argument strictly decreases.
+# All other helpers are nonrecursive task transformations.
+def explore(fuel: Nat, task: Task) -> Board4.State:
+  match fuel:
+    case 0n:
+      match task:
+        case Task{board, mines, work, seen}:
+          board
+    case 1n+remaining:
+      match task:
+        case Task{board, mines, work, seen}:
+          match work:
+            case Nil{}:
+              board
+            case index <> rest:
+              explore(remaining, step(board, mines, index, rest, seen))
+
+def reveal(board: Board4.State, mines: U32, index: U32) -> Board4.State:
+  explore(129n, Task{board, mines, [index], 0})
