@@ -7,7 +7,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from build_reader_bundle import (INTRO_EXAMPLES, INTERMEDIATE_EXAMPLES,
-                                 readme, build)
+                                 INTERMEDIATE_GAME_FILES, readme, build)
 
 class TestReaderBundle(unittest.TestCase):
     def check_one(self, kind):
@@ -18,6 +18,9 @@ class TestReaderBundle(unittest.TestCase):
             expected_examples = INTRO_EXAMPLES if kind == "intro" else INTERMEDIATE_EXAMPLES
             expected = {prefix + n for n in ("README.md", "LICENSE", "textbook.pdf")}
             expected |= {prefix + "examples/" + name for name in expected_examples}
+            if kind == "intermediate":
+                expected |= {prefix + "examples/minesweeper/" + name
+                             for name in INTERMEDIATE_GAME_FILES}
             with zipfile.ZipFile(p) as z:
                 names = z.namelist()
                 self.assertEqual(set(names), expected)
