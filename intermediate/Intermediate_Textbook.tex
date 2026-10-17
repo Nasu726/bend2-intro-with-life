@@ -1364,6 +1364,35 @@ bend examples/15_string_parse.bend -o parse.mjs
 
 なお、\code{bend ... -o parse.c}は\textbf{Cのソースを生成する}操作であり、それだけではCコンパイラが実行したことにはなりません。\code{parse.js}や\code{parse.mjs}も生成先の形式が違います。Cのソースは対応したコンパイラ、JavaScriptは対象ランタイムで別に確認します。
 
+\section{生成したC・JavaScriptを本当に動かす}
+先ほどは、\code{-o}でファイルを生成する方法を学びました。しかし、ファイルが書き出されたことと、そのプログラムが実際に動くことは別です。今度は\textbf{一つのBendプログラムを三通りで実行し、結果を比較}してみましょう。
+
+\sample{43_target_hello.bend}{Bend・C・JavaScriptで同じ42を表示する}
+
+この例では、\code{6 * 7}を\code{U32}として計算して文字列へ変換し、\code{IO.print}で出力します。GUIやGPUの機能を混ぜず、三つの実行方法で結果を見比べやすくしています。
+
+\begin{lstlisting}[caption={三つの実行方法で同じ値を確かめる}]
+bend examples/43_target_hello.bend
+bend examples/43_target_hello.bend -o hello
+./hello
+bend examples/43_target_hello.bend -o hello.js
+node hello.js
+\end{lstlisting}
+
+一行目はBendから実行します。二行目はCのネイティブ実行ファイルを作り、三行目で実行します。四行目はJavaScriptのコードを生成し、五行目でNode.jsから実行します。どれも表示される値は\code{42}です。
+
+ここで必要な環境は異なります。ネイティブ版を生成するときは\code{clang}などの対応するCコンパイラが必要で、JavaScriptの実行には\code{node}が必要です。環境にない場合は、まず公式のインストール案内と実行ターゲットの必要条件を確認しましょう。
+
+Cの\textbf{ソースコードだけ}を見たい場合は、次のようにも出力できます。
+
+\begin{lstlisting}[language={},caption={Cのソースだけを生成する}]
+bend examples/43_target_hello.bend -o hello.c
+\end{lstlisting}
+
+\code{hello.c}を作っただけでは、まだCの実行結果は得られません。ネイティブ版の生成と実行までを別に確認してください。本書の検証環境では、Bend・ネイティブC・生成JavaScriptの三つで実際に\code{42}が得られることをCIで確認しています。
+
+ただし、この検査から分かるのは\textbf{このIOと数値計算の例で三つの結果が一致すること}です。GPU処理、外部FFI、GUI表示、共有配列まで同じだとは主張できません。扱う機能が増えたら、その機能に対応した検査を追加しましょう。
+
 \section{二つのファイルへ分けてみる}
 ここまで一つのファイルに書いていた関数を、別のファイルから呼び出したい場面があります。マインスイーパーで「行と列から配列の番号を計算する」処理を別にしてみましょう。
 

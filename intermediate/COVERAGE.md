@@ -34,7 +34,7 @@
 | `@unsafe`, 外部信頼境界 | 第18・20章 | 追加実習 | 証明検査の境界 |
 | CPU並列、GPU指定 | 第19章を増補（CPU並列・GPU指定・IO並行の比較） | `06_parallel.bend`・`21_io_fork.bend` | CPU並列の実行確認、GPU・他ターゲットでの性能と実機挙動は未検証 |
 | `Array.atomic` | 第19章を増補（標準Baseの型と使用条件を説明） | 追加実習 | 呼出しコード・実機共有更新の検査は今後 |
-| C/JavaScriptと外部連携 | 第20章を増補（生成ターゲットごとの検証・外部所有権を整理） | 追加実習 | 生成コードの実行テスト・FFIは今後 |
+| C/JavaScriptと外部連携 | 第20章にC生成・ネイティブビルド・Node.js実行の一連の手順を追加 | `43_target_hello.bend` | CIでBend/C/JSの3実行結果42を確認。外部FFIの相互呼出し・GPU等は今後 |
 | モジュール・パッケージ | 第20章に二ファイルimport演習を追加 | `board_index.bend`、`42_module_board.bend` | モジュール読み込みと計算結果を照合。BendHubへの公開・外部パッケージ依存は実施せず |
 | 4×4盤面の近傍数 | 第13章 | `10_board_neighbors.bend` | 境界ケースと盤面全体の更新 |
 | 乱数IOの失敗処理 | 第8章 | `11_random_io.bend` | 実機での失敗・再現性確認 |

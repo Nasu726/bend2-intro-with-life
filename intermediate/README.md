@@ -51,7 +51,7 @@ bend examples/04_flag_laws.bend --verdict
 引き続き第19・20・21章を増補し、さらに第11・12章を『はじめてのBend2』と同じ
 **小さなコード→実行結果→仕組みの解説→演習**の流れに沿って改稿しました。
 新たに `31_image_quadrants.bend`、`32_mouse_events.bend`、
-`33_nat_induction.bend` と `34_mine_mask_law.bend` を追加し、学習用コードは**42ファイル**になりました。
+`33_nat_induction.bend` と `34_mine_mask_law.bend` を追加し、学習用コードは**43ファイル**になりました。
 第13〜18章は、マスの状態→座標の境界→旗操作の `law`→自然数の帰納法→
 盤面全体の不変条件→検証範囲の順に書き直し、本文の重複も整理しました。
 章別補稿とマインスイーパー草稿の全文が統合済みという意味ではなく、
@@ -89,10 +89,15 @@ IOの外部入力、Chanの受け渡し、TCP接続の成否を示す小さな�
 第1・2・4・23章の再編集では、入門書の編集方針に沿って、
 **必要性→実行可能な短い例→結果と型→解説→演習**の流れを強化しました。
 `35_string_fields.bend`（文字列分割）、`36_map_missing.bend`（Mapにキーがあるか）、
-`37_u32_dimension.bend`（Nat/U32変換と比較）を追加し、教材コードは**42ファイル**です（うち1ファイルはimport用モジュール）。
+`37_u32_dimension.bend`（Nat/U32変換と比較）を追加し、教材コードは**43ファイル**です（うち1ファイルはimport用モジュール）。
 
 今回の第3章改稿では `38_list_sort.bend`、`39_array_to_list.bend`、`40_list_map.bend` を追加し、
 標準の `List.sort`・`List.map`・`List.foldl`・`Array.to_list` を自分で動かして比較できます。
 第19章にはCPUスレッド数を変えるコマンド、第20章には `board_index.bend` と
 `42_module_board.bend` を使う二ファイルのimport実習を追加しました。
 後者の `board_index.bend` はライブラリ用なので、`main` を持つ `42_module_board.bend` を実行します。
+
+第20章には `43_target_hello.bend` を追加し、Bendの通常実行だけでなく
+**ネイティブCへコンパイルして実行、生成JSをNode.jsで実行**する手順を載せています。
+CIで三つとも42を出力することを照合しました。C生成には対応する `clang`、
+JavaScript実行にはNode.jsが別途必要です。

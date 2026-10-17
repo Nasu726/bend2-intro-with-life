@@ -50,6 +50,7 @@ INTERMEDIATE_EXAMPLES = (
     "37_u32_dimension.bend",
     "38_list_sort.bend",     "39_array_to_list.bend",     "40_list_map.bend",
     "board_index.bend", "42_module_board.bend",
+    "43_target_hello.bend",
 )
 
 def readme(track: str) -> str:
