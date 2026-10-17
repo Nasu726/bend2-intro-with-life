@@ -1672,15 +1672,15 @@ bend examples/minesweeper/cli_replay.bend c0 f1 c1
 \textbf{ここでは一度の起動時に操作列をまとめて指定しています。} キー入力を待つ対話式のCLIではありません。また、ゲーム開始前の旗操作はこの実習では無視します。操作を一つずつ処理する部分だけを見てみましょう。
 
 \begin{lstlisting}[caption={操作のリストを先頭から処理する}]
-def replay(stage: Start.Stage, commands: List<String>) -> Start.Stage:
+def replay(commands: List<String>, stage: Start.Stage) -> Start.Stage:
   match commands:
     case Nil{}:
       stage
     case command <> rest:
-      replay(action(stage, command), rest)
+      replay(rest, action(stage, command))
 \end{lstlisting}
 
-リストが空になれば現在の状態を返し、操作が残っていれば\code{action}で一手進めてから残りを処理します。文字列の先頭の\code{c}と\code{f}を識別し、後ろの数字は\code{U32.read}で読みます。変換に失敗した文字列を勝手に番号0とみなさないよう、\code{Maybe}の結果を分岐します。第5章で学んだ失敗の型が、ゲームの操作にも役立つ例です。
+リストが空になれば現在の状態を返し、操作が残っていれば\code{action}で一手進めてから残りを処理します。\textbf{再帰の引数は\code{commands}を先頭に置いています。} Bend 2は停止性を確認するとき、引数を左から順に検査するためです。毎回短くなるリストを先に置き、途中で変わる\code{stage}を後ろに置けば、確実にリストの終わりへ進むことが明瞭になります。文字列の先頭の\code{c}と\code{f}を識別し、後ろの数字は\code{U32.read}で読みます。変換に失敗した文字列を勝手に番号0とみなさないよう、\code{Maybe}の結果を分岐します。第5章で学んだ失敗の型が、ゲームの操作にも役立つ例です。
 
 初手の配置、クリック、勝敗を別々に書いたまま利用しているので、CLI自体には地雷を数える関数を書き直す必要がありません。次のGUIでも同じ純粋関数を利用できます。
 
