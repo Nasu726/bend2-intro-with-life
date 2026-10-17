@@ -1,0 +1,47 @@
+\begin{titlepage}
+\thispagestyle{empty}
+\pagecolor{paper}
+% A single generative "fold": many independent strands meet at one point
+% and open outward again. It evokes composition and parallelism without
+% turning the cover into a schematic of the book's chapters.
+% The small warm square is the only Minesweeper/revealed-cell allusion.
+\begin{tikzpicture}[remember picture,overlay,x=1mm,y=1mm,
+                    shift={(current page.south west)}]
+\fill[paper] (0,0) rectangle (210,297);
+% Editorial hierarchy: series / title / content / practice.
+\node[anchor=west,text=teal,font=\sffamily\bfseries\fontsize{11}{14}\selectfont]
+   at (22,272) {BEND 2 \quad / \quad INTERMEDIATE};
+\draw[teal!55,line width=.35pt] (22,266)--(188,266);
+\node[anchor=west,text=ink,font=\sffamily\bfseries\fontsize{34}{44}\selectfont]
+   at (21,244) {Bend 2を使いこなす};
+\node[anchor=west,text=muted,font=\sffamily\fontsize{12}{16}\selectfont]
+   at (22,229) {標準ライブラリ、入出力、GUI、証明。実際に作って学ぶ。};
+% One coherent artwork, edge to edge; no boxes, icons, or flowchart arrows.
+\begin{scope}
+\clip (0,80) rectangle (210,210);
+\fill[ink] (0,80) rectangle (210,210);
+\foreach \i in {0,...,45}{
+  \pgfmathsetmacro{\ya}{90+2.4*\i}
+  \pgfmathsetmacro{\yb}{200-2.4*\i}
+  \draw[white!75!teal,opacity=.52,line width=.46pt]
+    (5,\ya) .. controls (75,\ya) and (127,\yb) .. (205,\yb);
+}
+\foreach \i in {0,...,45}{
+  \pgfmathsetmacro{\ya}{90+2.4*\i}
+  \pgfmathsetmacro{\yb}{200-2.4*\i}
+  \draw[blue!60!white,opacity=.20,line width=.26pt]
+    (5,\yb) .. controls (74,\yb) and (135,\ya) .. (205,\ya);
+}
+\fill[warm] (103,143) rectangle (107,147);
+\end{scope}
+\draw[teal,line width=2.2pt] (0,80)--(210,80);
+\node[anchor=west,text=teal,font=\sffamily\bfseries\fontsize{12}{17}\selectfont]
+    at (22,61) {Bend 2 実践ハンズオン};
+\node[anchor=west,text=ink,font=\sffamily\fontsize{10}{15}\selectfont]
+    at (22,51) {マインスイーパーを題材に、書く・動かす・検証する。};
+\node[anchor=west,text=muted,font=\sffamily\fontsize{9}{13}\selectfont]
+    at (22,31) {『はじめてのBend2』に続く中級編};
+\node[anchor=east,text=muted,font=\sffamily\fontsize{8}{11}\selectfont]
+    at (188,31) {WORKBOOK / 02};
+\end{tikzpicture}
+\end{titlepage}
