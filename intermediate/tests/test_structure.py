@@ -41,6 +41,19 @@ class BookStructure(unittest.TestCase):
                         "Appとイベント", "lawを先に書く", "運ゲー無し"):
             self.assertIn(heading, text)
 
+    def test_binary_file_and_elapsed_clock_lessons(self):
+        text = BOOK.read_text(encoding="utf-8")
+        binary = (SRC / "45_binary_file.bend").read_text(encoding="utf-8")
+        clock = (SRC / "46_elapsed_clock.bend").read_text(encoding="utf-8")
+        self.assertEqual(text.count(r"\sample{45_binary_file.bend}"), 1)
+        self.assertEqual(text.count(r"\sample{46_elapsed_clock.bend}"), 1)
+        self.assertIn("File.write_bytes(file, [0, 10, 13, 255])", binary)
+        self.assertIn("File.read_bytes(input, 16)", binary)
+        self.assertIn("IO.now()", clock)
+        self.assertIn("IO.sleep(20)", clock)
+        self.assertIn("00 0A 0D FF", text)
+        self.assertIn(r"\code{Nat.sub}", text)
+
     def test_each_chapter_has_a_goal_and_an_exercise(self):
         text = BOOK.read_text(encoding="utf-8")
         chapters = re.split(r"\\chapter\{[^}]+\}", text)[1:]
