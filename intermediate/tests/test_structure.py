@@ -73,6 +73,18 @@ class BookStructure(unittest.TestCase):
         self.assertEqual(set(samples), set(INTERMEDIATE_EXAMPLES),
                          "Every bundled exercise must be introduced once in the textbook")
 
+    def test_reader_overview_matches_bundle_and_io_lessons(self):
+        from build_reader_bundle import INTERMEDIATE_GAME_FILES
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn(f"通常サンプル{len(INTERMEDIATE_EXAMPLES)}本", readme)
+        self.assertIn(f"ゲーム実習{len(INTERMEDIATE_GAME_FILES)}本", readme)
+        self.assertNotIn("**44ファイル**", readme)
+        for command in ("bend examples/45_binary_file.bend",
+                        "bend examples/46_elapsed_clock.bend"):
+            self.assertIn(command, readme)
+        self.assertIn("00 0a 0d ff", readme)
+        self.assertIn("時計の値は環境によって変わり", readme)
+
     def test_pair_exists_lesson_has_real_source(self):
         text = BOOK.read_text(encoding="utf-8")
         self.assertEqual(text.count(r"\sample{52_pair_exists.bend}"), 1)
