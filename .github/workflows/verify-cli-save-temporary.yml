@@ -1,0 +1,30 @@
+name: Verify intermediate CLI save contract (temporary)
+on:
+  push:
+    branches: [build/intermediate-save-contract-20261019]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      BEND_NO_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Python syntax
+        run: python3 -m py_compile intermediate/scripts/test_cli_storage.py
+      - name: Install Bend
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://bend-lang.com/install.sh -o /tmp/install-bend.sh
+          sh /tmp/install-bend.sh
+          echo "$HOME/.bend/bin" >> "$GITHUB_PATH"
+      - name: Bend typecheck
+        run: bend intermediate/minesweeper/cli_save.bend --check-only
+      - name: Real File IO regression
+        run: python3 intermediate/scripts/test_cli_storage.py
