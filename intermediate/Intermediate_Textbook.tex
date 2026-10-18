@@ -1307,6 +1307,23 @@ def new_state(mines: U32) -> State:
 \]
 8×8なら配列の添字は\(8\times\text{行}+\text{列}\)です。第12章の\code{23_cell_hit_test.bend}をもう一度開き、コード中でこの計算を行う場所を見つけてください。
 
+\section{関数の戻り値と実行結果を確かめる}
+まず、配布ZIPの\code{examples/23_cell_hit_test.bend}にある関数を見てみましょう。範囲判定は、添字の計算より先に行います。
+
+\begin{lstlisting}[caption={画素座標を盤面の添字へ変換する}]
+def pixel_to_cell(+x: U32, +y: U32) -> Maybe<&2, U32>:
+  cell_if_valid(x, y, Bool.and(U32.is_lt(x, 256), U32.is_lt(y, 256)))
+\end{lstlisting}
+
+ZIPを展開したフォルダーで、実行してみましょう。
+
+\begin{lstlisting}[language={},caption={第14章の実行例}]
+bend examples/23_cell_hit_test.bend
+10
+\end{lstlisting}
+
+この\code{10}は、\code{main}が(64,32)を10番へ、(256,32)を\code{None{}}へ変換し、表示用の\code{cell_or_zero}を通して10と0を足した結果です。\textbf{以下の六つの境界例をすべて実行した結果ではありません。} 次の表は、これから検査する期待値です。ゲームのクリック処理に\code{cell_or_zero}を流用すると、\code{None{}}を0番マスの操作と誤認するので注意しましょう。
+
 \section{端をまたぐ値はどうなるか}
 \begin{center}
 \begin{tabularx}{.9\linewidth}{@{}L{30mm}L{40mm}X@{}}
@@ -1558,6 +1575,23 @@ bend examples/34_mine_mask_law.bend --verdict
 \end{center}
 
 例えば第16章の\code{33_nat_induction.bend}で\code{main}を実行して0が返ることと、任意の\code{Nat}で掛け算の法則が成り立つことは違います。\code{--verdict}の結果が必要なのは、後者の確認です。
+
+\section{実行結果と法則の証明を比べる}
+配布ZIPの\code{examples/24_bool_proofs.bend}には、次の法則があります。
+
+\begin{lstlisting}[caption={Boolの二回反転を検査する法則}]
+law not_twice:
+  for b: Bool
+  {Bool.not(Bool.not(b)) == b : Bool}
+\end{lstlisting}
+
+\begin{lstlisting}[language={},caption={実行と形式的証明は別の確認}]
+bend examples/24_bool_proofs.bend
+1
+bend examples/24_bool_proofs.bend --verdict
+\end{lstlisting}
+
+\code{1}は、\code{main}で\code{True{}}を二回反転して\code{U32}として表示した値です。一方、\code{--verdict}は\code{law not_twice}の\code{b}が取り得る\code{Bool}のすべての値について証明を検査します。どちらも、ゲーム全体の旗操作が正しいという主張ではありません。
 
 \section{正しい法則でも、問いが足りない場合}
 第15章では「旗を二回切り替えると元に戻る」法則を学びました。その法則が正しくても、何もしない関数は排除できませんでした。証明が成立したかどうかだけでなく、\textbf{本当に必要な規則を言葉にしたか}を確かめましょう。
@@ -2355,6 +2389,24 @@ mines=40960;moves=0,12,14
 
 例えば「保存先のファイルが開けるか確かめたい」場合、\code{bend base File.open}を調べます。戻り値に\code{IO}と\code{Result}があるので、外部の操作であり、失敗もあり得ることが分かります。さらに開いた\code{File}を後で閉じる必要があります。型を読むだけでも、使い方の大切な部分が見えてきます。
 
+\section{知らない関数を最小例で試す}
+例えば「0、1、2、3のうち、3未満の数だけを足したい」とき、再帰を自作する前に\code{List.range}、\code{List.filter}、\code{List.foldl}を調べます。型を確認したら、配布ZIPの\code{examples/17_list_pipeline.bend}を実行してみましょう。
+
+\begin{lstlisting}[language={},caption={関数の型を調べてから実行}]
+bend base List.filter
+bend examples/17_list_pipeline.bend
+3n
+\end{lstlisting}
+
+\begin{lstlisting}[caption={既存の学習用コードの計算部分}]
+def main() -> Nat:
+  xs = List.range(4n)
+  ys = List.filter(~Nat, ~small, xs)
+  List.foldl(~&2, ~Nat, ~Nat, ~sum, ys, 0n)
+\end{lstlisting}
+
+\code{List.range(4n)}で作る列は0、1、2、3です。\code{small}は3未満だけを残し、\code{sum}と\code{List.foldl}で0、1、2を足すため、出力は\code{3n}となります。\code{small}と\code{sum}の定義もファイルを開いて確認してください。これは標準APIの一つの実行例であり、GPUの速度やGUIの表示を検証したものではありません。
+
 \section{機能から探すための索引}
 \begin{longtable}{@{}p{28mm}p{57mm}p{54mm}@{}}
 \toprule
@@ -2393,5 +2445,5 @@ GUI & Image, App, Window, Event & 画面・イベントの環境\\
 
 公式の\href{https://github.com/bendlang/bend/blob/main/guide/GUIDE.md}{Bend 2 GUIDE}と\href{https://github.com/bendlang/bend/blob/main/bend2/base.bend}{Baseライブラリ}も手元に置いておきましょう。
 
-\exercise{本書でまだ使っていないBaseの公開関数を一つ選び、引数・返り値・所有権・失敗条件を調べてみましょう。次に、実行できる最小プログラムを作り、期待した結果と一致するか確かめてみましょう。}
+\exercise{\code{17_list_pipeline.bend}の\code{small}の条件を2未満へ変えて、出力を予想してから実行してみましょう。次に\code{List.range(5n)}へ変えるとどうなるか試してみましょう。最後に、まだ使っていないBaseの公開関数を一つ選び、型・所有権・失敗条件を調べ、小さな実行例で結果を確かめてみましょう。}
 \end{document}

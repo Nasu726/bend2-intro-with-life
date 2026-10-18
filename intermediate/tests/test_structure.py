@@ -140,6 +140,27 @@ class BookStructure(unittest.TestCase):
         self.assertIn("IO.within(U32, 1000, IO.pure(U32, 7))", source)
         self.assertIn('IO.print("Timed out")', source)
 
+    def test_chapters_14_18_23_have_runnable_examples(self):
+        book = BOOK.read_text(encoding="utf-8")
+        chapters = re.split(r"\\chapter\{[^}]+\}", book)[1:]
+        checks = {
+            14: ("23_cell_hit_test.bend", "bend examples/23_cell_hit_test.bend",
+                 "cell_if_valid(x, y", "10"),
+            18: ("24_bool_proofs.bend", "bend examples/24_bool_proofs.bend",
+                 "law not_twice:", "--verdict"),
+            23: ("17_list_pipeline.bend", "bend examples/17_list_pipeline.bend",
+                 "List.foldl", "3n"),
+        }
+        for chapter_number, required in checks.items():
+            chapter = chapters[chapter_number - 1]
+            with self.subTest(chapter=chapter_number):
+                self.assertIn(r"\begin{lstlisting}", chapter)
+                for token in required:
+                    self.assertIn(token, chapter)
+        self.assertEqual(book.count(r"\sample{23_cell_hit_test.bend}"), 1)
+        self.assertEqual(book.count(r"\sample{24_bool_proofs.bend}"), 1)
+        self.assertEqual(book.count(r"\sample{17_list_pipeline.bend}"), 1)
+
     def test_draft_status_is_honest(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         self.assertIn("未完成", readme)
