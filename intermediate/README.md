@@ -75,7 +75,7 @@ bend examples/46_elapsed_clock.bend
 引き続き第19・20・21章を増補し、さらに第11・12章を『はじめてのBend2』と同じ
 **小さなコード→実行結果→仕組みの解説→演習**の流れに沿って改稿しました。
 新たに `31_image_quadrants.bend`、`32_mouse_events.bend`、
-`33_nat_induction.bend` と `34_mine_mask_law.bend` を追加し、学習用コードは**52ファイル**になりました。
+`33_nat_induction.bend` と `34_mine_mask_law.bend` を追加しました。
 第13〜18章は、マスの状態→座標の境界→旗操作の `law`→自然数の帰納法→
 盤面全体の不変条件→検証範囲の順に書き直し、本文の重複も整理しました。
 章別補稿とマインスイーパー草稿の全文が統合済みという意味ではなく、
@@ -114,7 +114,7 @@ IOの外部入力、Chanの受け渡し、TCP接続の成否を示す小さな�
 第1・2・4・23章の再編集では、入門書の編集方針に沿って、
 **必要性→実行可能な短い例→結果と型→解説→演習**の流れを強化しました。
 `35_string_fields.bend`（文字列分割）、`36_map_missing.bend`（Mapにキーがあるか）、
-`37_u32_dimension.bend`（Nat/U32変換と比較）を追加し、教材コードは**52ファイル**です（うち1ファイルはimport用モジュール）。
+`37_u32_dimension.bend`（Nat/U32変換と比較）を追加しました。
 
 今回の第3章改稿では `38_list_sort.bend`、`39_array_to_list.bend`、`40_list_map.bend` を追加し、
 標準の `List.sort`・`List.map`・`List.foldl`・`Array.to_list` を自分で動かして比較できます。
@@ -130,7 +130,7 @@ JavaScript実行にはNode.jsが別途必要です。
 第21章では0マスの連鎖公開を具体盤面から学べるよう追記し、
 仕様を先行して固定した6法則、`List`による作業リスト、`Nat`による停止性検査も説明しています。
 
-第10章には `44_message_boundary.bend` を追加し、`String.split` を使って区切り記号と受信単位の違いを確かめられるようにしました。ソケットを使った完全なTCP送受信プログラムではありません。
+第10章には `44_message_boundary.bend` を追加し、`String.split` を使って区切り記号と受信単位の違いを確かめられるようにしました。その後 `47_tcp_loopback.bend` と `48_udp_loopback.bend` でローカルホストへの実際の送受信も確認できるようにしました。外部ネットワークでの運用や任意の大きさの受信は検証していません。
 
 ## 新しいゲーム実習（2026-10-17）
 
