@@ -88,6 +88,20 @@ def expose(mines: frozenset[int], view: Visible, index: int) -> Visible:
         raise ValueError("mine out of bounds")
     if len(mines) != view.mine_count:
         raise ValueError("mine count does not match public view")
+    # The game engine knows the ground truth. Reject a forged/stale public view
+    # before any click, including clicking an already-open cell.
+    observed = set()
+    for cell, clue in view.opened:
+        if cell < 0 or cell >= view.width * view.height:
+            raise ValueError("opened cell out of bounds")
+        if cell in observed:
+            raise ValueError("duplicate opened cell")
+        observed.add(cell)
+        if cell in mines:
+            raise ValueError("a mine cannot be in the opened view")
+        actual = sum(n in mines for n in neighbors(cell, view.width, view.height))
+        if clue != actual:
+            raise ValueError("opened clue does not match the board")
     if index in mines:
         raise ValueError("attempt to open a mine")
     opened = dict(view.opened)

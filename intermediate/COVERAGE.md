@@ -73,3 +73,7 @@ G-04（0の連鎖公開）：`flood.bend` を `session.bend` から呼び出す�
 - 公開ソルバーだけでなく `noguess_generator.bend` で候補を列挙し、`Session.Won` を実際に確認できたものだけ返す。Python独立ゲームでマスク40960・クリック列0→12→14を照合。
 - `cli_save.bend` は固定マスク33のコマンド履歴を一度書き出し、別プロセスで再読込して盤面を復元。欠落ファイル、異なるバージョン、範囲外操作、終端改変、操作数超過などを拒否。
 - GUIの左・右以外のボタンは無効化し、ヘッドレス検査を13項目に拡充。ウィンドウ実機試験とGUI状態の保存は未完了。
+
+## Python参考検証器の入力契約（2026-10-18）
+
+`intermediate/solutions/noguess_reference.py` の `consistent_models`／`provably_safe` は公開情報だけを入力にし、候補の有無と確実な手を判定します。一方、`expose` と `verify_no_guess` は**真の地雷配置を持つゲーム・受入検査側**であり、ソルバー本体と混同しません。`expose` は公開済み数字の偽装・矛盾や盤外位置を拒否します。Pythonの境界・生成証明書テストは `tests/test_noguess_reference.py` と `tests/test_noguess_reference_input_contract.py` を参照。検査は固定の4×4・地雷2個の有限ケースが中心で、一般のBend証明ではありません。
