@@ -142,12 +142,15 @@ def verify_no_guess(width: int, height: int, mines: frozenset[int],
 
     Only this verifier can access the truth.  The inference step above cannot.
     """
-    if width <= 0 or height <= 0:
+    if type(width) is not int or width <= 0 or type(height) is not int or height <= 0:
         raise ValueError("invalid board dimensions")
-    if any(m < 0 or m >= width * height for m in mines):
+    if (not isinstance(mines, frozenset) or
+            any(type(m) is not int or m < 0 or m >= width * height for m in mines)):
         raise ValueError("mine out of bounds")
-    if not (0 <= first_click < width * height):
+    if type(first_click) is not int or not 0 <= first_click < width * height:
         raise ValueError("first click out of bounds")
+    if type(limit) is not int or limit < 0:
+        raise ValueError("invalid search limit")
     if first_click in mines:
         return None
     view = expose(mines, Visible(width, height, len(mines), ()), first_click)
@@ -169,10 +172,16 @@ def verify_no_guess(width: int, height: int, mines: frozenset[int],
 def generate(width: int, height: int, mine_count: int, first_click: int,
              seed: int, attempts: int = 100):
     """Generate-and-verify, never silently return an unverified fallback."""
-    if width <= 0 or height <= 0 or attempts <= 0:
+    if (type(width) is not int or width <= 0 or
+            type(height) is not int or height <= 0 or
+            type(attempts) is not int or attempts <= 0):
         raise ValueError("invalid board or attempt count")
-    if not 0 <= first_click < width * height:
+    if type(first_click) is not int or not 0 <= first_click < width * height:
         raise ValueError("first click out of bounds")
+    if type(mine_count) is not int or mine_count < 0:
+        raise ValueError("invalid mine count")
+    if type(seed) is not int:
+        raise ValueError("seed must be an integer")
     forbidden = {first_click, *neighbors(first_click, width, height)}
     allowed = sorted(set(range(width * height)) - forbidden)
     if not (0 <= mine_count <= len(allowed)):
