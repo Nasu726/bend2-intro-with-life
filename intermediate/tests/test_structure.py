@@ -41,6 +41,15 @@ class BookStructure(unittest.TestCase):
                         "Appとイベント", "lawを先に書く", "運ゲー無し"):
             self.assertIn(heading, text)
 
+    def test_each_chapter_has_a_goal_and_an_exercise(self):
+        text = BOOK.read_text(encoding="utf-8")
+        chapters = re.split(r"\\chapter\{[^}]+\}", text)[1:]
+        self.assertEqual(len(chapters), 23, "The book must retain its 23 chapters")
+        for number, chapter in enumerate(chapters, 1):
+            with self.subTest(chapter=number):
+                self.assertEqual(chapter.count(r"\sectiongoal{"), 1)
+                self.assertGreaterEqual(chapter.count(r"\exercise{"), 1)
+
     def test_code_listings_exist(self):
         text = BOOK.read_text(encoding="utf-8")
         samples = re.findall(r"\\sample\{([^}]+)\}", text)

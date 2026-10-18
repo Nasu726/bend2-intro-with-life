@@ -16,15 +16,19 @@ def adjacent(index):
 
 def verify_certificate(mask, clicks):
     """Raise ValueError for a false, guessed, or incomplete certificate."""
-    if not isinstance(mask, int) or mask < 0 or mask >= (1 << 16):
+    if type(mask) is not int or mask < 0 or mask >= (1 << 16):
         raise ValueError("invalid 16-bit mine mask")
     mines = frozenset(i for i in CELLS if mask & (1 << i))
     if len(mines) != 2:
         raise ValueError("expected exactly two mines")
+    # Reject booleans and malformed containers before using indexing or sets.
+    # In Python, False == 0 and True == 1, but neither is a cell index.
+    if not isinstance(clicks, (list, tuple)):
+        raise ValueError("click sequence must be a list or tuple")
+    if any(type(i) is not int or i not in CELLS for i in clicks):
+        raise ValueError("click outside 4x4 board")
     if not clicks or clicks[0] != 0:
         raise ValueError("certificate must start at cell zero")
-    if any(not isinstance(i, int) or i not in CELLS for i in clicks):
-        raise ValueError("click outside 4x4 board")
     if len(set(clicks)) != len(clicks):
         raise ValueError("repeated click")
     if mines & ({0} | adjacent(0)):
