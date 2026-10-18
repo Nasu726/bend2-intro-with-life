@@ -62,7 +62,8 @@ INTERMEDIATE_EXAMPLES = (
 INTERMEDIATE_GAME_FILES = (
     "game.bend", "board.bend", "board4.bend", "flood.bend",
     "session.bend", "start.bend", "cli_replay.bend", "gui.bend",
-    "public_solver.bend", "noguess_generator.bend", "cli_save.bend",
+    "public_solver.bend", "public_two_corners.bend",
+    "noguess_generator.bend", "cli_save.bend",
 )
 
 def readme(track: str) -> str:

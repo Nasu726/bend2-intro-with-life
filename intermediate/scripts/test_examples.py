@@ -508,8 +508,14 @@ def main():
     if public_mask != "50":
         raise AssertionError(f"Public two-mine deduction expected 50, got {public_mask!r}")
     independent = run(sys.executable, str(ROOT / "scripts" / "test_public_solver.py"))
-    if "PASS 13 independent public solver cases" not in independent:
+    if "PASS 49 independent public solver cases" not in independent:
         raise AssertionError(f"Public solver independent oracle missing: {independent!r}")
+    two = game / "public_two_corners.bend"
+    run("bend", str(two), "--check-only")
+    actual = run("bend", str(two)).splitlines()[-1]
+    if actual != "19506":
+        raise AssertionError(f"Two zero corners expected 19506, got {actual!r}")
+    print("PASS two-zero-corner public deduction = 19506", flush=True)
     print("PASS public-only exact deduction and independent oracle", flush=True)
     generator = run(sys.executable, str(ROOT / "scripts" / "test_noguess_generator.py"))
     if "PASS independent Bend no-guess generator replay" not in generator:

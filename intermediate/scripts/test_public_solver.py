@@ -56,6 +56,11 @@ def cases():
         ({1, 11}, (0, 2, 3, 5, 7)),
     ):
         out.append(clues_for(mines, opened))
+    out.extend([[(i, clue)] for i in range(16) for clue in (0, 1)])
+    out.extend([
+        [(0, 0), (15, 0)], [(0, 0), (15, 2)],
+        [(0, 0), (0, 0)], [(15, 0), (15, 1)],
+    ])
     return out
 
 
@@ -83,8 +88,14 @@ def program(items):
             f"def check_{k}() -> U32:",
             f"  bit(U32.is_eq(code(Solver.provably_safe(Solver.Public{{[{data}]}})), {target}))",
         ])
-    summands = " + ".join(f"(check_{k}() * {1 << k} : U32)" for k in range(len(items)))
-    defs.extend(["def main() -> U32:", f"  ({summands} : U32)"])
+    # 49 independent checks cannot be encoded as U32 bit positions.
+    groups = []
+    for start in range(0, len(items), 8):
+        name = f"group_{start // 8}"
+        terms = " + ".join(f"check_{i}()" for i in range(start, min(start + 8, len(items))))
+        defs.extend([f"def {name}() -> U32:", f"  ({terms} : U32)"])
+        groups.append(f"{name}()")
+    defs.extend(["def main() -> U32:", f'  ({" + ".join(groups)} : U32)'])
     return "\n".join(defs) + "\n"
 
 
@@ -99,15 +110,12 @@ def main():
         env = dict(os.environ, BEND_NO_TELEMETRY="1")
         proc = subprocess.run(["bend", str(caller)], cwd=ROOT.parent,
                               env=env, capture_output=True, text=True,
-                              timeout=180)
+                              timeout=360)
         if proc.returncode:
             raise AssertionError(f"Exact public solver failed:\n{proc.stdout}\n{proc.stderr}")
         observed = proc.stdout.strip().splitlines()[-1]
-        if observed != str((1 << len(items)) - 1):
-            bits = int(observed)
-            failed = [(k, items[k], oracle(items[k])) for k in range(len(items))
-                      if not (bits & (1 << k))]
-            raise AssertionError(f"Exact-oracle failures: {failed}; bitmask={bits}")
+        if observed != str(len(items)):
+            raise AssertionError(f"Independent public oracle passed {observed}/{len(items)} checks")
         print(f"PASS {len(items)} independent public solver cases, including inconsistent views")
 
 

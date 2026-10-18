@@ -2280,6 +2280,38 @@ bend examples/minesweeper/public_solver.bend
 
 \exercise{\code{public_solver.bend}にある\code{Number{0, 0}}を\code{Number{0, 1}}へ変更し、確定した安全マスがどう変わるか予想してから実行してみましょう。次に\code{Number{0, 9}}という実際にはあり得ない数字を与えたとき、ソルバーが\code{None}を返すべき理由を説明してみましょう。}
 
+\section{公開数字を一つ増やして比べる}
+番号0の数字が0なら、近傍の1・4・5は安全でした。では、\textbf{反対側の角である番号15にも数字0が見えていたら}、確定手は増えるでしょうか。まず番号15の近傍を紙に書き出してみましょう。
+
+番号15の近傍は10・11・14です。したがって二つの公開数字0から、\textbf{1・4・5・10・11・14の六つ}を安全と確定できます。地雷の総数は2個のままです。これ以外の未公開マスまで安全だと推測してはいけません。
+
+前節のソルバーを作り直す必要はありません。\code{Public}へ二つの\code{Number}を渡すだけです。次のプログラムを、配布物の\code{examples/minesweeper/public_two_corners.bend}に収録しました。
+
+\begin{lstlisting}[language={},caption={二つの公開数字を使うBendコード}]
+import Base
+import ./public_solver.bend as Solver
+
+def show(result: Maybe<&2, U32>) -> U32:
+  match result:
+    case Some{bits}:
+      bits
+    case None{}:
+      65536
+
+def main() -> U32:
+  show(Solver.provably_safe(Solver.Public{[
+    Solver.Number{0, 0}, Solver.Number{15, 0}
+  ]}))
+\end{lstlisting}
+
+\code{bend examples/minesweeper/public_two_corners.bend}を実行すると、結果は\textbf{19506}です。これはマス番号ではなく、確定安全マスのビット集合です。
+\[
+19506=2^1+2^4+2^5+2^{10}+2^{11}+2^{14}
+\]
+となり、予想と一致します。\code{Some{bits}}は安全なマスの集合を表し、\code{None{}}は公開数字が矛盾して候補が一つも残らない場合です。この例では後者を65536と表示し、\textbf{確定手なしの0と区別}しています。真の地雷配置はソルバーの引数に含まれていません。
+
+\exercise{\code{Number{15, 0}}を\code{Number{15, 1}}に変更し、結果を予想してから実行してみましょう。元の50と比べ、公開数字が増えても確定安全マスが必ず増えるとは限らない理由を説明してみましょう。}
+
 \section{候補盤面を実際に解いてから採用する}
 「ある時点で安全なマスが分かる」だけでは、運ゲー無しの盤面とは言えません。数手進めた後に安全なマスを一つも確定できなくなる場合があるからです。そこで、盤面を採用する前に\textbf{最初のクリックから勝利まで}を検証しましょう。
 

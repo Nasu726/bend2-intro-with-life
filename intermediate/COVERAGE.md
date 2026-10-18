@@ -81,3 +81,6 @@ G-04（0の連鎖公開）：`flood.bend` を `session.bend` から呼び出す�
 ## 限定版生成証明書の独立検収（2026-10-18）
 
 `scripts/test_noguess_generator.py` は、Bendが出力した地雷マスク・クリック列を `scripts/independent_certificate.py` で検証します。検査器は `solutions/noguess_reference.py` をimportせず、各クリック直前の公開数字だけから全整合候補を再列挙し、推測クリックを拒否します。0連鎖は別のFIFO実装で再現し、全14安全マスの公開まで確認します。固定4×4・地雷2個・初手0限定の受入検査であり、任意サイズ・地雷数に関するBendの全称証明ではありません。
+## 第22章：二つの公開数字の最小例
+
+`examples/minesweeper/public_two_corners.bend` は、4×4・地雷2個に限定し `Number{0,0}` と `Number{15,0}` から安全ビット集合19506を計算します。単独数字0の50と比較できる実行教材です。独立Python列挙は49ケースへ拡充しました。この有限照合は一般サイズの全称証明ではありません。

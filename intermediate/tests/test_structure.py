@@ -60,6 +60,14 @@ class BookStructure(unittest.TestCase):
         self.assertIn("Exists(Nat,", source)
         self.assertIn("Tuple{2n, {==}}", source)
 
+    def test_two_corner_lesson(self):
+        text = BOOK.read_text(encoding="utf-8")
+        source = (ROOT / "minesweeper" / "public_two_corners.bend").read_text(encoding="utf-8")
+        self.assertIn(r"\section{公開数字を一つ増やして比べる}", text)
+        self.assertIn("19506", text)
+        self.assertIn("Solver.Number{0, 0}", source)
+        self.assertIn("Solver.Number{15, 0}", source)
+
     def test_coverage_present(self):
         ledger = (ROOT / "COVERAGE.md").read_text(encoding="utf-8")
         for family in ("Map", "Set", "List", "Array", "IO", "File",
