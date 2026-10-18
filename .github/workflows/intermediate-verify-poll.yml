@@ -1,0 +1,54 @@
+name: Temporary Poll lesson verification
+on:
+  push:
+    branches: [build/intermediate-poll-20261018-a]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      BEND_NO_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Structural tests
+        run: python3 -m unittest discover -s intermediate/tests -v
+      - name: Install Bend
+        run: |
+          curl -fsSL https://bend-lang.com/install.sh -o /tmp/install-bend.sh
+          sh /tmp/install-bend.sh
+          echo "$HOME/.bend/bin" >> "$GITHUB_PATH"
+      - name: Poll example
+        run: |
+          bend intermediate/src/53_chan_poll.bend --check-only
+          bend intermediate/src/53_chan_poll.bend > /tmp/poll-actual
+          printf '0\n9\n' > /tmp/poll-expected
+          diff -u /tmp/poll-expected /tmp/poll-actual
+      - name: Compile PDF
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: intermediate/Intermediate_Textbook.tex
+          latexmk_use_xelatex: true
+          texlive_version: '2025'
+          os: debian
+          extra_system_packages: fonts-noto-cjk fonts-noto-core
+      - name: Build PDF and ZIP
+        run: |
+          set -e
+          if test -s Intermediate_Textbook.pdf; then
+            cp Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          else
+            cp intermediate/Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          fi
+          python3 scripts/build_reader_bundle.py intermediate
+          python3 -m unittest tests.test_reader_bundle -v
+      - uses: actions/upload-artifact@v4
+        with:
+          name: poll-reader-materials
+          path: |
+            intermediate/Bend2を使いこなす_プレビュー.pdf
+            reader-packages/bend2-intermediate-reader-preview.zip

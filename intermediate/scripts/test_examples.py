@@ -46,6 +46,7 @@ EXPECTED = {
     "52_pair_exists.bend": "5",
     "49_map_update_delete.bend": "9",
     "50_set_from_list.bend": "2n",
+    "53_chan_poll.bend": "9",
 }
 
 def run(*args):
