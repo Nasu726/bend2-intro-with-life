@@ -40,8 +40,17 @@ def neighbors(index: int, width: int, height: int) -> tuple[int, ...]:
 
 def consistent_models(view: Visible, limit: int = 200_000):
     """Enumerate every mine layout consistent with public numbers and total."""
+    if view.width <= 0 or view.height <= 0:
+        return []
     cells = set(range(view.width * view.height))
-    opened = dict(view.opened)
+    opened = {}
+    for index, clue in view.opened:
+        # Invalid public observations must never certify a safe move.
+        if (index not in cells or
+                not 0 <= clue <= len(neighbors(index, view.width, view.height)) or
+                (index in opened and opened[index] != clue)):
+            return []
+        opened[index] = clue
     hidden = sorted(cells - opened.keys())
     if not (0 <= view.mine_count <= len(hidden)):
         return []
@@ -58,9 +67,9 @@ def consistent_models(view: Visible, limit: int = 200_000):
     return models
 
 
-def provably_safe(view: Visible) -> frozenset[int]:
+def provably_safe(view: Visible, limit: int = 200_000) -> frozenset[int]:
     """Only visible constraints enter here; the actual board is not an input."""
-    models = consistent_models(view)
+    models = consistent_models(view, limit=limit)
     if not models:
         raise ValueError("no mine layout satisfies the visible information")
     all_cells = set(range(view.width * view.height))
@@ -71,6 +80,8 @@ def provably_safe(view: Visible) -> frozenset[int]:
 
 def expose(mines: frozenset[int], view: Visible, index: int) -> Visible:
     """Game-engine operation (not part of deduction): zero-cell flood opening."""
+    if not 0 <= index < view.width * view.height:
+        raise ValueError("cell out of bounds")
     if index in mines:
         raise ValueError("attempt to open a mine")
     opened = dict(view.opened)
@@ -104,7 +115,7 @@ def verify_no_guess(width: int, height: int, mines: frozenset[int],
     trace = [first_click]
     while len(view.opened) < width * height - len(mines):
         try:
-            safe = provably_safe(view)
+            safe = provably_safe(view, limit=limit)
         except (SearchLimit, ValueError):
             return None
         if not safe:
@@ -121,6 +132,8 @@ def generate(width: int, height: int, mine_count: int, first_click: int,
     """Generate-and-verify, never silently return an unverified fallback."""
     if width <= 0 or height <= 0 or attempts <= 0:
         raise ValueError("invalid board or attempt count")
+    if not 0 <= first_click < width * height:
+        raise ValueError("first click out of bounds")
     forbidden = {first_click, *neighbors(first_click, width, height)}
     allowed = sorted(set(range(width * height)) - forbidden)
     if not (0 <= mine_count <= len(allowed)):
