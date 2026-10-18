@@ -45,6 +45,8 @@ def main():
             "BEND2-SAVE-1|c0|END|tail",  # Data after terminator.
             "BEND2-SAVE-1|c0|c16|END",  # Out-of-range command.
             "BEND2-SAVE-1|c0|f1",  # Missing terminator.
+            "BEND2-SAVE-1|END",  # Empty history: save() refuses it too.
+            "BEND2-SAVE-1|" + "r|" * 65 + "END",  # >64 legal commands.
             "BEND2-SAVE-1|END|" + "X" * 510,  # Oversized and malformed.
         )
         for bad in bad_files:
@@ -53,7 +55,13 @@ def main():
 
         assert call("save", "c0", "r") == "Saved minesweeper_save.txt"
         assert call("load") == "Fresh: first click with c0..c15"
-    print("PASS CLI save/load: complete replay and 11 malformed/input cases")
+        # Both directions must accept the same upper boundary.
+        assert call("save", *(["r"] * 64)) == "Saved minesweeper_save.txt"
+        assert savefile.read_text() == "BEND2-SAVE-1|" + "r|" * 64 + "END"
+        assert call("load") == "Fresh: first click with c0..c15"
+        call("save", *(["r"] * 65), succeeds=False)
+        assert savefile.read_text() == "BEND2-SAVE-1|" + "r|" * 64 + "END"
+    print("PASS CLI save/load: replay, malformed histories and 1..64 limit")
 
 
 if __name__ == "__main__":

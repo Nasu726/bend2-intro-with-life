@@ -75,11 +75,25 @@ def parse_tokens(tokens: List<&2, String>) -> Maybe<&2, Parsed>:
     case command <> rest:
       combine_token(command, parse_tokens(rest))
 
+# Loading must enforce the same 1..64-command contract as saving.
+# A syntactically valid END token is not enough for a valid save.
+def accepted_commands(ok: Bool, commands: List<&2, String>) ->
+  Maybe<&2, List<&2, String>>:
+  match ok:
+    case True{}:
+      Some{commands}
+    case False{}:
+      None{}
+
+def checked_commands(+commands: List<&2, String>) ->
+  Maybe<&2, List<&2, String>>:
+  accepted_commands(valid_save(commands), commands)
+
 def parsed_commands(parsed: Maybe<&2, Parsed>) ->
   Maybe<&2, List<&2, String>>:
   match parsed:
     case Some{Valid{commands}}:
-      Some{commands}
+      checked_commands(commands)
     case _:
       None{}
 
