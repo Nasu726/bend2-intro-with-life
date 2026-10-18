@@ -77,3 +77,7 @@ G-04（0の連鎖公開）：`flood.bend` を `session.bend` から呼び出す�
 ## Python参考検証器の入力契約（2026-10-18）
 
 `intermediate/solutions/noguess_reference.py` の `consistent_models`／`provably_safe` は公開情報だけを入力にし、候補の有無と確実な手を判定します。一方、`expose` と `verify_no_guess` は**真の地雷配置を持つゲーム・受入検査側**であり、ソルバー本体と混同しません。`expose` は公開済み数字の偽装・矛盾や盤外位置を拒否します。Pythonの境界・生成証明書テストは `tests/test_noguess_reference.py` と `tests/test_noguess_reference_input_contract.py` を参照。検査は固定の4×4・地雷2個の有限ケースが中心で、一般のBend証明ではありません。
+
+## 限定版生成証明書の独立検収（2026-10-18）
+
+`scripts/test_noguess_generator.py` は、Bendが出力した地雷マスク・クリック列を `scripts/independent_certificate.py` で検証します。検査器は `solutions/noguess_reference.py` をimportせず、各クリック直前の公開数字だけから全整合候補を再列挙し、推測クリックを拒否します。0連鎖は別のFIFO実装で再現し、全14安全マスの公開まで確認します。固定4×4・地雷2個・初手0限定の受入検査であり、任意サイズ・地雷数に関するBendの全称証明ではありません。

@@ -5,6 +5,7 @@ The generated 4x4 board is replayed using the independent Python game,
 not with a second invocation of the Bend game/solver.
 """
 from __future__ import annotations
+from independent_certificate import verify_certificate
 import importlib.util
 from pathlib import Path
 import re
@@ -43,6 +44,9 @@ def check() -> tuple[int, tuple[int, ...]]:
     assert all(0 <= i < 16 for i in clicks)
 
     true_mines = frozenset(i for i in range(16) if mask & (1 << i))
+    # Check every forced click against all public candidates, independently
+    # of the Python reference and Bend implementations.
+    verify_certificate(mask, clicks)
     independent = module.verify_no_guess(4, 4, true_mines, 0)
     assert independent == clicks, (mask, clicks, independent)
 
