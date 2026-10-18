@@ -48,6 +48,20 @@ bend examples/minesweeper/cli_save.bend load
 
 [**完成までの執筆・実装予定**](COMPLETION_PLAN.md) に工程・ゲート・暫定スケジュールをまとめました。
 
+## 第7・8章の実行確認（File・時刻）
+
+第7章のバイナリ例は、文字列ではなく4バイトを保存して読み戻します。第8章の時計例は、待機前後の時刻から経過ミリ秒を求めます。どちらもZIP展開後の作業フォルダーで試せます。
+
+```sh
+bend examples/45_binary_file.bend
+python3 -c "from pathlib import Path; print(Path('sample_bytes.bin').read_bytes().hex(' '))"
+bend examples/46_elapsed_clock.bend
+```
+
+最初の出力は`4`、次は`00 0a 0d ff`、最後は経過時間を表す整数です。時計の値は環境によって変わり、常に`20`になるとは限りません。ファイルの個数だけでは内容の正しさを保証できないため、4バイトの値と順序を別に確かめます。書き込み先に同名のディレクトリがある場合など、`File.open`が失敗するときは読み込みへ進まず終了します。
+
+現行プレビューの読者ZIPには、通常サンプル52本（import用補助モジュール1本を含む）とゲーム実習12本、PDF・README・LICENSEを収録しています。演習解答、内部の証明・テスト、編集用資料は同梱しません。
+
 ## 制作の進捗と方針
 
 [制作ロードマップ](ROADMAP.md)に計画書から引き継いだ内容と完成条件をまとめています。
@@ -61,7 +75,7 @@ bend examples/minesweeper/cli_save.bend load
 引き続き第19・20・21章を増補し、さらに第11・12章を『はじめてのBend2』と同じ
 **小さなコード→実行結果→仕組みの解説→演習**の流れに沿って改稿しました。
 新たに `31_image_quadrants.bend`、`32_mouse_events.bend`、
-`33_nat_induction.bend` と `34_mine_mask_law.bend` を追加し、学習用コードは**44ファイル**になりました。
+`33_nat_induction.bend` と `34_mine_mask_law.bend` を追加し、学習用コードは**52ファイル**になりました。
 第13〜18章は、マスの状態→座標の境界→旗操作の `law`→自然数の帰納法→
 盤面全体の不変条件→検証範囲の順に書き直し、本文の重複も整理しました。
 章別補稿とマインスイーパー草稿の全文が統合済みという意味ではなく、
@@ -100,7 +114,7 @@ IOの外部入力、Chanの受け渡し、TCP接続の成否を示す小さな�
 第1・2・4・23章の再編集では、入門書の編集方針に沿って、
 **必要性→実行可能な短い例→結果と型→解説→演習**の流れを強化しました。
 `35_string_fields.bend`（文字列分割）、`36_map_missing.bend`（Mapにキーがあるか）、
-`37_u32_dimension.bend`（Nat/U32変換と比較）を追加し、教材コードは**44ファイル**です（うち1ファイルはimport用モジュール）。
+`37_u32_dimension.bend`（Nat/U32変換と比較）を追加し、教材コードは**52ファイル**です（うち1ファイルはimport用モジュール）。
 
 今回の第3章改稿では `38_list_sort.bend`、`39_array_to_list.bend`、`40_list_map.bend` を追加し、
 標準の `List.sort`・`List.map`・`List.foldl`・`Array.to_list` を自分で動かして比較できます。

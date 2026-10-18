@@ -456,9 +456,20 @@ def main():
         if raw != bytes((0, 10, 13, 255)):
             raise AssertionError(f"Incorrect binary bytes: {raw!r}")
         print("PASS binary File write/read 00 0A 0D FF", flush=True)
+        # A directory cannot be opened as a regular file for writing.
+        # The sample must report failure rather than continue to read bytes.
+        (pathlib.Path(td) / "sample_bytes.bin").unlink()
+        (pathlib.Path(td) / "sample_bytes.bin").mkdir()
+        failed = subprocess.run(
+            ["bend", str(SAMPLES / "45_binary_file.bend")],
+            capture_output=True, text=True, timeout=180, cwd=td,
+            env=dict(os.environ, BEND_NO_TELEMETRY="1"))
+        if failed.returncode == 0:
+            raise AssertionError("Binary File sample ignored a failed File.open")
+        print("PASS binary File.open failure exits without reading", flush=True)
 
     clock = run("bend", str(SAMPLES / "46_elapsed_clock.bend"))
-    if not clock.isdecimal() or int(clock) >= 60000:
+    if not clock.isdecimal() or not 1 <= int(clock) < 60000:
         raise AssertionError(f"Invalid elapsed clock output: {clock!r}")
     print("PASS variable numeric IO.now/IO.sleep measurement", flush=True)
 
