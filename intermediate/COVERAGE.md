@@ -84,3 +84,7 @@ G-04（0の連鎖公開）：`flood.bend` を `session.bend` から呼び出す�
 ## 第22章：二つの公開数字の最小例
 
 `examples/minesweeper/public_two_corners.bend` は、4×4・地雷2個に限定し `Number{0,0}` と `Number{15,0}` から安全ビット集合19506を計算します。単独数字0の50と比較できる実行教材です。独立Python列挙は49ケースへ拡充しました。この有限照合は一般サイズの全称証明ではありません。
+
+## 第9章のPoll補稿（2026-10-18）
+
+検証用 `tests/fixtures/chan_poll.bend` で空の受信と送信後の受信を実行照合する。補稿は `manuscript/09_Poll実習.md`。読者PDFとZIPには未収録であり、完成とは扱わない。
