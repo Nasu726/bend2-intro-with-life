@@ -121,6 +121,18 @@ class ReferenceOracleTests(unittest.TestCase):
             reference.generate(4, 4, 3, 0, seed=1, attempts=1)
 
 
+    def test_invalid_true_board_never_certified(self):
+        for mines in (frozenset({-1, 15}), frozenset({0, 16})):
+            with self.subTest(mines=mines):
+                with self.assertRaises(ValueError):
+                    reference.verify_no_guess(4, 4, mines, 1)
+                with self.assertRaises(ValueError):
+                    reference.expose(mines, reference.Visible(4, 4, 2, ()), 1)
+        with self.assertRaises(ValueError):
+            reference.expose(frozenset({15}), reference.Visible(4, 4, 2, ()), 0)
+        with self.assertRaises(ValueError):
+            reference.verify_no_guess(0, 4, frozenset(), 0)
+
     def test_non_warping_neighbors(self):
         self.assertEqual(set(reference.neighbors(0, 4, 4)), {1, 4, 5})
         self.assertEqual(len(reference.neighbors(5, 4, 4)), 8)

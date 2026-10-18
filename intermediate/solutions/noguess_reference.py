@@ -40,7 +40,7 @@ def neighbors(index: int, width: int, height: int) -> tuple[int, ...]:
 
 def consistent_models(view: Visible, limit: int = 200_000):
     """Enumerate every mine layout consistent with public numbers and total."""
-    if view.width <= 0 or view.height <= 0:
+    if view.width <= 0 or view.height <= 0 or limit < 0:
         return []
     cells = set(range(view.width * view.height))
     opened = {}
@@ -80,8 +80,14 @@ def provably_safe(view: Visible, limit: int = 200_000) -> frozenset[int]:
 
 def expose(mines: frozenset[int], view: Visible, index: int) -> Visible:
     """Game-engine operation (not part of deduction): zero-cell flood opening."""
+    if view.width <= 0 or view.height <= 0:
+        raise ValueError("invalid board dimensions")
     if not 0 <= index < view.width * view.height:
         raise ValueError("cell out of bounds")
+    if any(m < 0 or m >= view.width * view.height for m in mines):
+        raise ValueError("mine out of bounds")
+    if len(mines) != view.mine_count:
+        raise ValueError("mine count does not match public view")
     if index in mines:
         raise ValueError("attempt to open a mine")
     opened = dict(view.opened)
@@ -107,6 +113,10 @@ def verify_no_guess(width: int, height: int, mines: frozenset[int],
 
     Only this verifier can access the truth.  The inference step above cannot.
     """
+    if width <= 0 or height <= 0:
+        raise ValueError("invalid board dimensions")
+    if any(m < 0 or m >= width * height for m in mines):
+        raise ValueError("mine out of bounds")
     if not (0 <= first_click < width * height):
         raise ValueError("first click out of bounds")
     if first_click in mines:
