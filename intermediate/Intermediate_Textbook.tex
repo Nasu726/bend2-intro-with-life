@@ -29,7 +29,9 @@
 \usepackage{float}
 % The book reaches section 22.10: standard Book ToC number boxes (2.3em)
 % clip a five-character section label. Expand the section/subsection columns.
+% Three-digit TOC page numbers need more than the default 1.55em box.
 \makeatletter
+\renewcommand*{\@pnumwidth}{2.2em}
 \renewcommand*{\l@section}{\@dottedtocline{1}{1.5em}{3.0em}}
 \renewcommand*{\l@subsection}{\@dottedtocline{2}{4.5em}{4.0em}}
 \makeatother
@@ -490,6 +492,46 @@ bend examples/36_map_missing.bend
 
 \code{Map.keys}の順序が追加した順番と同じだと仮定してはいけません。順番も必要な画面なら、並べ替えの操作や別の順序管理を使います。
 
+\section{Mapの値を上書きし、不要なキーを削除する}
+戦績に\code{"wins"}と\code{"games"}を保存しているとしましょう。勝利が一回増えたら、\code{"wins"}をもう一度登録するのでしょうか。それとも新しいキーが増えるのでしょうか。実際に動かして確かめます。
+
+\sample{49_map_update_delete.bend}{Mapの上書きと削除を確かめる}
+
+\begin{lstlisting}[language={},caption={更新後のキーと値を確認する}]
+bend examples/49_map_update_delete.bend
+\end{lstlisting}
+
+最初に\code{"wins" = 7}、\code{"games" = 10}を保存します。その後、\code{Map.set}で\code{"wins"}を8に上書きし、\code{Map.del}で\code{"games"}を削除します。残るのは\textbf{\code{"wins" = 8}という一組}です。
+
+\begin{lstlisting}[caption={キーの上書きと削除}]
+m3 = Map.set(&2, U32, m2, "wins", 8)
+m4 = Map.del(&2, U32, m3, "games")
+\end{lstlisting}
+
+最後に\code{Map.get}で勝利数8を、\code{Map.has}で削除済みキーの存在判定\code{False{}}を、\code{Map.size}で要素数\code{1n}を調べます。\code{after_get}と\code{after_has}は\textbf{返されたMapを次の検査へ渡す}ための小さな関数です。数値へ変換した結果を足しているので、表示は\code{9}（$8+0+1$）になります。
+
+\begin{pointbox}
+\code{Map.set}は同じキーの値を\textbf{置き換える}操作であり、キーを重複して増やしません。\code{Map.del}はキーを取り除きます。存在しないキーを削除しても要素数は増減しません。\code{Map.size}はMapを消費して個数を返すため、その後で同じMapを使い続けることはできません。
+\end{pointbox}
+
+\exercise{\code{49_map_update_delete.bend}で\code{"wins"}の上書き値を\code{12}に変えると、表示はどうなるでしょうか。次に\code{Map.del}の削除対象を\code{"not-found"}に変え、残るキーの個数と結果を予想してみましょう。}
+
+\section{リストからSetを作る}
+旗を保存した座標リストに、同じマスが二回入っている場合を考えます。\code{List}は重複を保持しますが、\code{Set}はキーの\textbf{有無}だけを記録します。既存のリストから集合を作る\code{Set.from_list}と、集合の要素をリストに戻す\code{Set.to_list}を試しましょう。
+
+\sample{50_set_from_list.bend}{重複する座標リストを集合へ変換する}
+
+\begin{lstlisting}[language={},caption={リストから集合を作り直す}]
+bend examples/50_set_from_list.bend
+\end{lstlisting}
+
+入力の\code{["0,0", "1,1", "0,0"]}は三要素ですが、\code{Set.from_list}で集合にすると二つのキーだけが残ります。存在しない\code{"3,3"}を\code{Set.del}で削除しても変化しません。\code{Set.to_list}で取り出したリストの長さを調べるため、表示は\code{2n}です。
+
+\code{Set.to_list}が返すキーの\textbf{並び順}を、入力リストの順序と同じだと思ってはいけません。今回確認したのは要素数と重複排除です。画面で座標を一定順に表示したいなら、別途並べ替えを行います。
+
+\exercise{\code{50_set_from_list.bend}の削除対象を\code{"1,1"}に変え、結果を予想してみましょう。さらに入力リストに\code{"2,2"}を追加したとき、集合の要素数がいくつになるか確かめてみましょう。}
+
+
 \section{Map・Set・Arrayは何を基準に選ぶ？}
 「旗があるか」なら\code{Set}、「設定名から値を取り出す」なら\code{Map}、「盤面の何番のマスを更新する」なら\code{Array}が候補になります。ただし、小さい4×4の盤面ならビットマスクで状態を記録する方法もあります。
 
@@ -531,6 +573,26 @@ def flag(s: Cell) -> Result<&2, &2, String, Cell>:
 \code{A & B}は二つの値をまとめた組です。\code{Map.get}が「辞書と読み出した値」を返すのは、\textbf{両方を同時に持っている}からです。一方、\code{Either}の\code{Inl}と\code{Inr}は、\textbf{どちらか一方が入っている}ことを表します。\code{Result}はこの発想を成功・失敗という用途に特化した型です。
 
 \code{Sigma}はさらに一般的な組で、\textbf{最初の値によって次の値の型が決まる}場合に使います。普通の二つの数を返すだけなら依存型にする必要はありません。この段階では「普通の組と、依存する組を区別できる」ことを目標にし、実際の存在命題と依存型は証明のPartで扱います。
+
+\section{PairとExistsを一つのコードで比べる}
+マインスイーパーで「横座標と縦座標」を返すなら、二つの値の型は互いに独立しています。しかし「ある数と、その数が条件を満たす証拠」を返すなら、後ろの値の型は前の数によって変わります。ここで\code{Pair}と\code{Exists}を実際に比べてみましょう。
+
+\sample{52_pair_exists.bend}{独立した二つの値と、条件を満たす値の組}
+
+\begin{lstlisting}[language={},caption={組と存在する値を実行する}]
+bend examples/52_pair_exists.bend
+\end{lstlisting}
+
+表示は\code{5}です。まず\code{coordinate()}は\code{Tuple{1, 2}}を返します。\code{sum_coordinate}が二つの座標を足すので\code{3}です。この二つはともに\code{U32}であり、片方の値によってもう片方の型が変わることはありません。
+
+\code{Exists}では、最初の値\code{n}を選んだ後で、二番目の値が満たす型が決まります。この例は「\code{n + 1 = 3}となる自然数\code{n}が存在する」という主張です。\code{2n}を選べば\code{Nat.add(2n, 1n)}は\code{3n}になるため、\code{{==}}でその等式を示せます。\code{witness_number}は組から\code{2n}を取り出して\code{U32}へ変換します。したがって、先ほどの\code{3}に\code{2}を足して\code{5}です。
+
+\begin{pointbox}
+標準の\code{Pair(A, B)}も\code{Exists(A, P)}も、内部では\code{Sigma}を使って表現されます。\code{Pair}では二番目の型が最初の値に依存しません。\code{Exists}では\code{P(n)}のように依存します。ただし、\textbf{型検査に成功したこと}と\textbf{任意の自然数についての法則を証明したこと}は別です。この例が与えるのは\code{n=2}という一つの具体的な証拠です。すべての値に関する証明は第16章で学びます。
+\end{pointbox}
+
+\Needspace{45mm}
+\exercise{\code{coordinate()}を\code{Tuple{4, 5}}へ変更し、表示がどう変わるか予想してから実行しましょう。次に\code{next_is_three()}の\code{2n}だけを\code{1n}へ変えて型検査し、なぜ\code{{==}}では証拠を作れなくなるのか説明してみましょう。最後に、座標を返すだけなら\code{Exists}より\code{Pair}が自然な理由を考えてみましょう。}
 
 \section{Eitherを使って「どちらか一方」を表す}
 「設定ファイルに数値がある場合」と「説明文をそのまま扱う場合」の二種類を一つの値として持ちたいとします。二つが\textbf{同時にある}わけではないので、普通の組とは違います。\code{Either}は左側の\code{Inl}または右側の\code{Inr}で、異なる二種類の値を受け取れる型です。
@@ -778,6 +840,58 @@ bend examples/28_chan_roundtrip.bend
 
 ただし\textbf{待つ側が時間切れになっても、裏で動く仕事が自動的に停止するとは限りません}。時間が掛かる処理を開始するなら、途中で終了させる方法や、終了後のリソース管理も設計する必要があります。\code{Chan.try_recv}や\code{Chan.try_send}では\code{Poll}の\code{Ready}・\code{Wait}で、処理できたか、待つ必要があるかを表します。
 
+\section{時間制限は仕事の中止ではない}
+\code{29_io_within.bend}を実行してみましょう。1000ミリ秒以内に\code{IO.pure(U32,7)}の結果が届けば\code{7}を、時間切れなら\code{Timed out}を表示します。
+
+\begin{lstlisting}[language={},caption={時間制限付きのIOを実行する}]
+bend examples/29_io_within.bend
+\end{lstlisting}
+
+\begin{lstlisting}[caption={結果を受け取ってから二つの状態を区別する}]
+result: Maybe<&1, U32> <-
+  IO.within(U32, 1000, IO.pure(U32, 7))
+explain(result)
+\end{lstlisting}
+
+ここで\code{IO.within}の返り値は\code{IO(Maybe<&1,U32>)}です。外部の処理を待つ\code{IO}の中に、\textbf{間に合ったかどうか}を表す\code{Maybe}が入っています。待機を終えた後で\code{Some{value}}なら値を使い、\code{None{}}なら値が届かなかった場合へ進みます。
+
+現行の\code{Base}では、仕事の終了を待つ側と\code{IO.sleep(ms)}で時間切れを待つ側を開始し、\textbf{先に届いた結果}を返す構成です。したがって、\code{None{}}は「指定時間内に結果を受け取れなかった」であり、「仕事が実行されなかった」や「仕事を強制終了した」という意味ではありません。処理はその後も動き続けることがあります。
+
+例えばネットワーク経由で戦績を保存する処理が時間切れになっても、相手側ですでに保存されている可能性があります。確認せず同じ保存要求を再送すると二重登録になるかもしれません。\textbf{待機の期限}と\textbf{処理の取り消し}は別の設計問題です。タイムアウト後の再試行には、操作の識別子や重複排除なども検討しましょう。
+
+\begin{pointbox}
+\code{IO.within}の結果が\code{Some}でも、\textbf{何を成功とするか}は内側の仕事の返り値次第です。例えば\code{IO(Result<...>)}を待てば、時間内に\code{Fail}が届くこともあります。「間に合ったか」と「処理が成功したか」は別の二段階の判断です。
+\end{pointbox}
+
+\section{Pollは「いま待つ必要がある」を表す}
+チャネルの操作では、待ってでも結果を得たい場合と、一定時間待ってまだ準備できていなければ別の仕事へ戻りたい場合があります。後者に使えるのが\code{Chan.try_send}と\code{Chan.try_recv}です。
+
+\begin{lstlisting}[language={},caption={Baseで返り値の型を確かめる}]
+bend base Chan.try_send
+bend base Chan.try_recv
+\end{lstlisting}
+
+\code{Chan.try_recv}は\code{IO(Poll<...,Maybe<...>,Unit>)}を返します。外側の\code{Poll}には\code{Ready{value}}と\code{Wait{rest}}があります。\code{Ready}は受信の試行が完了したこと、\code{Wait}は指定時間内には受信が成立しなかったことを表します。\textbf{受信できる値があるかどうか}は、その内側の\code{Maybe}でさらに区別します。
+
+\begin{center}
+\begin{tabularx}{\linewidth}{@{}L{39mm}X@{}}
+\toprule
+受信結果の形 & 意味\\\midrule
+\code{Ready{Some{v}}} & 値\code{v}を受信できた\\
+\code{Ready{None{}}} & チャネルが閉じ、受信できる値が残っていない\\
+\code{Wait{Unit{}}} & 制限内には受信できなかった。終了したとは限らない\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+送信側の\code{Chan.try_send}は\code{Poll<...,Result<...>,A>}を返します。\code{Ready}の内側にある\code{Done}と\code{Fail}で送信成否を区別し、\code{Wait{rest}}では\textbf{まだ送れていない値}が戻ります。戻された値を無視してよいかはアプリケーション側の判断です。
+
+\begin{pointbox}
+\code{IO.within}の\code{None}、\code{Chan.try_recv}の\code{Wait}、\code{Chan.recv}の\code{None}は似た言葉に見えますが、意味が違います。時間切れ・一時的な待機・チャネルの終了を同じ「失敗」にまとめないことが、正しい並行プログラムの第一歩です。
+\end{pointbox}
+
+\exercise{\code{29_io_within.bend}の制限を1000から500ミリ秒へ変え、実行結果を確認してみましょう。次に、次の三つを言葉で区別しましょう。(1) 結果が間に合わなかった、(2) チャネルが閉じて値がもうない、(3) 値を送る準備がまだできていない。どの返り値が対応するでしょうか。}
+
 \section{いつ使うべきか}
 小さなマインスイーパーの通常の操作は、まず一つずつ順番に実装する方が理解しやすいでしょう。一方、時間のかかる分析や外部処理を追加する場合には、処理を分ける選択肢があります。並行処理が必要になるまでは、単純な純粋関数と順序どおりのIOで十分です。
 
@@ -972,6 +1086,23 @@ bend examples/31_image_quadrants.bend
 
 実際にウィンドウへ表示するのは次章の\code{App.run}です。画像を組み立てることと、イベントを受け取って画面を更新することを同時に考える必要はありません。まず表示したい絵を値として作り、次に画面へ渡す方法を学びます。
 
+\section{四分木の深さと画面の大きさを結び付ける}
+ここまでの例では、\code{Qua}を一回使ったので2×2の領域ができました。では、マインスイーパーの4×4盤面を256×256画素のウィンドウへ表示するとき、四分木は何段必要でしょうか。
+
+実際の\code{examples/minesweeper/gui.bend}では、\code{tile_draw(3n, ...)}が一つのマスを作り、\code{board_picture}が16マスを組み合わせます。\code{tile_draw}は深さ3なので、一辺が\(2^3=8\)個の\code{Pix}領域になります。盤面全体は4×4マスですから、\code{Qua}をさらに2段重ねると一辺が\(4\times8=32\)個の領域になります。
+
+\[
+  \underbrace{4}_{\text{マス数}}\times
+  \underbrace{8}_{\text{一マスの分割数}}=32,\qquad
+  \underbrace{256}_{\text{画面の一辺}}\div32=8
+\]
+
+つまり、この実装では\textbf{最も小さな\code{Pix}領域が8×8画素}として描かれます。1画素ずつ描いていないので、画像の細部を8画素単位で考える設計です。文字をなめらかに表示したい場合は、分割の深さや描き方を変える必要があります。
+
+\begin{pointbox}
+\code{Pix}は「必ず1画素」という意味ではありません。\code{Qua}でどこまで分割し、\code{App.run}で何画素のウィンドウに表示するかによって、実際の画面で占める面積が決まります。また、画像の木を作ることと、画面上でその画像が正しく描画されたことは別の検査です。
+\end{pointbox}
+
 \exercise{\code{31_image_quadrants.bend}の左上の赤を青（\code{255}）に変え、返り値を予想してから実行してみましょう。次に赤い\code{Pix}を右下へ移し、\code{top_left_color}の結果がどう変わるか確かめてください。表示される図と、プログラムが検査している領域を区別しましょう。}
 
 \chapter{Appとイベントの処理}
@@ -1046,9 +1177,53 @@ bend examples/32_mouse_events.bend
 \item \code{view}がその状態から新しい\code{Image}を組み立てます。
 \end{enumerate}
 
-第14章で扱う位置変換のサンプルは8×8ですが、現在のゲームエンジンは4×4です。ゲームの配列の大きさに合わせて、行数と列数を統一してから接続してください。\code{App}のイベント受信と\code{Session.click}の実行を結び付ける実機のGUIは、まだ完成していません。
+ここまでの\code{23_cell_hit_test.bend}と\code{32_mouse_events.bend}は8×8盤面の\textbf{座標変換を学ぶための小例}です。実際のゲームは4×4なので、同じ計算式をそのままコピーしてはいけません。次に、既に実装されている4×4 GUIがどのように結び付けているか確認します。
 
-\exercise{まず\code{07_gui_hello.bend}を実行し、キーを押したときとウィンドウを閉じたときの違いを観察しましょう。次に\code{32_mouse_events.bend}の\code{True{}}を\code{False{}}に変えて結果を予想してください。最後に\code{(255,255)}、\code{(256,0)}、\code{(0,256)}がそれぞれ盤面内か、コードを動かして確かめましょう。}
+\section{4×4 GUIでは、一マスは64画素になる}
+\code{examples/minesweeper/gui.bend}では、256×256画素のウィンドウを4×4に区切ります。したがって、一マスは\textbf{64×64画素}です。8×8の練習例で使った32画素を、そのまま流用しないようにしましょう。
+
+\begin{lstlisting}[caption={実ゲームの座標変換（gui.bendより）}]
+def cell_at(+x: U32, +y: U32) -> Maybe<&2, U32>:
+  cell_if_valid(Bool.and(U32.is_lt(x, 256), U32.is_lt(y, 256)), x, y)
+\end{lstlisting}
+
+\code{cell_if_valid}は、盤面内なら\code{(y / 64) * 4 + (x / 64)}を返します。例えば\code{(63,0)}は0番、\code{(64,0)}は1番、\code{(255,255)}は15番です。\code{(256,0)}は範囲外なので\code{None{}}です。どのマスも0から15の範囲に収まり、画面の右端・下端を越えたクリックを受け付けません。
+
+\section{クリックからゲーム状態を更新する}
+画素座標が有効でも、すべてのマウスボタンを左クリックとして扱ってはいけません。実装では\code{button == 0}を左クリック、\code{button == 1}を右クリックとし、その他のボタンでは状態を変更しません。押して離す一連の動作で二回更新しないように、\code{Mouse}の\code{down}が\code{True{}}のイベントだけを処理します。
+
+\begin{lstlisting}[caption={ゲームのイベント分岐（gui.bendより）}]
+def event(e: Event, stage: Start.Stage) -> Maybe<Start.Stage>:
+  match e:
+    case Close{}:
+      None{}
+    case Key{27, True{}}:
+      None{}
+    case Key{114, True{}}:
+      Some{Start.new(33)}
+    case Mouse{x, y, button, True{}}:
+      Some{pointer(stage, x, y, button)}
+    case _:
+      Some{stage}
+\end{lstlisting}
+
+\code{Close}とEscキー（27）は終了、Rキー（114）は初期状態へのリセットです。マウス操作は\code{pointer}へ渡し、そこで\code{Maybe}の\code{None{}}を無視します。左クリックは\code{Start.click}、右クリックは\code{Session.mark}へ進みますが、\code{Start.Fresh}の段階では右クリックを無視します。こうして\textbf{画面の入力}と\textbf{ゲームの規則}を分離できます。
+
+\section{viewは盤面を消費せず、画像を組み立てる}
+GUIの\code{view}は現在のゲーム状態を読み、16マスの表示状態から\code{Image}を作ります。ここで重要なのは、\code{Array}をそのまま画像化のために消費してしまうと、次のクリックを処理するための状態が残らないことです。
+
+実装の\code{active_view}では、\code{Array.clone(Game.Square, cells)}で二つの配列を受け取り、一方を次の状態に保持し、もう一方を\code{Array.to_list}で表示用のリストに変えます。これは第3章で学んだ\textbf{所有権を戻す・複製する}という考え方の実例です。画像化に使うのは公開された\code{Game.Square}の状態であり、隠れた地雷配置を直接描くわけではありません。
+
+\begin{lstlisting}[language={},caption={実ゲームを型検査し、デスクトップ環境で起動する}]
+bend examples/minesweeper/gui.bend --check-only
+bend examples/minesweeper/gui.bend -o minesweeper
+./minesweeper
+\end{lstlisting}
+
+最初のコマンドは型検査です。続く二行はネイティブ実行ファイルを作り、GUIを起動します。対応するコンパイラ・ウィンドウシステム・ライブラリが必要です。現時点でCIが確認しているのは\textbf{型検査、Linuxネイティブビルド、13件のヘッドレス入力検査}までです。実際のウィンドウ上でのクリック・数字の位置・勝敗表示の目視確認や、GUIの現在状態の保存・復元はまだ検収していません。
+
+\exercise{まず\code{07_gui_hello.bend}でキー操作と終了を観察し、\code{32_mouse_events.bend}の\code{down}を\code{False{}}に変えて結果を予想してみましょう。次に4×4の\code{gui.bend}で\code{(63,63)}、\code{(64,63)}、\code{(0,64)}、\code{(255,255)}、\code{(256,0)}、\code{(0,256)}の添字または\code{None{}}を求めてみましょう。最後に、右クリックを左クリック扱いにした場合と\code{Array.clone}を省いた場合の問題を説明してみましょう。}
+
 
 \chapter{マインスイーパーの状態}
 \sectiongoal{「画面に見えるもの」と「ゲームが内部で知っていること」を分け、4×4の小さな盤面を表してみる。}
@@ -1464,6 +1639,38 @@ bend base Array.atomic.add
 bend base Array.atomic.cas
 bend base Array.fork
 \end{lstlisting}
+
+\section{atomic.addは更新前の値を返す}
+「原子的に加算する」と聞くと、配列の中身が変わることだけに目が向きがちです。ところが\code{Array.atomic.add}の返り値は、\textbf{更新後の配列と更新前の値}の組です。返り値を読まずに処理を続けると、後で何が起きたかを追いにくくなります。まず共有も並列実行も行わない、小さな例で返り値を確かめましょう。
+
+\sample{51_atomic_counter.bend}{原子的加算の前後を表示する}
+
+\begin{lstlisting}[language={},caption={原子的加算の最小例を実行する}]
+bend examples/51_atomic_counter.bend
+\end{lstlisting}
+
+最初に\code{Array.new(U32, 1n, 5)}で、値5を持つ長さ2の配列を作ります。深さ\code{1n}なので、要素数は\(\,2^1=2\,\)です。0番の要素に3を足すと、次の二行が表示されます。
+
+\begin{lstlisting}[language={},caption={表示される二つの数値}]
+5
+8
+\end{lstlisting}
+
+\code{before}は\code{Array.atomic.add}が返した\textbf{加算前の値5}、\code{after}は続く\code{Array.get}で読んだ\textbf{加算後の値8}です。\code{Array.get}自身も配列と要素を組で返すため、配列を次の操作に引き継ぐ必要があります。
+
+\begin{lstlisting}[caption={組を受け取る場所を関数の引数に分ける}]
+def read_after(r: Array<U32> & U32) -> IO(Unit):
+  (unused, after) = r
+  IO.print(U32.show(after))
+\end{lstlisting}
+
+Bendでは、計算した式をその場で直接組のパターンに分解できるとは限りません。そこで\code{Array.get(U32, array, 0)}が返す組を\code{read_after}の\textbf{引数}へ渡し、その関数の中で分解します。\code{show_values}側では先に更新前の値を表示し、次に\code{read_after(Array.get(...))}を呼ぶため、表示の順序も明確です。
+
+\begin{cautionbox}
+この実習は\textbf{原子的操作のAPIと返り値}を確認するもので、並列処理の競合が解決できることを実測した例ではありません。\code{Array.atomic.add}が原子的であるというAPIの契約と、実際に共有配列を複数の処理から更新したときの動作検証は分けます。\code{Array.fork}でハンドルを共有する設計には追加の注意が必要です。
+\end{cautionbox}
+
+\exercise{\code{51_atomic_counter.bend}の初期値を5から9へ、加算量を3から2へ変え、二行の表示を予想してから実行しましょう。次に、\code{Array.atomic.add}を通常の\code{Array.set}へ置き換えるとき、返り値の型と「更新前の値を得る」手順がどう変わるか説明してみましょう。}
 
 \textbf{マインスイーパーの通常の旗切替や公開操作には、共有配列や原子的更新は必要ありません。} 一手ずつ純粋関数で盤面を更新すれば、より単純で検証しやすくなります。一方、多数の独立した候補盤面を同時に検査するような処理では、並列計算を検討する価値があります。その際も最初は候補同士の状態を共有しない設計を選び、実際に共有が必要だと分かったときに原子的操作を導入しましょう。
 

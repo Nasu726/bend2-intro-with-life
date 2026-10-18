@@ -36,6 +36,24 @@ class TestReaderBundle(unittest.TestCase):
                     self.assertFalse(name.endswith(".tex"))
                     self.assertFalse(name.endswith(".py"))
 
+    def test_pair_exists_sample_when_bend_is_installed(self):
+        # The staging job installs Bend before invoking these bundle tests.
+        # Keep local ZIP inspection usable on machines without the compiler.
+        import os
+        import shutil
+        import subprocess
+        if shutil.which("bend") is None:
+            self.skipTest("Bend executable not installed")
+        sample = ROOT / "intermediate" / "src" / "52_pair_exists.bend"
+        env = dict(os.environ, BEND_NO_TELEMETRY="1")
+        for args in (["bend", str(sample), "--check-only"], ["bend", str(sample)]):
+            result = subprocess.run(args, capture_output=True, text=True,
+                                    timeout=180, env=env, cwd=ROOT)
+            self.assertEqual(result.returncode, 0,
+                             f"{args} failed:\\n{result.stdout}\\n{result.stderr}")
+            if len(args) == 2:
+                self.assertEqual(result.stdout.strip(), "5")
+
     def test_intro_bundle(self):
         self.check_one("intro")
 

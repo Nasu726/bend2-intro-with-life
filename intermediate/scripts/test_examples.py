@@ -42,6 +42,10 @@ EXPECTED = {
     "40_list_map.bend": "9",
     "42_module_board.bend": "11",
     "44_message_boundary.bend": "2n",
+    "51_atomic_counter.bend": "8",
+    "52_pair_exists.bend": "5",
+    "49_map_update_delete.bend": "9",
+    "50_set_from_list.bend": "2n",
 }
 
 def run(*args):
@@ -416,6 +420,11 @@ def main():
         if value != result:
             raise AssertionError(f"{file} expected {result}; got {value}")
         print(f"PASS value {file} = {value}", flush=True)
+    atomic_output = run("bend", str(SAMPLES / "51_atomic_counter.bend"))
+    if atomic_output.splitlines() != ["5", "8"]:
+        raise AssertionError(f"Array.atomic.add old/new mismatch: {atomic_output!r}")
+    print("PASS Array.atomic.add returns previous value 5, then Array.get returns 8", flush=True)
+
     with tempfile.TemporaryDirectory() as td:
         p = subprocess.run(["bend", str(SAMPLES / "12_file_write.bend")],
                            text=True, capture_output=True, timeout=180, cwd=td,

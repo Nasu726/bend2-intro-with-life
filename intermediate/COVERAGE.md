@@ -15,25 +15,25 @@
 | `String`, `Char` | 第2章を改稿（設定行の分割・数値変換） | `15_string_parse.bend`、`35_string_fields.bend` | trim/U32.readとsplitの件数を実行照合。joinと文字境界は今後 |
 | `List`, 高階関数と畳み込み | 第3章を全面改稿（map/filter/sort/foldの目的と結果を比較） | `03_list.bend`、`17_list_pipeline.bend`、`38_list_sort.bend`、`40_list_map.bend` | map・sort・filter・foldを型検査と結果照合で確認。安定ソート・巨大入力性能は対象外 |
 | `Array` 操作、`fork/join/clone` | 第3章を改稿（更新・to_list・cloneの用途を比較） | `18_array_mutations.bend`、`30_array_clone.bend`、`39_array_to_list.bend` | new/set/get・clone・to_listの結果を照合。共有時の競合とfork/joinの実機検証は今後 |
-| `Map`（文字列キー） | 第4章を改稿（存在・既定値を使い分ける） | `02_map.bend`、`16_map_set_api.bend`、`36_map_missing.bend` | Map.hasで存在を区別、Map.getは既定値で取得。キー順と複雑な値型は今後 |
-| `Set` | 第4章 | `01_set.bend`、`05_marking.bend`、`16_map_set_api.bend` | 追加・重複・削除・サイズを照合 |
+| `Map`（文字列キー） | 第4章を改稿（存在・既定値・上書き・削除を区別） | `02_map.bend`、`16_map_set_api.bend`、`36_map_missing.bend`、`49_map_update_delete.bend` | Map.has/get/set/del/sizeの組み合わせを実行照合。キー順と複雑な値型は今後 |
+| `Set` | 第4章（重複するListとの相互変換を追加） | `01_set.bend`、`05_marking.bend`、`16_map_set_api.bend`、`50_set_from_list.bend` | 追加・重複・削除・サイズ・from_list/to_listを照合。変換後のキー順は保証しない |
 | `Maybe`, `Result`, `Either` | 第5・第6章 | `15_string_parse.bend`、`22_result_and_game.bend`、`25_either_case.bend` | Maybe/Result/Eitherの独立例。失敗と二者択一を区別 |
-| `Pair`, `Sigma`, `Exists`, `Or` | 第5・第16章 | 追加実習 | 依存する値・存在証明 |
+| `Pair`, `Sigma`, `Exists`, `Or` | 第5・第16章 | `52_pair_exists.bend` | PairとExistsの構築・値の取り出しを実習。`n=2`の証拠は一般全称証明ではない。`Or`と複雑な依存型の演習は今後 |
 | `Kind`, `Quant`, 消去引数 | 第5・第16章 | 追加実習 | 型エラーとの対比 |
 | `IO`, `IO.try`, `IO.die` | 第6章＋[詳細補稿](manuscript/06_IOと失敗を読む.md)（PDFに一部反映、残りは補稿） | `08_args.bend` | 失敗時の終了コード |
 | `File`（文字列・バイト） | 第7章と第21章（保存・復元） | `12_file_write.bend`、`13_file_read.bend`、`45_binary_file.bend`、`minesweeper/cli_save.bend` | 文字列・バイト列の保存と閉鎖、実ファイルの `00 0A 0D FF` 照合。大容量の反復読取・GUI保存は未完成 |
 | 引数・環境変数・乱数・時刻 | 第8章 | `08_args.bend`、`11_random_io.bend`、`19_environment.bend`、`46_elapsed_clock.bend` | IO.now/sleepの実行検証。経過時間を固定せず数値形式を照合 |
 | `Process.run` | 第8章 | `20_process_run.bend` | Linuxでの終了コード実行例。stderr・失敗は今後 |
 | `IO.fork/join`, `Chan` | 第9章 | `21_io_fork.bend`、`28_chan_roundtrip.bend` | fork/joinとChan送受信・closeの実行照合。失敗・時間制限の実践は今後 |
-| `IO.within`, `Poll` | 第9章 | `29_io_within.bend` | withinのSome/None処理を型検査。時間制限の実機挙動とPollは今後 |
+| `IO.within`, `Poll` | 第9章（時間切れ・仕事の非取消・Ready/Waitを型に沿って解説） | `29_io_within.bend` | withinのSome/None処理は型検査済み。PollはBaseのtry_send/try_recvの返り値を解説した段階で、実行サンプルと時間制限の実機挙動は未検証 |
 | TCP/UDP/Socket/Listener | 第10章（TCPとUDPのローカル送受信実習を追加） | `27_tcp_connect.bend`、`47_tcp_loopback.bend`、`48_udp_loopback.bend` | 127.0.0.1でlisten/connect/accept/send/recv、UDP.bind/send_to/recv_fromとcloseを実行検査。長文フレーミング、外部ネットワーク、UDP損失の実機検査は今後 |
 | `Image`, `Pix`, `Qua` | 第11章を改稿（図・最小コード・出力・演習） | `31_image_quadrants.bend`、`07_gui_hello.bend` | 四分木の左上色を実行検査。ウィンドウ実機表示は別検査 |
-| `App`, `Event`, `Window` | 第12章を改稿（view/tickとMouseイベント）、第14章 | `07_gui_hello.bend`、`23_cell_hit_test.bend`、`32_mouse_events.bend` | Image/Viewの型検査、マウス押下と画素位置の純粋な実行検査。実機入力・Windowは今後 |
+| `App`, `Event`, `Window` | 第12章で8×8の座標変換から4×4 GUIのview/tick・64画素・所有権へ接続、第14・21章 | `07_gui_hello.bend`、`23_cell_hit_test.bend`、`32_mouse_events.bend`、`minesweeper/gui.bend`、`gui_smoke.bend` | 8×8の独立例、4×4 GUIの型検査・Linuxネイティブビルド・13件のヘッドレス入力検査。実機の画面操作・GUI保存は未検収 |
 | `Audio` | 第20章 | `26_audio_open.bend` | open/write/closeの型検査。実機での再生確認は今後 |
 | `law`, `Equal`, 帰納法 | 第15〜18章を再構成（入門的な法則→Boolの全称証明→Nat帰納法→盤面不変条件） | `04_flag_laws.bend`、`14_local_inference.bend`、`22_result_and_game.bend`、`24_bool_proofs.bend`、`33_nat_induction.bend` | Natについての帰納法を `--verdict` で新たに検査。依存型・一般の補題は今後 |
 | `@unsafe`, 外部信頼境界 | 第18・20章 | 追加実習 | 証明検査の境界 |
 | CPU並列、GPU指定 | 第19章を増補（CPU並列・GPU指定・IO並行の比較） | `06_parallel.bend`・`21_io_fork.bend` | CPU並列の実行確認、GPU・他ターゲットでの性能と実機挙動は未検証 |
-| `Array.atomic` | 第19章を増補（標準Baseの型と使用条件を説明） | 追加実習 | 呼出しコード・実機共有更新の検査は今後 |
+| `Array.atomic` | 第19章（APIの返り値と更新前後の違いを実行する） | `51_atomic_counter.bend` | `Array.atomic.add`の型検査、旧値5・新値8を独立出力照合。`Array.fork`で共有した場合の競合・GPU実機動作は未検証 |
 | C/JavaScriptと外部連携 | 第20章にC生成・ネイティブビルド・Node.js実行の一連の手順を追加 | `43_target_hello.bend` | CIでBend/C/JSの3実行結果42を確認。外部FFIの相互呼出し・GPU等は今後 |
 | モジュール・パッケージ | 第20章に二ファイルimport演習を追加 | `board_index.bend`、`42_module_board.bend` | モジュール読み込みと計算結果を照合。BendHubへの公開・外部パッケージ依存は実施せず |
 | 4×4盤面の近傍数 | 第13章 | `10_board_neighbors.bend` | 境界ケースと盤面全体の更新 |
