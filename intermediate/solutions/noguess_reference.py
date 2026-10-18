@@ -28,6 +28,19 @@ class Visible:
     opened: tuple[tuple[int, int], ...]
 
 
+def _valid_public_shape(view: Visible) -> bool:
+    """Reject bools/coercible values before treating public data as indices."""
+    return (
+        type(view.width) is int and view.width > 0
+        and type(view.height) is int and view.height > 0
+        and type(view.mine_count) is int and view.mine_count >= 0
+        and isinstance(view.opened, tuple)
+        and all(isinstance(item, tuple) and len(item) == 2
+                and type(item[0]) is int and type(item[1]) is int
+                for item in view.opened)
+    )
+
+
 def neighbors(index: int, width: int, height: int) -> tuple[int, ...]:
     x, y = index % width, index // width
     return tuple(
@@ -40,7 +53,7 @@ def neighbors(index: int, width: int, height: int) -> tuple[int, ...]:
 
 def consistent_models(view: Visible, limit: int = 200_000):
     """Enumerate every mine layout consistent with public numbers and total."""
-    if view.width <= 0 or view.height <= 0 or limit < 0:
+    if not _valid_public_shape(view) or type(limit) is not int or limit < 0:
         return []
     cells = set(range(view.width * view.height))
     opened = {}
@@ -80,11 +93,13 @@ def provably_safe(view: Visible, limit: int = 200_000) -> frozenset[int]:
 
 def expose(mines: frozenset[int], view: Visible, index: int) -> Visible:
     """Game-engine operation (not part of deduction): zero-cell flood opening."""
-    if view.width <= 0 or view.height <= 0:
-        raise ValueError("invalid board dimensions")
-    if not 0 <= index < view.width * view.height:
+    if not _valid_public_shape(view):
+        raise ValueError("invalid public board shape")
+    if type(index) is not int or not 0 <= index < view.width * view.height:
         raise ValueError("cell out of bounds")
-    if any(m < 0 or m >= view.width * view.height for m in mines):
+    if not isinstance(mines, frozenset) or any(
+            type(m) is not int or m < 0 or m >= view.width * view.height
+            for m in mines):
         raise ValueError("mine out of bounds")
     if len(mines) != view.mine_count:
         raise ValueError("mine count does not match public view")

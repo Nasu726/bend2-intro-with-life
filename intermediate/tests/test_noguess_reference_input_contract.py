@@ -32,6 +32,57 @@ class ReferenceBoundaryTests(unittest.TestCase):
         self.assertEqual(ref.expose(mines, view, 0), view)
         self.assertEqual(ref.verify_no_guess(4, 4, mines, 0), (0, 12, 14))
 
+    def test_rejects_non_integer_public_observations(self):
+        # bool is a subclass of int, and 0.0 == 0; neither is a valid cell/clue.
+        bad_opened = (
+            ((False, 0),), ((True, 0),), ((0, False),),
+            ((0, True),), ((0.0, 0),), ((0, 0.0),),
+            (("0", 0),), ((0, "0"),),
+            ((0,),), ((0, 0, 0),), (False,),
+        )
+        for opened in bad_opened:
+            with self.subTest(opened=opened):
+                view = ref.Visible(4, 4, 2, opened)
+                self.assertEqual(ref.consistent_models(view), [])
+                with self.assertRaises(ValueError):
+                    ref.provably_safe(view)
+                with self.assertRaises(ValueError):
+                    ref.expose(frozenset((13, 15)), view, 0)
+
+    def test_rejects_malformed_public_dimensions_and_limits(self):
+        for view in (
+            ref.Visible(False, 4, 2, ()),
+            ref.Visible(4, True, 2, ()),
+            ref.Visible(4.0, 4, 2, ()),
+            ref.Visible(4, 4, True, ()),
+            ref.Visible(4, 4, 2.0, ()),
+            ref.Visible(4, 4, -1, ()),
+            ref.Visible(4, 4, 2, []),
+        ):
+            with self.subTest(view=view):
+                self.assertEqual(ref.consistent_models(view), [])
+                with self.assertRaises(ValueError):
+                    ref.provably_safe(view)
+                with self.assertRaises(ValueError):
+                    ref.expose(frozenset((13, 15)), view, 0)
+        valid = ref.Visible(4, 4, 2, ((0, 0),))
+        for limit in (False, True, 120.0, "120", None):
+            with self.subTest(limit=limit):
+                self.assertEqual(ref.consistent_models(valid, limit=limit), [])
+                with self.assertRaises(ValueError):
+                    ref.provably_safe(valid, limit=limit)
+
+    def test_rejects_coercible_truth_and_click_indices(self):
+        valid = ref.Visible(4, 4, 2, ())
+        for click in (False, True, 0.0, "0"):
+            with self.subTest(click=click):
+                with self.assertRaises(ValueError):
+                    ref.expose(frozenset((13, 15)), valid, click)
+        for mines in (frozenset((False, 15)), frozenset((13.0, 15)), {13, 15}):
+            with self.subTest(mines=mines):
+                with self.assertRaises(ValueError):
+                    ref.expose(mines, valid, 0)
+
     def test_generator_witness_has_only_publicly_forced_clicks(self):
         # Independently re-enumerate public candidates: do not call the
         # implementation's provably_safe or neighbors from this test.
