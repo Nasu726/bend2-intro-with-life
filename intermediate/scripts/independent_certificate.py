@@ -14,24 +14,30 @@ def adjacent(index):
                      and abs(x - j % 4) <= 1 and abs(y - j // 4) <= 1)
 
 
-def verify_certificate(mask, clicks):
-    """Raise ValueError for a false, guessed, or incomplete certificate."""
+def verify_certificate(mask, clicks, first_click=0):
+    """Raise ValueError for a false, guessed, or incomplete certificate.
+
+    The declared first click and its neighbors must contain no mines.
+    Subsequent clicks must be forced safe by public clues alone.
+    """
     if type(mask) is not int or mask < 0 or mask >= (1 << 16):
         raise ValueError("invalid 16-bit mine mask")
     mines = frozenset(i for i in CELLS if mask & (1 << i))
     if len(mines) != 2:
         raise ValueError("expected exactly two mines")
+    if type(first_click) is not int or first_click not in CELLS:
+        raise ValueError("invalid first click")
     # Reject booleans and malformed containers before using indexing or sets.
     # In Python, False == 0 and True == 1, but neither is a cell index.
     if not isinstance(clicks, (list, tuple)):
         raise ValueError("click sequence must be a list or tuple")
     if any(type(i) is not int or i not in CELLS for i in clicks):
         raise ValueError("click outside 4x4 board")
-    if not clicks or clicks[0] != 0:
-        raise ValueError("certificate must start at cell zero")
+    if not clicks or clicks[0] != first_click:
+        raise ValueError("certificate does not start at declared first click")
     if len(set(clicks)) != len(clicks):
         raise ValueError("repeated click")
-    if mines & ({0} | adjacent(0)):
+    if mines & ({first_click} | adjacent(first_click)):
         raise ValueError("first click is not protected")
 
     opened = {}
