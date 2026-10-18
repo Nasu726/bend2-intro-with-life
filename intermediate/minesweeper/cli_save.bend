@@ -85,11 +85,15 @@ def accepted_commands(ok: Bool, commands: List<&2, String>) ->
     case False{}:
       None{}
 
+def checked_commands(+commands: List<&2, String>) ->
+  Maybe<&2, List<&2, String>>:
+  accepted_commands(valid_save(commands), commands)
+
 def parsed_commands(parsed: Maybe<&2, Parsed>) ->
   Maybe<&2, List<&2, String>>:
   match parsed:
     case Some{Valid{commands}}:
-      accepted_commands(valid_save(commands), commands)
+      checked_commands(commands)
     case _:
       None{}
 
