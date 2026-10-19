@@ -3,6 +3,10 @@
 import Base
 import ./game.bend as Game
 
+# Coordinate helper: x=column, y=row; caller checks x,y in 0..3.
+def index(x: U32, y: U32) -> U32:
+  (y * 4 + x : U32)
+
 # The board model is deliberately explicit about hidden mine truth.
 # Never pass Cell to the no-guess solver: it contains privileged information.
 type Cell is Data:
