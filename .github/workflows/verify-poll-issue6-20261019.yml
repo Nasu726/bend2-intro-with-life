@@ -93,7 +93,7 @@ jobs:
               assert not any(("solutions" in s or s.endswith((".tex",".py"))) for s in entries)
           with tempfile.TemporaryDirectory() as tmp:
               old=Path(tmp)/"old.pdf"
-              old.write_bytes(subprocess.check_output(["git","show","1a96caa9e98d8fc59b68f5510ce248c87aea9be2:intermediate/Bend2を使いこなす_プレビュー.pdf"]))
+              old.write_bytes(subprocess.check_output(["git","show","HEAD:intermediate/Bend2を使いこなす_プレビュー.pdf"]))
               subprocess.run(["pdftoppm","-f","1","-l","1","-r","144","-singlefile","-png",str(old),str(Path(tmp)/"old")],check=True,capture_output=True)
               new=Path(tmp)/"new.pdf"
               new.write_bytes(pdf)
