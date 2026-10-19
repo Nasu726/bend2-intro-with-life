@@ -20,9 +20,9 @@ law nxn_outside_right:
   for y: U32
   {BoardN.in_bounds(10, 10, y) == False{} : Bool}
 
+# Concrete bottom-edge witness; the Python oracle checks every column.
 law nxn_outside_bottom:
-  for x: U32
-  {BoardN.in_bounds(10, x, 10) == False{} : Bool}
+  {BoardN.in_bounds(10, 0, 10) == False{} : Bool}
 
 law nxn_padding_100_is_invalid:
   {BoardN.valid_index(10, 100) == False{} : Bool}

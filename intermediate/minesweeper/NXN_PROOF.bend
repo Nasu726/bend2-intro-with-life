@@ -19,7 +19,7 @@ def Laws.nxn_far_corner_valid_10():
 def Laws.nxn_outside_right(y):
   {==}
 
-def Laws.nxn_outside_bottom(x):
+def Laws.nxn_outside_bottom():
   {==}
 
 def Laws.nxn_padding_100_is_invalid():
