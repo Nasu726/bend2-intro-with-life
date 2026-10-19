@@ -4,6 +4,10 @@ on:
     branches: [verify/intermediate-nxn-core-20261019]
     paths:
       - '.github/workflows/verify-nxn-core-20261019.yml'
+      - 'intermediate/minesweeper/board_n.bend'
+      - 'intermediate/minesweeper/NXN_LAWS.bend'
+      - 'intermediate/minesweeper/NXN_PROOF.bend'
+      - 'intermediate/minesweeper/nxn_layout_demo.bend'
 permissions:
   contents: read
 jobs:
