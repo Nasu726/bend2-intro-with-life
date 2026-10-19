@@ -1,6 +1,6 @@
 # 第9章補稿：Pollで「まだ届かない」と「もう届かない」を区別する
 
-この補稿は本文への統合前の実行教材です。採用済み表紙と配布PDF・ZIPは変更しません。
+この補稿の要点は教科書第9章と読者ZIPへ統合済みです。補足確認用の資料として残します。採用済み表紙は変更しません。
 
 ## 必要性
 
@@ -8,10 +8,10 @@
 
 ## 動く最小例
 
-`intermediate/tests/fixtures/chan_poll.bend` を使います。
+読者ZIPの `examples/53_chan_poll.bend`（リポジトリでは `intermediate/src/53_chan_poll.bend`）を使います。
 
 ```sh
-bend intermediate/tests/fixtures/chan_poll.bend
+bend examples/53_chan_poll.bend
 ```
 
 期待する出力は二行です。

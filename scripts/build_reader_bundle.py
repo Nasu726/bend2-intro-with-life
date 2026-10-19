@@ -55,6 +55,7 @@ INTERMEDIATE_EXAMPLES = (
     "47_tcp_loopback.bend", "48_udp_loopback.bend",
     "49_map_update_delete.bend", "50_set_from_list.bend",
     "51_atomic_counter.bend", "52_pair_exists.bend",
+    "53_chan_poll.bend",
 )
 
 # Runnable 4x4 replay lesson and its exact relative-import dependencies.
