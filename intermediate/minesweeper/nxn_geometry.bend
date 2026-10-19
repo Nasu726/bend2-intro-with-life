@@ -13,12 +13,15 @@ def in_bounds(+n: U32, +x: U32, +y: U32) -> Bool:
 def index(+n: U32, +x: U32, +y: U32) -> U32:
   (y * n + x : U32)
 
-def checked_index(+n: U32, +x: U32, +y: U32) -> Maybe<&2, U32>:
-  match in_bounds(n, x, y):
+def index_if_valid(valid: Bool, n: U32, x: U32, y: U32) -> Maybe<&2, U32>:
+  match valid:
     case True{}:
       Some{index(n, x, y)}
     case False{}:
       None{}
+
+def checked_index(+n: U32, +x: U32, +y: U32) -> Maybe<&2, U32>:
+  index_if_valid(in_bounds(n, x, y), n, x, y)
 
 # Array.get wraps invalid indices: 100..127 are padding, not cells,
 # when a 10x10 board uses a 128-slot Array.
