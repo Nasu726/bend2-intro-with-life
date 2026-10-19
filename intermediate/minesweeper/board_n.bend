@@ -30,19 +30,21 @@ def valid_index(+n: U32, +i: U32) -> Bool:
 
 # For 10x10, depth=7; the physical array has 128 entries.
 # The extra entries are NEVER logical game cells.
-def depth_loop(fuel: Nat, +count: U32, +capacity: U32, depth: Nat) -> Nat:
-  match fuel:
-    case 0n:
+def depth_loop(fuel: Nat, done: Bool, +count: U32,
+               +capacity: U32, depth: Nat) -> Nat:
+  match fuel done:
+    case 0n _:
       depth
-    case 1n+more:
-      match U32.is_le(count, capacity):
-        case True{}:
-          depth
-        case False{}:
-          depth_loop(more, count, (capacity + capacity : U32), 1n+depth)
+    case 1n+more True{}:
+      depth
+    case 1n+more False{}:
+      +next_cap = (capacity + capacity : U32)
+      depth_loop(more, U32.is_le(count, next_cap),
+                 count, next_cap, 1n+depth)
 
 def storage_depth(n: U32) -> Nat:
-  depth_loop(11n, (n * n : U32), 1, 0n)
+  +count = (n * n : U32)
+  depth_loop(11n, U32.is_le(count, 1), count, 1, 0n)
 
 def new_valid(n: U32) -> State:
   +d = storage_depth(n)
