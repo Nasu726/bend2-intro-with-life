@@ -42,11 +42,11 @@ def depth_loop(fuel: Nat, done: Bool, +count: U32,
       depth_loop(more, U32.is_le(count, next_cap),
                  count, next_cap, 1n+depth)
 
-def storage_depth(n: U32) -> Nat:
+def storage_depth(+n: U32) -> Nat:
   +count = (n * n : U32)
   depth_loop(11n, U32.is_le(count, 1), count, 1, 0n)
 
-def new_valid(n: U32) -> State:
+def new_valid(+n: U32) -> State:
   +d = storage_depth(n)
   State{n, Array.new(Bool, d, False{}),
            Array.new(Game.Square, d, Game.Hidden{})}
@@ -87,10 +87,14 @@ def mark_valid(valid: Bool, n: U32, mines: Array<Bool>,
     case True{}:
       mark_from_read(n, mines, i, Array.get(Game.Square, cells, i))
 
-def mark_checked(state: State, +i: U32) -> State:
+def mark_for_state(+n: U32, mines: Array<Bool>,
+                   cells: Array<Game.Square>, +i: U32) -> State:
+  mark_valid(valid_index(n, i), n, mines, cells, i)
+
+def mark_checked(state: State, i: U32) -> State:
   match state:
     case State{n, mines, cells}:
-      mark_valid(valid_index(n, i), n, mines, cells, i)
+      mark_for_state(n, mines, cells, i)
 
 # A read outside the logical N*N cells returns None, never a wrapped cell.
 # The board is returned because Array is affine.
@@ -109,11 +113,16 @@ def read_valid(valid: Bool, n: U32, mines: Array<Bool>,
     case True{}:
       read_from_array(n, mines, Array.get(Game.Square, cells, i))
 
-def read_checked(state: State, +i: U32) ->
+def read_for_state(+n: U32, mines: Array<Bool>,
+                   cells: Array<Game.Square>, +i: U32) ->
+  State & Maybe<&2, Game.Square>:
+  read_valid(valid_index(n, i), n, mines, cells, i)
+
+def read_checked(state: State, i: U32) ->
   State & Maybe<&2, Game.Square>:
   match state:
     case State{n, mines, cells}:
-      read_valid(valid_index(n, i), n, mines, cells, i)
+      read_for_state(n, mines, cells, i)
 
 # The true mine array is owned only by the game setup/controller.
 # Do not pass State or this setter to the public-information solver.
@@ -125,10 +134,14 @@ def mine_valid(valid: Bool, n: U32, mines: Array<Bool>,
     case True{}:
       State{n, Array.set(Bool, mines, i, True{}), cells}
 
-def set_mine_for_setup(state: State, +i: U32) -> State:
+def mine_for_state(+n: U32, mines: Array<Bool>,
+                   cells: Array<Game.Square>, +i: U32) -> State:
+  mine_valid(valid_index(n, i), n, mines, cells, i)
+
+def set_mine_for_setup(state: State, i: U32) -> State:
   match state:
     case State{n, mines, cells}:
-      mine_valid(valid_index(n, i), n, mines, cells, i)
+      mine_for_state(n, mines, cells, i)
 
 # Printable codes are only for the small layout demo, not game serialization.
 def square_code(m: Maybe<&2, Game.Square>) -> U32:
