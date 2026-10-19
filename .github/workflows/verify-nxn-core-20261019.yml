@@ -1,0 +1,55 @@
+name: Validate N x N Minesweeper core outside PR
+on:
+  push:
+    branches: [verify/intermediate-nxn-core-20261019]
+    paths:
+      - '.github/workflows/verify-nxn-core-20261019.yml'
+permissions:
+  contents: read
+jobs:
+  bend-board-core:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    env:
+      BEND_NO_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate size-parametric reference oracle
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s intermediate/tests -p 'test_nxn_board_oracle.py' -v
+          python3 -m py_compile intermediate/solutions/nxn_board_oracle.py
+      - name: Install Bend 2 and Lean
+        run: |
+          set -euo pipefail
+          curl -fsSL https://bend-lang.com/install.sh -o /tmp/install-bend.sh
+          sh /tmp/install-bend.sh
+          echo "$HOME/.bend/bin" >> "$GITHUB_PATH"
+          curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o /tmp/elan-init.sh
+          sh /tmp/elan-init.sh -y --default-toolchain leanprover/lean4:v4.34.0 --no-modify-path
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Typecheck board, print N=10 layout and verify N x N laws
+        run: |
+          set -euo pipefail
+          bend version
+          bend intermediate/minesweeper/board_n.bend --check-only
+          bend intermediate/minesweeper/nxn_layout_demo.bend --check-only
+          output="$(bend intermediate/minesweeper/nxn_layout_demo.bend)"
+          printf '%s\n' "$output"
+          test "$output" = "$(printf '128\n1\n9')"
+          verdict="$(bend intermediate/minesweeper/NXN_PROOF.bend --verdict)"
+          printf '%s\n' "$verdict"
+          printf '%s\n' "$verdict" | grep -q 'ALL PROOFS CHECK'
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          src=Path("intermediate/minesweeper/NXN_LAWS.bend").read_text()
+          proofs=Path("intermediate/minesweeper/NXN_PROOF.bend").read_text()
+          declared=set(re.findall(r"^law (\w+):",src,re.M))
+          implemented=set(re.findall(r"^def Laws\.(\w+)\(",proofs,re.M))
+          assert declared==implemented and len(declared)==11,(declared,implemented)
+          print("PASS 11 declared N x N contracts and 11 Lean-checked Bend proofs")
+          PY
