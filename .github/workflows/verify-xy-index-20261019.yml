@@ -4,6 +4,7 @@ on:
     branches: [verify/xy-index-both-books-20261019]
     paths:
       - '.github/workflows/verify-xy-index-20261019.yml'
+      - '.github/validation/index_migration.py'
 permissions:
   contents: write
 jobs:
