@@ -1,32 +1,35 @@
-name: Validate N x N Minesweeper core outside PR
+name: Verify N x N core and reader artifacts outside PR
 on:
   push:
     branches: [verify/intermediate-nxn-core-20261019]
     paths:
       - '.github/workflows/verify-nxn-core-20261019.yml'
-      - 'intermediate/minesweeper/board_n.bend'
-      - 'intermediate/minesweeper/NXN_LAWS.bend'
-      - 'intermediate/minesweeper/NXN_PROOF.bend'
-      - 'intermediate/minesweeper/nxn_layout_demo.bend'
+      - '.github/validation/apply_nxn_docs_20261019.py'
 permissions:
-  contents: read
+  contents: write
 jobs:
-  bend-board-core:
+  validate-and-stage:
     runs-on: ubuntu-24.04
-    timeout-minutes: 18
+    timeout-minutes: 45
     env:
       BEND_NO_TELEMETRY: '1'
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Validate size-parametric reference oracle
+      - name: Integrate N x N manuscript and regression checks in temporary checkout
         run: |
           set -euo pipefail
-          python3 -m unittest discover -s intermediate/tests -p 'test_nxn_board_oracle.py' -v
-          python3 -m py_compile intermediate/solutions/nxn_board_oracle.py
-      - name: Install Bend 2 and Lean
+          python3 -m py_compile .github/validation/apply_nxn_docs_20261019.py
+          python3 .github/validation/apply_nxn_docs_20261019.py
+          python3 -m py_compile intermediate/scripts/test_examples.py intermediate/tests/test_structure.py tests/test_reader_bundle.py
+          python3 -m unittest discover -s intermediate/tests -v
+          git diff --check
+          git diff --exit-code -- intermediate/cover_art.tex
+      - name: Install Bend 2 and Lean 4
         run: |
           set -euo pipefail
           curl -fsSL https://bend-lang.com/install.sh -o /tmp/install-bend.sh
@@ -35,25 +38,86 @@ jobs:
           curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o /tmp/elan-init.sh
           sh /tmp/elan-init.sh -y --default-toolchain leanprover/lean4:v4.34.0 --no-modify-path
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-      - name: Typecheck board, print N=10 layout and verify N x N laws
+      - name: Validate real N x N Bend code and proofs
         run: |
           set -euo pipefail
-          bend version
           bend intermediate/minesweeper/board_n.bend --check-only
-          bend intermediate/minesweeper/nxn_layout_demo.bend --check-only
-          output="$(bend intermediate/minesweeper/nxn_layout_demo.bend)"
-          printf '%s\n' "$output"
-          test "$output" = "$(printf '128\n1\n9')"
+          actual="$(bend intermediate/minesweeper/nxn_layout_demo.bend)"
+          test "$actual" = "$(printf '128\n1\n9')"
           verdict="$(bend intermediate/minesweeper/NXN_PROOF.bend --verdict)"
-          printf '%s\n' "$verdict"
           printf '%s\n' "$verdict" | grep -q 'ALL PROOFS CHECK'
+      - name: Check complete existing intermediate sources, independent oracle, and target binaries
+        run: |
+          set -euo pipefail
+          python3 intermediate/scripts/test_examples.py
+          python3 intermediate/scripts/test_targets.py
+      - name: XeLaTeX production typeset
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: intermediate/Intermediate_Textbook.tex
+          latexmk_use_xelatex: true
+          texlive_version: '2025'
+          os: debian
+          extra_system_packages: fonts-noto-cjk fonts-noto-core
+      - name: Verify warning-free PDF and exact 70-entry learner ZIP
+        run: |
+          set -euo pipefail
+          LOG='Intermediate_Textbook.log'
+          if test -s intermediate/Intermediate_Textbook.log; then LOG='intermediate/Intermediate_Textbook.log'; fi
+          test -s "$LOG"
+          if grep -nE 'Overfull|Underfull|LaTeX Font Warning|LaTeX Warning' "$LOG"; then
+            echo 'XeLaTeX warnings' >&2
+            exit 1
+          fi
+          if test -s Intermediate_Textbook.pdf; then
+            cp Intermediate_Textbook.pdf intermediate/Bend2を使いこなす_プレビュー.pdf
+          else
+            cp intermediate/Intermediate_Textbook.pdf intermediate/Bend2を使いこなす_プレビュー.pdf
+          fi
+          python3 scripts/build_reader_bundle.py intermediate
+          python3 -m unittest discover -s tests -p 'test_reader_bundle.py' -v
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
           python3 - <<'PY'
+          import hashlib, io, subprocess, tempfile, zipfile
           from pathlib import Path
-          import re
-          src=Path("intermediate/minesweeper/NXN_LAWS.bend").read_text()
-          proofs=Path("intermediate/minesweeper/NXN_PROOF.bend").read_text()
-          declared=set(re.findall(r"^law (\w+):",src,re.M))
-          implemented=set(re.findall(r"^def Laws\.(\w+)\(",proofs,re.M))
-          assert declared==implemented and len(declared)==11,(declared,implemented)
-          print("PASS 11 declared N x N contracts and 11 Lean-checked Bend proofs")
+          from scripts.build_reader_bundle import INTERMEDIATE_EXAMPLES,INTERMEDIATE_GAME_FILES
+          pdf=Path("intermediate/Bend2を使いこなす_プレビュー.pdf").read_bytes()
+          with zipfile.ZipFile("reader-packages/bend2-intermediate-reader-preview.zip") as z:
+              entries=z.namelist()
+              assert len(INTERMEDIATE_EXAMPLES)==53
+              assert len(INTERMEDIATE_GAME_FILES)==14
+              assert len(entries)==70 and len(entries)==len(set(entries))
+              assert z.testzip() is None
+              assert z.read("bend2-intermediate-reader/textbook.pdf")==pdf
+              for filename in ("board_n.bend","nxn_layout_demo.bend"):
+                  name="bend2-intermediate-reader/examples/minesweeper/"+filename
+                  assert z.read(name)==Path("intermediate/minesweeper/"+filename).read_bytes()
+              assert not any(("NXN_PROOF" in name or "solutions" in name.lower() or name.endswith((".py",".tex"))) for name in entries)
+          cover=Path("intermediate/cover_art.tex").read_bytes()
+          cover_sha=hashlib.sha1(f"blob {len(cover)}".encode()+bytes([0])+cover).hexdigest()
+          assert cover_sha=="ba9b5c4cb296e3adfd119ace6b55abc419c6faf1"
+          with tempfile.TemporaryDirectory() as temp:
+              root=Path(temp)
+              old=root/"old.pdf"
+              old.write_bytes(subprocess.check_output(["git","show","HEAD:intermediate/Bend2を使いこなす_プレビュー.pdf"]))
+              new=root/"new.pdf"
+              new.write_bytes(pdf)
+              for stem,file in (("old",old),("new",new)):
+                  subprocess.run(["pdftoppm","-f","1","-l","1","-r","144","-singlefile","-png",str(file),str(root/stem)],check=True,capture_output=True)
+              assert (root/"old.png").read_bytes()==(root/"new.png").read_bytes(),"approved cover rendering changed"
+              text=subprocess.check_output(["pdftotext","-layout",str(new),"-"]).decode("utf-8")
+              assert "nxn_layout_demo.bend" in text
+          print("PASS N x N 10x10 manuscript, cover pixel match, 70 learner files, exact PDF bytes, no solutions")
           PY
+      - name: Stage one validated source-PDF-ZIP commit on isolation branch
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A -- intermediate/Intermediate_Textbook.tex intermediate/README.md intermediate/COVERAGE.md intermediate/manuscript/STATUS.md intermediate/minesweeper/REQUIREMENTS.md intermediate/COMPLETION_PLAN.md intermediate/tests/test_structure.py intermediate/scripts/test_examples.py scripts/build_reader_bundle.py tests/test_reader_bundle.py intermediate/Bend2を使いこなす_プレビュー.pdf reader-packages/bend2-intermediate-reader-preview.zip
+          git diff --cached --check
+          git diff --cached --name-only
+          if git diff --cached --name-only | grep -F 'intermediate/cover_art.tex'; then exit 1; fi
+          git commit -m "docs(intermediate): pair validated N x N core with chapter 13 and learner bundle"
+          git push origin HEAD:verify/intermediate-nxn-core-20261019
