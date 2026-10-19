@@ -46,7 +46,7 @@ jobs:
               assert len(a)==67
               for name in a:
                   if old.read(name)!=new.read(name): changed.append(name)
-              assert changed==["bend2-intermediate-reader/examples/minesweeper/cli_save.bend"],changed
+              assert set(changed)=={"bend2-intermediate-reader/examples/minesweeper/cli_save.bend", "bend2-intermediate-reader/textbook.pdf"},changed
               assert new.read("bend2-intermediate-reader/examples/minesweeper/cli_save.bend")==Path("intermediate/minesweeper/cli_save.bend").read_bytes()
               assert new.read("bend2-intermediate-reader/textbook.pdf")==new_pdf
               assert not any("/solutions/" in name for name in b)
