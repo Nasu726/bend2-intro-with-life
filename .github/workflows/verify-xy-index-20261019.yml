@@ -1,0 +1,143 @@
+name: Verify x-y index migration in both Bend 2 textbooks
+on:
+  push:
+    branches: [verify/xy-index-both-books-20261019]
+    paths:
+      - '.github/workflows/verify-xy-index-20261019.yml'
+permissions:
+  contents: write
+jobs:
+  verify-both-textbooks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    env:
+      BEND_NO_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply agreed coordinate helper and check structure
+        run: |
+          set -euo pipefail
+          python3 .github/validation/index_migration.py
+          python3 -m py_compile scripts/test_bend_runtime.py tests/test_textbook_structure.py intermediate/tests/test_structure.py
+          python3 -m unittest discover -s intermediate/tests -v
+          python3 -m unittest tests.test_textbook_structure -v
+          git diff --check
+          # Confirm there is no book-cover source change, even before staging
+          git diff --exit-code -- intermediate/cover_art.tex
+      - name: Install Bend 2 and Lean 4
+        run: |
+          set -euo pipefail
+          curl -fsSL https://bend-lang.com/install.sh -o /tmp/install-bend.sh
+          sh /tmp/install-bend.sh
+          echo "$HOME/.bend/bin" >> "$GITHUB_PATH"
+          curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o /tmp/elan-init.sh
+          sh /tmp/elan-init.sh -y --default-toolchain leanprover/lean4:v4.34.0 --no-modify-path
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Execute and typecheck all introductory Bend samples
+        run: |
+          set -euo pipefail
+          bend version
+          python3 scripts/test_bend_runtime.py
+      - name: Execute and prove all intermediate Bend examples
+        run: |
+          set -euo pipefail
+          python3 intermediate/scripts/test_examples.py
+          python3 intermediate/scripts/test_targets.py
+      - name: Compile introductory textbook with XeLaTeX
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: Bend2_Life_Textbook.tex
+          latexmk_use_xelatex: true
+          texlive_version: '2025'
+          os: debian
+          extra_system_packages: fonts-noto-cjk fonts-noto-core
+      - name: Require warning-free intro and stage PDF
+        run: |
+          set -euo pipefail
+          test -s Bend2_Life_Textbook.log
+          if grep -nE 'Overfull|Underfull|LaTeX Font Warning|LaTeX Warning' Bend2_Life_Textbook.log; then
+            echo 'Intro TeX box/font warnings' >&2; exit 1
+          fi
+          test -s Bend2_Life_Textbook.pdf
+          cp Bend2_Life_Textbook.pdf 'ライフゲームで学ぶ_はじめてのBend2.pdf'
+      - name: Compile intermediate textbook with XeLaTeX
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: intermediate/Intermediate_Textbook.tex
+          latexmk_use_xelatex: true
+          texlive_version: '2025'
+          os: debian
+          extra_system_packages: fonts-noto-cjk fonts-noto-core
+      - name: Require warning-free intermediate and stage PDF
+        run: |
+          set -euo pipefail
+          LOG=Intermediate_Textbook.log
+          if test -s intermediate/Intermediate_Textbook.log; then LOG=intermediate/Intermediate_Textbook.log; fi
+          test -s "$LOG"
+          if grep -nE 'Overfull|Underfull|LaTeX Font Warning|LaTeX Warning' "$LOG"; then
+            echo 'Intermediate TeX box/font warnings' >&2; exit 1
+          fi
+          if test -s Intermediate_Textbook.pdf; then
+            cp Intermediate_Textbook.pdf intermediate/Bend2を使いこなす_プレビュー.pdf
+          else
+            cp intermediate/Intermediate_Textbook.pdf intermediate/Bend2を使いこなす_プレビュー.pdf
+          fi
+      - name: Regenerate both exact reader bundles and check learner scope
+        run: |
+          set -euo pipefail
+          python3 scripts/build_reader_bundle.py intro
+          python3 scripts/build_reader_bundle.py intermediate
+          python3 -m unittest discover -s tests -v
+          python3 -m unittest discover -s intermediate/tests -v
+          python3 -m unittest tests.test_reader_bundle -v
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,io,subprocess,tempfile,zipfile
+          from scripts.build_reader_bundle import (INTRO_EXAMPLES,INTERMEDIATE_EXAMPLES,INTERMEDIATE_GAME_FILES)
+          pairs = (
+            ("reader-packages/bend2-intro-reader.zip","ライフゲームで学ぶ_はじめてのBend2.pdf",len(INTRO_EXAMPLES),0,"bend2-intro-reader/"),
+            ("reader-packages/bend2-intermediate-reader-preview.zip","intermediate/Bend2を使いこなす_プレビュー.pdf",len(INTERMEDIATE_EXAMPLES),len(INTERMEDIATE_GAME_FILES),"bend2-intermediate-reader/"))
+          for archive,pdf,base_count,game_count,prefix in pairs:
+              raw=Path(pdf).read_bytes()
+              with zipfile.ZipFile(archive) as z:
+                  names=z.namelist()
+                  assert z.testzip() is None
+                  assert len(names)==len(set(names))==base_count+game_count+3
+                  assert z.read(prefix+"textbook.pdf")==raw
+                  assert not any(("solutions" in name.lower() or name.endswith((".py",".tex"))) for name in names)
+                  for name in names:
+                      if name.startswith(prefix+"examples/"):
+                          source = Path(("intermediate/src/" if "intermediate" in archive else "src/") + name.removeprefix(prefix+"examples/"))
+                          if "/minesweeper/" in name:
+                              source=Path("intermediate/minesweeper/"+name.split("/")[-1])
+                          assert z.read(name)==source.read_bytes(),(archive,name,source)
+              print("PASS",archive,len(names),"reader entries, all byte-for-byte matched")
+          raw=Path("intermediate/cover_art.tex").read_bytes()
+          sha=hashlib.sha1(f"blob {len(raw)}".encode()+bytes([0])+raw).hexdigest()
+          assert sha=="ba9b5c4cb296e3adfd119ace6b55abc419c6faf1",sha
+          with tempfile.TemporaryDirectory() as td:
+              base=Path(td)
+              old=base/"old.pdf"
+              old.write_bytes(subprocess.check_output(["git","show","HEAD:intermediate/Bend2を使いこなす_プレビュー.pdf"]))
+              new=Path("intermediate/Bend2を使いこなす_プレビュー.pdf")
+              for name,file in (("old",old),("new",new)):
+                  subprocess.run(["pdftoppm","-f","1","-l","1","-r","144","-singlefile","-png",str(file),str(base/name)],check=True,capture_output=True)
+              assert (base/"old.png").read_bytes()==(base/"new.png").read_bytes(),"Approved cover visually changed"
+          print("PASS immutable intermediate cover SHA and 1st-page pixel consistency")
+          PY
+      - name: Commit verified source + both PDFs and ZIPs on isolated branch
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A -- README.md Bend2_Life_Textbook.tex src/05_glider.bend src/06_neighbors.bend src/07_life_core.bend src/08_life_terminal.bend src/life_core.bend tests/test_textbook_structure.py scripts/test_bend_runtime.py 'ライフゲームで学ぶ_はじめてのBend2.pdf' reader-packages/bend2-intro-reader.zip intermediate/src/board_index.bend intermediate/src/42_module_board.bend intermediate/src/23_cell_hit_test.bend intermediate/src/32_mouse_events.bend intermediate/minesweeper/board.bend intermediate/minesweeper/gui.bend intermediate/Intermediate_Textbook.tex intermediate/tests/test_structure.py intermediate/manuscript/STATUS.md intermediate/README.md intermediate/Bend2を使いこなす_プレビュー.pdf reader-packages/bend2-intermediate-reader-preview.zip
+          git diff --cached --check
+          if git diff --cached --name-only | grep -F 'intermediate/cover_art.tex'; then exit 1; fi
+          git diff --cached --stat
+          git commit -m "docs(bend): introduce x-y index helpers throughout both textbooks"
+          git push origin HEAD:verify/xy-index-both-books-20261019
