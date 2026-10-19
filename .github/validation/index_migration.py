@@ -137,9 +137,9 @@ insert_test='''def test_xy_index_mapping() -> None:
     head, marker, unused_main = original.partition("def main() -> U32:")
     assert marker
     coords = [(0, 0), (7, 0), (0, 1), (3, 2), (7, 7)]
-    program = head + "\ndef main() -> IO(Unit):\n  do IO<Unit>:\n"
+    program = head + "\\ndef main() -> IO(Unit):\\n  do IO<Unit>:\\n"
     for x,y in coords:
-        program += f'    IO.print(U32.show(index({x}, {y})))\n'
+        program += f'    IO.print(U32.show(index({x}, {y})))\\n'
     with tempfile.TemporaryDirectory(prefix="bend-xy-index-") as td:
         temp=Path(td)/"coordinates.bend"
         temp.write_text(program,encoding="utf8")
@@ -148,7 +148,7 @@ insert_test='''def test_xy_index_mapping() -> None:
     print("PASS 8x8 index(x,y) = 0,7,8,19,63")
 
 '''
-# Escape sequences above are literal Python source for the test: \n in strings.
+# Escape sequences above are literal Python source for the test: \\n in strings.
 change("scripts/test_bend_runtime.py",
        "def test_parallel_and_proofs() -> None:",
        insert_test+"def test_parallel_and_proofs() -> None:")
