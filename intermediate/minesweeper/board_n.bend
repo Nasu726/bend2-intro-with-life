@@ -52,12 +52,15 @@ def new_valid(n: U32) -> State:
            Array.new(Game.Square, d, Game.Hidden{})}
 
 # Public constructor: validated N; avoids mismatched user-supplied depth.
-def new_checked(+n: U32) -> Creation:
-  match valid_size(n):
+def new_if_valid(valid: Bool, n: U32) -> Creation:
+  match valid:
     case False{}:
       Invalid{}
     case True{}:
       Created{new_valid(n)}
+
+def new_checked(+n: U32) -> Creation:
+  new_if_valid(valid_size(n), n)
 
 # Read logical length without losing the cells array.
 def capacity_from_read(n: U32, mines: Array<Bool>,
