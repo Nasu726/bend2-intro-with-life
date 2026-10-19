@@ -22,7 +22,7 @@ bend examples/53_chan_poll.bend
 9
 \end{lstlisting}
 
-最初に\code{Chan.new(U32,1)}で容量1のチャネルを作ります。何も送っていない状態で\code{Chan.try_recv(U32,chan,0)}を呼ぶと、待機時間0ミリ秒の試行は\code{Wait{Unit{}}}になります。そこで9を送った後の二度目の試行は\code{Ready{Some{9}}}となり、受信した9を取り出せます。二行の表示は、この二つの状態に対応します。
+最初に容量1のチャネルを作ります。まだ何も送らずに、待機時間0ミリ秒で\code{Chan.try_recv}を呼ぶと\code{Wait{Unit{}}}になります。次に9を送った後、もう一度受信を試すと\code{Ready{Some{9}}}となります。二行の表示は、この二つの状態に対応します。
 
 サンプル内の\code{poll_number}は、\code{Wait}なら表示用に0を返し、\code{Ready{Some{number}}}ならその数値を返します。\textbf{0はPollの返り値そのものではありません。}受信した数値0でも表示は0になるため、実際のアプリケーションでは\code{match}の分岐を保ったまま扱いましょう。また、\code{Ready{None{}}}はチャネルが閉じて受信できる値が残っていない状態ですが、このプログラムは閉じた後の受信を試していません。
 
