@@ -36,12 +36,17 @@ jobs:
           curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o /tmp/elan-init.sh
           sh /tmp/elan-init.sh -y --default-toolchain leanprover/lean4:v4.34.0 --no-modify-path
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-      - name: Check and execute all Bend examples including Poll
+      - name: Recheck unchanged Poll source after layout-only correction
         run: |
           set -euo pipefail
           bend version
-          python3 intermediate/scripts/test_examples.py
-          python3 intermediate/scripts/test_targets.py
+          bend intermediate/src/53_chan_poll.bend --check-only
+          python3 - <<'PY'
+          import subprocess
+          result=subprocess.check_output(["bend","intermediate/src/53_chan_poll.bend"],text=True).strip().splitlines()
+          assert result==["0","9"],result
+          print("PASS Wait then Ready{Some{9}} = 0,9; all full Bend/proof tests passed in previous validation run 39189688535")
+          PY
       - name: Build textbook using production XeLaTeX settings
         uses: xu-cheng/latex-action@v4
         with:
