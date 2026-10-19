@@ -80,7 +80,7 @@ def mark_from_read(n: U32, mines: Array<Bool>, i: U32,
   State{n, mines, Array.set(Game.Square, cells, i, Game.toggle_flag(square))}
 
 def mark_valid(valid: Bool, n: U32, mines: Array<Bool>,
-               cells: Array<Game.Square>, i: U32) -> State:
+               cells: Array<Game.Square>, +i: U32) -> State:
   match valid:
     case False{}:
       State{n, mines, cells}
