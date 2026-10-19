@@ -1,0 +1,63 @@
+name: Verify and stage regenerated intermediate reader bundle
+on:
+  push:
+    branches:
+      - verify/intermediate-reader-sync-20261019
+permissions:
+  contents: write
+  actions: read
+jobs:
+  stage-validated-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Download exact output from PR-head CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh run download 39146263980 --repo Nasu726/bend2-intro-with-life \
+            --name intermediate-reader-materials --dir "$RUNNER_TEMP/generated"
+          test -s "$RUNNER_TEMP/generated/intermediate/Bend2を使いこなす_プレビュー.pdf"
+          test -s "$RUNNER_TEMP/generated/reader-packages/bend2-intermediate-reader-preview.zip"
+          cp "$RUNNER_TEMP/generated/intermediate/Bend2を使いこなす_プレビュー.pdf" intermediate/
+          cp "$RUNNER_TEMP/generated/reader-packages/bend2-intermediate-reader-preview.zip" reader-packages/
+      - name: Verify precise source match and unchanged book rendering
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
+          python3 - <<'PY'
+          import io, subprocess, zipfile
+          from pathlib import Path
+          from intermediate.scripts.check_bundle_consistency import compare_rendered_pages, text_of_pdf
+          old_pdf=subprocess.check_output(["git","show","HEAD:intermediate/Bend2を使いこなす_プレビュー.pdf"])
+          new_pdf=Path("intermediate/Bend2を使いこなす_プレビュー.pdf").read_bytes()
+          assert text_of_pdf(old_pdf)==text_of_pdf(new_pdf)
+          compare_rendered_pages(old_pdf,new_pdf)
+          old_zip=subprocess.check_output(["git","show","HEAD:reader-packages/bend2-intermediate-reader-preview.zip"])
+          new_zip=Path("reader-packages/bend2-intermediate-reader-preview.zip").read_bytes()
+          changed=[]
+          with zipfile.ZipFile(io.BytesIO(old_zip)) as old,zipfile.ZipFile(io.BytesIO(new_zip)) as new:
+              a,b=old.namelist(),new.namelist()
+              assert len(a)==len(set(a)) and len(b)==len(set(b)) and set(a)==set(b)
+              assert len(a)==67
+              for name in a:
+                  if old.read(name)!=new.read(name): changed.append(name)
+              assert changed==["bend2-intermediate-reader/examples/minesweeper/cli_save.bend"],changed
+              assert new.read("bend2-intermediate-reader/examples/minesweeper/cli_save.bend")==Path("intermediate/minesweeper/cli_save.bend").read_bytes()
+              assert new.read("bend2-intermediate-reader/textbook.pdf")==new_pdf
+              assert not any("/solutions/" in name for name in b)
+          print("PASS: only the intended learner source updated; cover and every page unchanged; PDF byte matches ZIP")
+          PY
+      - name: Stage binary artifacts on validation branch only
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- intermediate/Bend2を使いこなす_プレビュー.pdf reader-packages/bend2-intermediate-reader-preview.zip
+          git diff --cached --quiet && { echo "No artifact changes"; exit 1; }
+          git commit -m "build(intermediate): sync verified CLI save source in reader bundle"
+          git push origin HEAD:verify/intermediate-reader-sync-20261019
