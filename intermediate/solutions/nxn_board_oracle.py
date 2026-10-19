@@ -28,7 +28,7 @@ class PublicView:
 
 
 def _size_ok(n: int) -> bool:
-    return type(n) is int and n >= 2
+    return type(n) is int and 2 <= n <= 100
 
 
 def index(n: int, x: int, y: int) -> int:
