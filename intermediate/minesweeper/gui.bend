@@ -5,6 +5,7 @@
 import Base
 import ./game.bend as Game
 import ./board4.bend as Board4
+import ./board.bend as Board
 import ./session.bend as Session
 import ./start.bend as Start
 
@@ -139,7 +140,7 @@ def view(stage: Start.Stage) -> Start.Stage & Image:
 def cell_if_valid(valid: Bool, x: U32, y: U32) -> Maybe<&2, U32>:
   match valid:
     case True{}:
-      Some{(U32.div(y, 64) * 4 + U32.div(x, 64) : U32)}
+      Some{Board.index(U32.div(x, 64), U32.div(y, 64))}
     case False{}:
       None{}
 

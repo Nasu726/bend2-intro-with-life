@@ -1,11 +1,15 @@
 import Base
 
+# 8x8 example: x=column and y=row (0..7 after pixel bounds check).
+def index(x: U32, y: U32) -> U32:
+  (y * 8 + x : U32)
+
 # This example is self-contained. We reuse the same 8x8 coordinate rule
 # introduced in 23_cell_hit_test.bend without requiring a numbered import.
 def cell_if_valid(valid: Bool, x: U32, y: U32) -> Maybe<&2, U32>:
   match valid:
     case True{}:
-      Some{U32.add(U32.mul(U32.div(y, 32), 8), U32.div(x, 32))}
+      Some{index(U32.div(x, 32), U32.div(y, 32))}
     case False{}:
       None{}
 

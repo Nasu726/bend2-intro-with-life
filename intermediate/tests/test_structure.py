@@ -115,9 +115,27 @@ class BookStructure(unittest.TestCase):
         self.assertIn(r"\code{Array.clone}", text)
         self.assertIn("bend examples/minesweeper/gui.bend --check-only", text)
         self.assertNotIn("実機のGUIは、まだ完成していません", text)
-        for part in ("App.run(~Start.Stage", "Array.clone(Game.Square, cells)",
+        for part in ("App.run(~Start.Stage", "Array.clone(Game.Square, cells)", "Board.index(",
                      "U32.div(y, 64)", "Key{114, True{}}"):
             self.assertIn(part, gui)
+
+    def test_index_xy_contract_for_minesweeper_and_examples(self):
+        board = (ROOT / "minesweeper" / "board.bend").read_text(encoding="utf8")
+        gui = (ROOT / "minesweeper" / "gui.bend").read_text(encoding="utf8")
+        sample = (SRC / "board_index.bend").read_text(encoding="utf8")
+        demo = (SRC / "42_module_board.bend").read_text(encoding="utf8")
+        for code in (board, sample):
+            self.assertIn("def index(x: U32, y: U32) -> U32:", code)
+            self.assertIn("(y * 4 + x : U32)", code)
+        for name in ("23_cell_hit_test.bend", "32_mouse_events.bend"):
+            exercise = (SRC / name).read_text(encoding="utf8")
+            self.assertIn("def index(x: U32, y: U32) -> U32:", exercise)
+            self.assertIn("index(U32.div(x, 32), U32.div(y, 32))", exercise)
+        self.assertIn("Board.index(U32.div(x, 64), U32.div(y, 64))", gui)
+        self.assertIn("Board.index(3, 2)", demo)
+        for y in range(4):
+            for x in range(4):
+                self.assertEqual(y*4+x, 4*y+x)
 
     def test_gui_coordinate_reference_boundaries(self):
         # Independent arithmetic oracle for the chapter's 4x4 / 64px mapping.

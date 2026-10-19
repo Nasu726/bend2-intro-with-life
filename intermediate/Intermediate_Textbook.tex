@@ -1167,12 +1167,11 @@ Bend 2のイベントには\code{Mouse{x, y, button, down}}があります。画
 
 \sample{23_cell_hit_test.bend}{画素座標を8×8盤面の添字へ変換する}
 
-このサンプルでは、一辺32画素のマスを縦横8個並べた256×256画素の画面を想定しています。\code{(64,32)}は左から3列目、上から2行目なので、0始まりの添字は
+このサンプルでは32画素のマスを8×8並べます。\code{(64,32)}は列2、行1なので、\code{index(2,1)}が返す番号は
 \[
-  \left\lfloor \frac{32}{32} \right\rfloor\cdot 8
-  +\left\lfloor \frac{64}{32} \right\rfloor=10
+  \operatorname{index}(2,1)=10
 \]
-となります。一方、\code{(256,32)}は画面外です。\code{Maybe}の\code{None{}}を返せば、盤面のどこかを誤って開くことを防げます。
+です。一方、\code{(256,32)}は画面外です。\code{Maybe}の\code{None{}}を返せば、盤面のどこかを誤って開くことを防げます。
 
 \section{Mouseイベントと座標変換をつなぐ}
 今度は\code{Event}を受け取り、マウスが押されたときだけ座標を変換してみましょう。
@@ -1210,7 +1209,7 @@ def cell_at(+x: U32, +y: U32) -> Maybe<&2, U32>:
   cell_if_valid(Bool.and(U32.is_lt(x, 256), U32.is_lt(y, 256)), x, y)
 \end{lstlisting}
 
-\code{cell_if_valid}は、盤面内なら\code{(y / 64) * 4 + (x / 64)}を返します。例えば\code{(63,0)}は0番、\code{(64,0)}は1番、\code{(255,255)}は15番です。\code{(256,0)}は範囲外なので\code{None{}}です。どのマスも0から15の範囲に収まり、画面の右端・下端を越えたクリックを受け付けません。
+\code{cell_if_valid}はまず画素を列\code{x/64}と行\code{y/64}に分け、範囲内なら\code{Board.index}で番号へ変換します。例えば\code{(63,0)}は0番、\code{(64,0)}は1番、\code{(255,255)}は15番です。\code{(256,0)}は範囲外なので\code{None{}}です。どのマスも0から15の範囲に収まり、画面の右端・下端を越えたクリックを受け付けません。
 
 \section{クリックからゲーム状態を更新する}
 画素座標が有効でも、すべてのマウスボタンを左クリックとして扱ってはいけません。実装では\code{button == 0}を左クリック、\code{button == 1}を右クリックとし、その他のボタンでは状態を変更しません。押して離す一連の動作で二回更新しないように、\code{Mouse}の\code{down}が\code{True{}}のイベントだけを処理します。
@@ -1300,7 +1299,15 @@ bend examples/10_board_neighbors.bend
 
 結果は\code{2}です。これは「盤面全体に地雷が二つある」という意味ではありません。\textbf{二つの位置からそれぞれ数えた結果を足した値}です。何を\code{main}が返しているかを必ず確認しましょう。
 
-\section{4×4の盤面を配列に並べる}
+\section{座標を使い、内部では一次元配列に格納する}
+実装では次の小さな関数に座標変換を任せます。\code{x}が横方向の列、\code{y}が縦方向の行です。
+
+\begin{lstlisting}[caption={4×4盤面の補助関数（board.bendより）}]
+def index(x: U32, y: U32) -> U32:
+  (y * 4 + x : U32)
+\end{lstlisting}
+
+
 一マスの状態と周囲の数え方が分かったら、16マスを一つにまとめます。位置を指定して状態を変えたいので、ここでは\code{Array}が適しています。
 
 \begin{lstlisting}[caption={ゲーム内部の盤面を表す参考コード（抜粋）}]
@@ -1313,7 +1320,7 @@ def new_state(mines: U32) -> State:
 
 \code{mines}の下位16ビットは地雷配置、\code{cells}は16マス分の表示状態です。\code{Array.new}の\code{4n}は「4要素」ではなく深さ4を表すので、長さは\(2^4=16\)です。配列を持つ\code{State}は\code{Data}ではなく\code{Type}として宣言します。実際の\code{Game.Square}という型名は、学習用の\code{Square}と別のモジュールの型です。目的は同じですが、そのまま互換の値として混ぜないでください。
 
-行を\code{y}、列を\code{x}とすると、4×4盤面の添字は\(\,4y+x\,\)です。(1,1)なら5、(3,3)なら15になります。画面の座標が盤面外なら、\code{Array.get}に進む前に取り除かなければなりません。
+盤面を扱う間は列\code{x}、行\code{y}の二つで位置を考えます。例えば(1,1)は5番、(3,3)は15番です。補助関数\code{Board.index(x,y)}が、内部の一次元配列の番号へ変換します。画面外の座標は\code{Array.get}に進む前に拒否してください。
 
 \exercise{\code{09_minesweeper_status.bend}の\code{main}を変更し、旗を二回操作した結果が0になることを確かめましょう。次に\code{10_board_neighbors.bend}の地雷を(0,0)へ移し、(0,1)、(1,1)、(3,3)の数字を予想して実行してください。なぜ隅から見える隣接位置は三か所だけなのでしょうか。}
 
@@ -1328,7 +1335,7 @@ def new_state(mines: U32) -> State:
   \text{列}=\left\lfloor\frac{x}{32}\right\rfloor,\qquad
   \text{行}=\left\lfloor\frac{y}{32}\right\rfloor.
 \]
-8×8なら配列の添字は\(8\times\text{行}+\text{列}\)です。第12章の\code{23_cell_hit_test.bend}をもう一度開き、コード中でこの計算を行う場所を見つけてください。
+8×8の実習コードでは\code{index(x,y)}へ列と行を渡します。第12章の\code{23_cell_hit_test.bend}を開き、画素座標から列と行を求め、\code{index}を呼ぶ順序を確認してください。
 
 \section{関数の戻り値と実行結果を確かめる}
 まず、配布ZIPの\code{examples/23_cell_hit_test.bend}にある関数を見てみましょう。範囲判定は、添字の計算より先に行います。
@@ -1365,7 +1372,7 @@ bend examples/23_cell_hit_test.bend
 ここで\code{None{}}を0へ置き換えて操作してはいけません。盤面の外をクリックしたことが、左上のマスをクリックしたことになってしまうからです。\code{Maybe}を使う理由は、\textbf{有効な位置と無効な位置を別々に扱う}ためです。
 
 \section{実際の盤面へ渡す前に}
-第13章の参考ゲームエンジンは4×4ですが、この座標変換は8×8です。ゲームにつなぐ際には、行数と列数を統一します。例えば32画素のマスを4×4に並べるなら、画面は128×128画素で、添字は\(4\times\text{行}+\text{列}\)になります。
+第13章の参考ゲームエンジンは4×4ですが、この練習例は8×8です。両者の\code{index(x,y)}は同じ引数順でも盤面の幅が異なります。例えば32画素の4×4なら画面は128×128画素です。呼び出す補助関数と境界検査を、盤面の大きさに合わせてください。
 
 座標変換の計算はウィンドウがなくてもテストできます。一方、ウィンドウが実際に開くことや、OSからマウスイベントが届くことは、\code{App}を実機で動かす検査が必要です。ゲームの内部処理と画面の動作を分けて確かめましょう。
 
@@ -1789,7 +1796,7 @@ bend examples/43_target_hello.bend -o hello.c
 \sample{board_index.bend}{4×4盤面の添字を計算する小さなモジュール}
 \sample{42_module_board.bend}{別ファイルの関数をimportして利用する}
 
-まず\code{board_index.bend}には\code{index}という関数が入っています。行を\code{row}、列を\code{col}とすると、添字は\code{row * 4 + col}です。2行目の3列目なら11になります。
+まず\code{board_index.bend}には\code{index(x,y)}という関数があります。\code{x}は列、\code{y}は行です。例えば\code{index(3,2)}は11です。呼び出し側では場所を座標で考え、内部の格納位置は関数へ任せます。
 
 もう一つのファイルでは、次のように読み込みます。
 
@@ -1798,7 +1805,7 @@ import Base
 import ./board_index.bend as Board
 
 def main() -> U32:
-  Board.index(2, 3)
+  Board.index(3, 2)
 \end{lstlisting}
 
 \begin{lstlisting}[language={},caption={二つのファイルを一緒に使う}]
@@ -1808,7 +1815,7 @@ bend examples/42_module_board.bend
 実行結果は\code{11}です。名前の前に\code{Board.}を付けることで、どのモジュールの関数なのかが分かります。複雑なパッケージを作らなくても、二つのファイルだけでこの仕組みを試せます。
 
 \begin{pointbox}
-この例では\code{index}を呼ぶ前に座標が盤面内か確かめていません。実際の4×4盤面では、行・列が0〜3であることも検査してください。モジュールへ分けることと、入力の妥当性を保証することは別です。
+この例では\code{index}を呼ぶ前に座標を検査していません。実際の4×4盤面では\code{x}と\code{y}がともに0〜3であることを先に検査してください。モジュールへ分けることと、入力の妥当性を保証することは別です。
 \end{pointbox}
 
 \section{モジュールをパッケージとして配るとき}
