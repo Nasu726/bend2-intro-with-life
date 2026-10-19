@@ -1,0 +1,112 @@
+name: Validate chapter 9 Poll lesson and build matching reader files
+on:
+  push:
+    branches: [verify/intermediate-poll-issue6-20261019]
+    paths:
+      - '.github/workflows/verify-poll-issue6-20261019.yml'
+permissions:
+  contents: write
+jobs:
+  complete-poll-integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      BEND_NO_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Integrate source lesson into validation checkout
+        run: |
+          set -euo pipefail
+          python3 .github/validation/poll_issue6.py
+          python3 -m py_compile intermediate/scripts/test_examples.py intermediate/tests/test_structure.py tests/test_reader_bundle.py
+          python3 -m unittest discover -s intermediate/tests -v
+          git diff --check
+      - name: Install Bend 2
+        run: |
+          set -euo pipefail
+          curl -fsSL https://bend-lang.com/install.sh -o /tmp/install-bend.sh
+          sh /tmp/install-bend.sh
+          echo "$HOME/.bend/bin" >> "$GITHUB_PATH"
+      - name: Install Lean proof checker
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o /tmp/elan-init.sh
+          sh /tmp/elan-init.sh -y --default-toolchain leanprover/lean4:v4.34.0 --no-modify-path
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Check and execute all Bend examples including Poll
+        run: |
+          set -euo pipefail
+          bend version
+          python3 intermediate/scripts/test_examples.py
+          python3 intermediate/scripts/test_targets.py
+      - name: Build textbook using production XeLaTeX settings
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: intermediate/Intermediate_Textbook.tex
+          latexmk_use_xelatex: true
+          texlive_version: '2025'
+          os: debian
+          extra_system_packages: fonts-noto-cjk fonts-noto-core
+      - name: Require warning-free PDF and strict learner ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOG='Intermediate_Textbook.log'
+          if test -s intermediate/Intermediate_Textbook.log; then LOG='intermediate/Intermediate_Textbook.log'; fi
+          test -s "$LOG"
+          if grep -nE 'Overfull|Underfull|LaTeX Font Warning|LaTeX Warning' "$LOG"; then
+            echo "XeLaTeX warnings found" >&2
+            exit 1
+          fi
+          if test -s Intermediate_Textbook.pdf; then
+            cp Intermediate_Textbook.pdf intermediate/Bend2を使いこなす_プレビュー.pdf
+          else
+            cp intermediate/Intermediate_Textbook.pdf intermediate/Bend2を使いこなす_プレビュー.pdf
+          fi
+          python3 scripts/build_reader_bundle.py intermediate
+          python3 -m unittest discover -s tests -p 'test_reader_bundle.py' -v
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
+          python3 - <<'PY'
+          from pathlib import Path
+          import io, subprocess, tempfile, zipfile
+          from scripts.build_reader_bundle import INTERMEDIATE_EXAMPLES, INTERMEDIATE_GAME_FILES
+          pdf=Path("intermediate/Bend2を使いこなす_プレビュー.pdf").read_bytes()
+          zdata=Path("reader-packages/bend2-intermediate-reader-preview.zip").read_bytes()
+          with zipfile.ZipFile(io.BytesIO(zdata)) as z:
+              entries=z.namelist()
+              prefix="bend2-intermediate-reader/"
+              assert len(INTERMEDIATE_EXAMPLES)==53
+              assert len(INTERMEDIATE_GAME_FILES)==12
+              assert len(entries)==68 and len(entries)==len(set(entries)), len(entries)
+              assert z.testzip() is None
+              assert z.read(prefix+"textbook.pdf")==pdf
+              assert z.read(prefix+"examples/53_chan_poll.bend")==Path("intermediate/src/53_chan_poll.bend").read_bytes()
+              assert not any(("solutions" in s or s.endswith((".tex",".py"))) for s in entries)
+          with tempfile.TemporaryDirectory() as tmp:
+              old=Path(tmp)/"old.pdf"
+              old.write_bytes(subprocess.check_output(["git","show","1a96caa9e98d8fc59b68f5510ce248c87aea9be2:intermediate/Bend2を使いこなす_プレビュー.pdf"]))
+              subprocess.run(["pdftoppm","-f","1","-l","1","-r","144","-singlefile","-png",str(old),str(Path(tmp)/"old")],check=True,capture_output=True)
+              new=Path(tmp)/"new.pdf"
+              new.write_bytes(pdf)
+              subprocess.run(["pdftoppm","-f","1","-l","1","-r","144","-singlefile","-png",str(new),str(Path(tmp)/"new")],check=True,capture_output=True)
+              assert (Path(tmp)/"old.png").read_bytes()==(Path(tmp)/"new.png").read_bytes(),"Adopted cover changed"
+              txt=subprocess.check_output(["pdftotext","-layout",str(new),"-"]).decode("utf-8")
+              assert "53_chan_poll.bend" in txt
+          print("PASS 68-entry bundle, PDF exact bytes, source bytes, complete unchanged cover image, Poll in PDF")
+          PY
+      - name: Stage verified integration, PDF and ZIP in one validation commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- intermediate/Intermediate_Textbook.tex intermediate/src/53_chan_poll.bend intermediate/scripts/test_examples.py intermediate/tests/test_structure.py intermediate/tests/fixtures/chan_poll.bend intermediate/README.md intermediate/COVERAGE.md intermediate/manuscript/STATUS.md intermediate/manuscript/09_Poll実習.md intermediate/solutions/05_10_io_exercises.md scripts/build_reader_bundle.py tests/test_reader_bundle.py intermediate/Bend2を使いこなす_プレビュー.pdf reader-packages/bend2-intermediate-reader-preview.zip
+          git diff --cached --check
+          git diff --cached --name-only
+          if git diff --cached --name-only | grep -F 'intermediate/cover_art.tex'; then exit 1; fi
+          git commit -m 'docs(intermediate): verify Poll lesson, runnable source and synchronized learner artifacts (#6)'
+          git push origin HEAD:verify/intermediate-poll-issue6-20261019
