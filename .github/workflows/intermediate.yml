@@ -7,7 +7,7 @@ on:
       - 'tests/test_reader_bundle.py'
       - '.github/workflows/intermediate.yml'
   push:
-    branches: [main]
+    branches: [main, build/nxn-geometry-20261019]
     paths:
       - 'intermediate/**'
       - '.github/workflows/intermediate.yml'
@@ -49,6 +49,8 @@ jobs:
         run: bend version
       - name: Typecheck, run and verify proof examples
         run: python3 intermediate/scripts/test_examples.py
+      - name: Verify N x N Bend geometry against independent coordinates
+        run: python3 intermediate/scripts/test_nxn_geometry.py
       - name: Compile native C and execute JavaScript target
         run: python3 intermediate/scripts/test_targets.py
 
