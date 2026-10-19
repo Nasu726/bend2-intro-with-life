@@ -24,8 +24,8 @@
 | `File`（文字列・バイト） | 第7章と第21章（保存・復元） | `12_file_write.bend`、`13_file_read.bend`、`45_binary_file.bend`、`minesweeper/cli_save.bend` | 文字列・バイト列の保存と閉鎖、実ファイルの `00 0A 0D FF` 照合。大容量の反復読取・GUI保存は未完成 |
 | 引数・環境変数・乱数・時刻 | 第8章 | `08_args.bend`、`11_random_io.bend`、`19_environment.bend`、`46_elapsed_clock.bend` | IO.now/sleepの実行検証。経過時間を固定せず数値形式を照合 |
 | `Process.run` | 第8章 | `20_process_run.bend` | Linuxでの終了コード実行例。stderr・失敗は今後 |
-| `IO.fork/join`, `Chan` | 第9章 | `21_io_fork.bend`、`28_chan_roundtrip.bend` | fork/joinとChan送受信・closeの実行照合。失敗・時間制限の実践は今後 |
-| `IO.within`, `Poll` | 第9章（時間切れ・仕事の非取消・Ready/Waitを型に沿って解説） | `29_io_within.bend` | withinのSome/None処理は型検査済み。PollはBaseのtry_send/try_recvの返り値を解説した段階で、実行サンプルと時間制限の実機挙動は未検証 |
+| `IO.fork/join`, `Chan` | 第9章 | `21_io_fork.bend`、`28_chan_roundtrip.bend`、`53_chan_poll.bend` | fork/join、送受信・close、空の受信/送信後のPollを実行照合。閉鎖後の受信・送信待機・取消は今後 |
+| `IO.within`, `Poll` | 第9章（時間切れ・仕事の非取消・Ready/Waitを型に沿って解説） | `29_io_within.bend`、`53_chan_poll.bend` | withinのSome/None処理は型検査済み。Pollは空のWaitと9のReady{Some}を実行照合済み。閉鎖後のReady{None}、try_sendの待機、時間の競合は未検証 |
 | TCP/UDP/Socket/Listener | 第10章（TCPとUDPのローカル送受信実習を追加） | `27_tcp_connect.bend`、`47_tcp_loopback.bend`、`48_udp_loopback.bend` | 127.0.0.1でlisten/connect/accept/send/recv、UDP.bind/send_to/recv_fromとcloseを実行検査。長文フレーミング、外部ネットワーク、UDP損失の実機検査は今後 |
 | `Image`, `Pix`, `Qua` | 第11章を改稿（図・最小コード・出力・演習） | `31_image_quadrants.bend`、`07_gui_hello.bend` | 四分木の左上色を実行検査。ウィンドウ実機表示は別検査 |
 | `App`, `Event`, `Window` | 第12章で8×8の座標変換から4×4 GUIのview/tick・64画素・所有権へ接続、第14・21章 | `07_gui_hello.bend`、`23_cell_hit_test.bend`、`32_mouse_events.bend`、`minesweeper/gui.bend`、`gui_smoke.bend` | 8×8の独立例、4×4 GUIの型検査・Linuxネイティブビルド・13件のヘッドレス入力検査。実機の画面操作・GUI保存は未検収 |
@@ -85,6 +85,6 @@ G-04（0の連鎖公開）：`flood.bend` を `session.bend` から呼び出す�
 
 `examples/minesweeper/public_two_corners.bend` は、4×4・地雷2個に限定し `Number{0,0}` と `Number{15,0}` から安全ビット集合19506を計算します。単独数字0の50と比較できる実行教材です。独立Python列挙は49ケースへ拡充しました。この有限照合は一般サイズの全称証明ではありません。
 
-## 第9章のPoll補稿（2026-10-18）
+## 第9章のPoll実行教材（2026-10-19）
 
-検証用 `tests/fixtures/chan_poll.bend` で空の受信と送信後の受信を実行照合する。補稿は `manuscript/09_Poll実習.md`。読者PDFとZIPには未収録であり、完成とは扱わない。
+`53_chan_poll.bend` は空の受信の `Wait` と9送信後の `Ready{Some{9}}` を二行の `0`・`9` で照合。TeX第9章へ必要性・コード・結果・説明・演習を統合。表示用0と実際の受信値0を混同しない。閉鎖後の `Ready{None}`、`try_send` の待機、時間競合は未検証。

@@ -420,9 +420,11 @@ def main():
         if value != result:
             raise AssertionError(f"{file} expected {result}; got {value}")
         print(f"PASS value {file} = {value}", flush=True)
-    poll_output = run("bend", str(ROOT / "tests/fixtures/chan_poll.bend"))
+    # Reader-facing Poll example: check BOTH observed lines.
+    poll_output = run("bend", str(SAMPLES / "53_chan_poll.bend"))
     if poll_output.splitlines() != ["0", "9"]:
-        raise AssertionError(f"Poll mismatch: {poll_output!r}")
+        raise AssertionError(f"Poll expected Wait=0 and Ready(Some(9))=9; got {poll_output!r}")
+    print("PASS Chan.try_recv Wait then Ready(Some(9)) = 0,9", flush=True)
 
     atomic_output = run("bend", str(SAMPLES / "51_atomic_counter.bend"))
     if atomic_output.splitlines() != ["5", "8"]:

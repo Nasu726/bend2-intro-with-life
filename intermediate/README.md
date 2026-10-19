@@ -30,6 +30,7 @@ ZIPを展開すると、教科書PDF、実習用コード、使い始めるた�
 ```sh
 bend examples/01_set.bend
 bend examples/02_map.bend
+bend examples/53_chan_poll.bend
 bend examples/04_flag_laws.bend --verdict
 bend examples/minesweeper/cli_replay.bend c0 f1 c1
 bend examples/minesweeper/gui.bend -o minesweeper
@@ -60,7 +61,7 @@ bend examples/46_elapsed_clock.bend
 
 最初の出力は`4`、次は`00 0a 0d ff`、最後は経過時間を表す整数です。時計の値は環境によって変わり、常に`20`になるとは限りません。ファイルの個数だけでは内容の正しさを保証できないため、4バイトの値と順序を別に確かめます。書き込み先に同名のディレクトリがある場合など、`File.open`が失敗するときは読み込みへ進まず終了します。
 
-現行プレビューの読者ZIPには、通常サンプル52本（import用補助モジュール1本を含む）とゲーム実習12本、PDF・README・LICENSEを収録しています。演習解答、内部の証明・テスト、編集用資料は同梱しません。
+現行プレビューの読者ZIPには、通常サンプル53本（import用補助モジュール1本を含む）とゲーム実習12本、PDF・README・LICENSEを収録しています。演習解答、内部の証明・テスト、編集用資料は同梱しません。
 
 ## 制作の進捗と方針
 
@@ -164,3 +165,7 @@ GUIの13件のヘッドレス入力検査は実行済みですが、デスクト
 ## 第19章の追加実習（検証ブランチ）
 
 `51_atomic_counter.bend`は`Array.atomic.add`の返り値（更新前の5）と`Array.get`で読んだ更新後の8を表示します。並列実行やGPUの速度を保証する例ではありません。本文と参考解答はそれぞれ第19章と`solutions/19_atomic_exercises.md`を参照してください。
+
+## 第9章：値を待つPollの実習
+
+`53_chan_poll.bend` は空のチャネルへの `Chan.try_recv` と、9を送った後の再受信を比較します。出力は二行で `0` と `9`。表示の0は `Wait` に対応させた便宜的な値です。受信データ0とは区別して扱ってください。閉鎖後の受信や送信側の待機は未検証です。

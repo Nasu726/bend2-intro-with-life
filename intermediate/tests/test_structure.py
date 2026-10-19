@@ -136,6 +136,18 @@ class BookStructure(unittest.TestCase):
                      "U32.is_eq(button, 0)", "U32.is_eq(button, 1)"):
             self.assertIn(term, gui)
 
+    def test_poll_lesson_has_executable_source_and_limits(self):
+        book = BOOK.read_text(encoding="utf-8")
+        chapter9 = re.split(r"\\chapter\{[^}]+\}", book)[9]
+        self.assertEqual(book.count(r"\sample{53_chan_poll.bend}"), 1)
+        for phrase in (r"\section{空のチャネルを試して、受信待ちを見分ける}",
+                       "bend examples/53_chan_poll.bend", "0\n9",
+                       "Wait{Unit{}}", "Ready{Some{9}}", "閉じた後の受信を試していません"):
+            self.assertIn(phrase, chapter9)
+        code = (SRC / "53_chan_poll.bend").read_text(encoding="utf-8")
+        self.assertIn("Chan.try_recv(U32, chan, 0)", code)
+        self.assertIn("Chan.send(U32, chan, 9)", code)
+
     def test_timeout_lesson_distinguishes_three_outcomes(self):
         text = BOOK.read_text(encoding="utf-8")
         source = (SRC / "29_io_within.bend").read_text(encoding="utf-8")

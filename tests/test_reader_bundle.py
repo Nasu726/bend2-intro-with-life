@@ -36,6 +36,13 @@ class TestReaderBundle(unittest.TestCase):
                     self.assertFalse(name.endswith(".tex"))
                     self.assertFalse(name.endswith(".py"))
 
+    def test_poll_example_is_learner_material(self):
+        self.assertIn("53_chan_poll.bend", INTERMEDIATE_EXAMPLES)
+        with zipfile.ZipFile(ROOT / "reader-packages/bend2-intermediate-reader-preview.zip") as z:
+            name = "bend2-intermediate-reader/examples/53_chan_poll.bend"
+            self.assertEqual(z.read(name),
+                             (ROOT / "intermediate/src/53_chan_poll.bend").read_bytes())
+
     def test_pair_exists_sample_when_bend_is_installed(self):
         # The staging job installs Bend before invoking these bundle tests.
         # Keep local ZIP inspection usable on machines without the compiler.
