@@ -18,7 +18,7 @@ lesson=r"""\section{10×10の盤面では、配列の余りを使わない}
 
 \code{Array.new}の第2引数は個数ではなく深さです。100要素ぴったりの深さはないので、深さ7で128要素を確保し、\textbf{0から99までだけ}をゲームのマスとして扱います。残る100から127は、格納領域が存在しても\textbf{盤面の外}です。
 
-\begin{lstlisting}[caption={N×N用の座標変換（board_n.bendより）}]
+\begin{lstlisting}[caption={N×N用の座標変換（board\_n.bendより）}]
 def index(n: U32, x: U32, y: U32) -> U32:
   (y * n + x : U32)
 \end{lstlisting}
