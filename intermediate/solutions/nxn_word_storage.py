@@ -1,20 +1,73 @@
-"""Independent N x N bit-packed mine oracle; never expose to a solver."""
+"""Independent N x N bit-packed mine oracle; never expose to a solver.
+
+The storage contract is a tuple of ceil(n*n/32) unsigned 32-bit words.
+Bits beyond the n*n logical cells must be zero. This is a Python reference
+for a future Bend engine, not an implementation or proof of that engine.
+"""
+
+WORD_BITS = 32
+WORD_MAX = (1 << WORD_BITS) - 1
+
+
+def _cells(n):
+    if type(n) is not int or not 2 <= n <= 100:
+        raise ValueError("size")
+    return n * n
+
+
+def validate(n, words):
+    """Reject malformed words, including nonzero bits in the padding area."""
+    cells = _cells(n)
+    length = (cells + WORD_BITS - 1) // WORD_BITS
+    if (type(words) is not tuple or len(words) != length or
+            any(type(w) is not int or not 0 <= w <= WORD_MAX for w in words)):
+        raise ValueError("words")
+    used = cells % WORD_BITS
+    if used and words[-1] >> used:
+        raise ValueError("padding")
+    return words
 
 
 def pack(n, mines):
-    if type(n) is not int or not 2 <= n <= 100:
-        raise ValueError("size")
-    if any(type(i) is not int or not 0 <= i < n*n for i in mines):
-        raise ValueError("cell")
-    words = [0] * ((n*n + 31)//32)
-    for i in mines:
-        words[i//32] |= 1 << (i % 32)
+    cells = _cells(n)
+    words = [0] * ((cells + WORD_BITS - 1) // WORD_BITS)
+    try:
+        iterator = iter(mines)
+    except TypeError as exc:
+        raise ValueError("mines") from exc
+    for i in iterator:
+        if type(i) is not int or not 0 <= i < cells:
+            raise ValueError("cell")
+        words[i // WORD_BITS] |= 1 << (i % WORD_BITS)
     return tuple(words)
 
 
 def has(n, words, i):
-    return type(i) is int and 0 <= i < n*n and bool(words[i//32] & (1 << (i % 32)))
+    validate(n, words)
+    return (type(i) is int and 0 <= i < n*n and
+            bool(words[i // WORD_BITS] & (1 << (i % WORD_BITS))))
+
+
+def set_cell(n, words, i, value):
+    """Return updated immutable words; reject padding and invalid indices."""
+    validate(n, words)
+    if type(i) is not int or not 0 <= i < n*n or type(value) is not bool:
+        raise ValueError("cell/value")
+    slot, offset = divmod(i, WORD_BITS)
+    result = list(words)
+    if value:
+        result[slot] |= 1 << offset
+    else:
+        result[slot] &= WORD_MAX ^ (1 << offset)
+    return tuple(result)
 
 
 def unpack(n, words):
-    return frozenset(i for i in range(n*n) if has(n, words, i))
+    validate(n, words)
+    return frozenset(i for i in range(n*n)
+                     if words[i // WORD_BITS] & (1 << (i % WORD_BITS)))
+
+
+def count(n, words):
+    validate(n, words)
+    return sum(word.bit_count() for word in words)
