@@ -71,3 +71,21 @@ def unpack(n, words):
 def count(n, words):
     validate(n, words)
     return sum(word.bit_count() for word in words)
+
+
+def relocate_first_click(n, words, clicked):
+    """Move a first-click mine to the lowest free cell, preserving mine count.
+
+    Reject invalid clicks and full boards. If clicked is safe, keep the exact
+    immutable words. This is an internal game operation, not public solver data.
+    """
+    validate(n, words)
+    if type(clicked) is not int or not 0 <= clicked < n*n:
+        raise ValueError("clicked")
+    if count(n, words) == n*n:
+        raise ValueError("full board")
+    if not has(n, words, clicked):
+        return words
+    replacement = next(i for i in range(n*n)
+                       if not (words[i // WORD_BITS] & (1 << (i % WORD_BITS))))
+    return set_cell(n, set_cell(n, words, clicked, False), replacement, True)
