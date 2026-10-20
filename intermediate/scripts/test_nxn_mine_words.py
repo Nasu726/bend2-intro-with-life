@@ -24,15 +24,23 @@ def cases():
     def add(n, actions, read):
         state = f"Mines.new({n})"
         words = oracle.pack(n, ())
+        reference = set()  # Independent expected-state model.
         for i, enabled in actions:
             state = f"Mines.set_checked({state}, {i}, {'True{}' if enabled else 'False{}'})"
             if i < n*n:
                 words = oracle.set_cell(n, words, i, enabled)
+                if enabled:
+                    reference.add(i)
+                else:
+                    reference.discard(i)
         actual = f"Mines.read_bit(Mines.has({state}, {read}))"
         expected = int(oracle.has(n, words, read))
+        if expected != int(read in reference):
+            raise AssertionError(f"oracle disagreement: n={n}, actions={actions}, read={read}")
         checks.append(f"bit(U32.is_eq({actual}, {expected}))")
 
     for n in (2, 3, 4, 10, 17, 100):
+        checks.append(f"bit(U32.is_eq(Mines.word_count({n}), {(n*n + 31)//32}))")
         for i in sorted({0, 1, n*n-1, 31, 32, 63, 64, 99, n*n, n*n+27, 4294967295}):
             add(n, [(i, True)], i)
             add(n, [(i, True)], 0)
@@ -41,6 +49,14 @@ def cases():
             if i < n*n:
                 add(n, [(i, True), (i, False)], i)
                 add(n, [(i, True), (i, False), (i, True)], i)
+        # Clearing one cell must not erase another bit in the same word.
+        if n*n > 1:
+            add(n, [(0, True), (1, True), (0, False)], 1)
+            add(n, [(0, True), (1, True), (1, False)], 0)
+        # Invalid writes must not alter a previously set valid mine.
+        for invalid in (n*n, n*n + 27, 4294967295):
+            add(n, [(0, True), (invalid, True)], 0)
+            add(n, [(0, True), (invalid, False)], 0)
         # Clearing one word must not erase the adjacent word.
         if n*n > 32:
             add(n, [(31, True), (32, True), (31, False)], 32)
@@ -49,7 +65,8 @@ def cases():
         for _ in range(12):
             actions = [(rng.randrange(n*n), bool(rng.randrange(2))) for _ in range(3)]
             add(n, actions, rng.randrange(n*n))
-    return checks
+    # Boundary sets overlap; avoid redundant Bend compiler work.
+    return list(dict.fromkeys(checks))
 
 
 def program(checks):
