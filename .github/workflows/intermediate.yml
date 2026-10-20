@@ -51,6 +51,8 @@ jobs:
         run: python3 intermediate/scripts/test_examples.py
       - name: Verify N x N Bend geometry against independent coordinates
         run: python3 intermediate/scripts/test_nxn_geometry.py
+      - name: Verify N x N Bend mine-word storage against independent Python oracle
+        run: python3 intermediate/scripts/test_nxn_mine_words.py
       - name: Compile native C and execute JavaScript target
         run: python3 intermediate/scripts/test_targets.py
 
