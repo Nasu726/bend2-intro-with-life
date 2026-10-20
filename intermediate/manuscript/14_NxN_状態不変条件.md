@@ -112,3 +112,37 @@ print(sorted(unpack(10, moved)))  # [0, 1, 31, 99]
 
 演習として、クリック位置が最初から安全な場合と、盤面が地雷で
 埋まっている場合の動作を確かめてみましょう。
+
+## Bendで32ビット語を読み書きする（本編PDFへの統合前）
+
+Python参照モデルで仕様を決めたので、今度はBendの
+`intermediate/minesweeper/nxn_mine_words.bend` に同じ格納層を実装します。
+10×10の100個の地雷を、4個の `U32` 語で保持します。
+添字 `i` に対して語番号は `i/32`、ビット位置は `i%32` です。
+
+```bend
+def bit(+index: U32) -> U32:
+  U32.shln(1, U32.to_nat(U32.mod(index, 32)))
+
+def update_word(old: U32, index: U32, value: Bool) -> U32:
+  match value:
+    case True{}:
+      U32.or(old, bit(index))
+    case False{}:
+      U32.and(old, U32.not(bit(index)))
+```
+
+`set_checked` は有効な添字だけを書き換え、`has` は範囲外なら
+`False{}` を返します。無効なサイズは `new_checked` が `None{}` にします。
+`bend intermediate/minesweeper/nxn_mine_words.bend` の
+`main` は31番と32番に地雷を置いて32番を読むため、予想出力は `1` です。
+`python3 intermediate/scripts/test_nxn_mine_words.py` では
+N=2/3/4/10/17/100の境界と追加・削除をPythonモデルと有限照合します。
+
+これは**地雷の内部格納**の教材であり、初手の地雷移動、
+近傍数字、0連鎖、勝敗、GUI、運ゲー無し生成を検証したことにはなりません。
+内部の地雷語列を公開情報だけを受け取る推論器に渡してはいけません。
+
+**演習：** 31番と32番の地雷を別々に立て、変化する語番号を
+予想してみましょう。99番を削除した場合と、無効な100番を
+指定した場合の違いも説明してみましょう。
