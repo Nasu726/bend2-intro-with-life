@@ -36,6 +36,15 @@ def cases():
         for i in sorted({0, 1, n*n-1, 31, 32, 63, 64, 99, n*n, n*n+27, 4294967295}):
             add(n, [(i, True)], i)
             add(n, [(i, True)], 0)
+        # Deterministic clear/re-set at the first/last cells and word edges.
+        for i in sorted({0, n*n-1, 31, 32, 63, 64, 99}):
+            if i < n*n:
+                add(n, [(i, True), (i, False)], i)
+                add(n, [(i, True), (i, False), (i, True)], i)
+        # Clearing one word must not erase the adjacent word.
+        if n*n > 32:
+            add(n, [(31, True), (32, True), (31, False)], 32)
+            add(n, [(31, True), (32, True), (32, False)], 31)
         rng = random.Random(20261020 + n)
         for _ in range(12):
             actions = [(rng.randrange(n*n), bool(rng.randrange(2))) for _ in range(3)]
