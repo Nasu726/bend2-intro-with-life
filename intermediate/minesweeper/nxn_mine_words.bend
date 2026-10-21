@@ -8,6 +8,11 @@ import ./nxn_geometry.bend as Geo
 type MineWords is Type:
   MineWords{n: U32, words: Array<U32>}
 
+# Array is a resource-like Type, so it cannot be stored in Maybe<Data>.
+type Creation is Type:
+  Created{board: MineWords}
+  InvalidSize{}
+
 def word_count(+n: U32) -> U32:
   U32.div((n * n + 31 : U32), 32)
 
@@ -27,14 +32,14 @@ def depth_loop(fuel: Nat, small: Bool, +capacity: U32, +depth: Nat, +need: U32) 
 def new(+n: U32) -> MineWords:
   MineWords{n, Array.new(U32, depth_loop(10n, U32.is_lt(1, word_count(n)), 1, 0n, word_count(n)), 0)}
 
-def new_if_valid(valid: Bool, n: U32) -> Maybe<&2, MineWords>:
+def new_if_valid(valid: Bool, n: U32) -> Creation:
   match valid:
     case True{}:
-      Some{new(n)}
+      Created{new(n)}
     case False{}:
-      None{}
+      InvalidSize{}
 
-def new_checked(+n: U32) -> Maybe<&2, MineWords>:
+def new_checked(+n: U32) -> Creation:
   new_if_valid(Geo.valid_size(n), n)
 
 def bit(+index: U32) -> U32:
