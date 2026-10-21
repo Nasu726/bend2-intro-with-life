@@ -89,3 +89,6 @@ if __name__ == "__main__":
     # Keep geometry and bit-packed mine storage in the same N x N CI gate.
     from test_nxn_mine_words import main as verify_mine_words
     verify_mine_words()
+    # Test the Bend clue layer against a separately computed set oracle.
+    from test_nxn_clues import main as verify_clues
+    verify_clues()
