@@ -89,3 +89,22 @@ def relocate_first_click(n, words, clicked):
     replacement = next(i for i in range(n*n)
                        if not (words[i // WORD_BITS] & (1 << (i % WORD_BITS))))
     return set_cell(n, set_cell(n, words, clicked, False), replacement, True)
+
+def adjacent_count(n, words, i):
+    """Count mines in the at-most-eight non-wrapping neighboring cells.
+
+    Privileged game logic only: never pass the true mine words to a
+    public-information solver. Reject invalid storage and cell indices.
+    """
+    validate(n, words)
+    if type(i) is not int or not 0 <= i < n*n:
+        raise ValueError("cell")
+    y, x = divmod(i, n)
+    total = 0
+    for yy in range(max(0, y-1), min(n, y+2)):
+        for xx in range(max(0, x-1), min(n, x+2)):
+            if xx == x and yy == y:
+                continue
+            j = yy*n + xx
+            total += (words[j//WORD_BITS] >> (j%WORD_BITS)) & 1
+    return total
