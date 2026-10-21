@@ -49,7 +49,7 @@ def from_read(n: U32, index: U32, pair: Array<U32> & U32) -> MineWords & Bool:
   (words, value) = pair
   (MineWords{n, words}, U32.is_ne(U32.and(value, bit(index)), 0))
 
-def has_if_valid(valid: Bool, n: U32, words: Array<U32>, index: U32) -> MineWords & Bool:
+def has_if_valid(valid: Bool, n: U32, words: Array<U32>, +index: U32) -> MineWords & Bool:
   match valid:
     case True{}:
       from_read(n, index, Array.get(U32, words, U32.div(index, 32)))
@@ -68,11 +68,11 @@ def update_word(old: U32, index: U32, value: Bool) -> U32:
     case False{}:
       U32.and(old, U32.not(bit(index)))
 
-def from_update(index: U32, value: Bool, pair: Array<U32> & U32) -> Array<U32>:
+def from_update(+index: U32, value: Bool, pair: Array<U32> & U32) -> Array<U32>:
   (words, old) = pair
   Array.set(U32, words, U32.div(index, 32), update_word(old, index, value))
 
-def set_if_valid(valid: Bool, n: U32, words: Array<U32>, index: U32, value: Bool) -> MineWords:
+def set_if_valid(valid: Bool, n: U32, words: Array<U32>, +index: U32, value: Bool) -> MineWords:
   match valid:
     case True{}:
       MineWords{n, from_update(index, value, Array.get(U32, words, U32.div(index, 32)))}
