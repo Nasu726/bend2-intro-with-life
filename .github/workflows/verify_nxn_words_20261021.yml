@@ -64,4 +64,18 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_reader_bundle.py' -v
           sudo apt-get update -qq
           sudo apt-get install -y -qq poppler-utils
+          python3 - <<'PY'
+          import difflib
+          import subprocess
+          from pathlib import Path
+          path = 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          before = subprocess.check_output(['git', 'show', 'HEAD:' + path])
+          after = Path(path).read_bytes()
+          def extract(pdf):
+              return subprocess.check_output(['pdftotext', '-layout', '-', '-'], input=pdf).decode('utf8', 'replace').splitlines()
+          old, new = extract(before), extract(after)
+          print('PDF text lines committed/regenerated:', len(old), len(new))
+          for line in list(difflib.unified_diff(old, new, fromfile='committed', tofile='regenerated'))[:95]:
+              print(line)
+          PY
           python3 intermediate/scripts/check_bundle_consistency.py
