@@ -21,7 +21,7 @@ def received(listener: Listener, client: Socket,
         IO.die(Unit, code, reason)
 
 def sent(listener: Listener, server: Socket,
-         pair: Socket & Result<&1, &1, (U32 & String) & String, Unit>)
+         pair: Socket & Result<&1, &1, (U32 & String) & List<&2, U32>, Unit>)
          -> IO(Unit):
   (client, result) = pair
   match result:
@@ -44,7 +44,7 @@ def handle_accept(client: Socket,
   match result:
     case Done{server}:
       do IO<Unit>:
-        result: Socket & Result<&1, &1, (U32 & String) & String, Unit> <-
+        result: Socket & Result<&1, &1, (U32 & String) & List<&2, U32>, Unit> <-
           TCP.send(client, "B")
         sent(listener, server, result)
     case Fail{(code, reason)}:
