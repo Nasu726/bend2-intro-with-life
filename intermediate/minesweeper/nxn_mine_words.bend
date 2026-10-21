@@ -56,10 +56,13 @@ def has_if_valid(valid: Bool, n: U32, words: Array<U32>, +index: U32) -> MineWor
     case False{}:
       (MineWords{n, words}, False{})
 
+def has_inside(+n: U32, words: Array<U32>, +index: U32) -> MineWords & Bool:
+  has_if_valid(Geo.valid_index(n, index), n, words, index)
+
 def has(board: MineWords, +index: U32) -> MineWords & Bool:
   match board:
     case MineWords{n, words}:
-      has_if_valid(Geo.valid_index(n, index), n, words, index)
+      has_inside(n, words, index)
 
 def update_word(old: U32, index: U32, value: Bool) -> U32:
   match value:
@@ -79,10 +82,13 @@ def set_if_valid(valid: Bool, n: U32, words: Array<U32>, +index: U32, value: Boo
     case False{}:
       MineWords{n, words}
 
+def set_inside(+n: U32, words: Array<U32>, +index: U32, value: Bool) -> MineWords:
+  set_if_valid(Geo.valid_index(n, index), n, words, index, value)
+
 def set_checked(board: MineWords, +index: U32, +value: Bool) -> MineWords:
   match board:
     case MineWords{n, words}:
-      set_if_valid(Geo.valid_index(n, index), n, words, index, value)
+      set_inside(n, words, index, value)
 
 def read_bit(pair: MineWords & Bool) -> U32:
   (unused, present) = pair
