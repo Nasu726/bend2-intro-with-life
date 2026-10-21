@@ -12,20 +12,20 @@ def word_count(+n: U32) -> U32:
   U32.div((n * n + 31 : U32), 32)
 
 # Structural fuel bound: 313 logical words need at most depth 9.
-def depth_loop(fuel: Nat, +capacity: U32, +depth: Nat, +need: U32) -> Nat:
+def depth_loop(fuel: Nat, small: Bool, +capacity: U32, +depth: Nat, +need: U32) -> Nat:
   match fuel:
     case 0n:
       depth
     case 1n+k:
-      match U32.is_lt(capacity, need):
+      match small:
         case True{}:
-          depth_loop(k, (capacity + capacity : U32), (1n + depth : Nat), need)
+          depth_loop(k, U32.is_lt((capacity + capacity : U32), need), (capacity + capacity : U32), (1n + depth : Nat), need)
         case False{}:
           depth
 
 # PRECONDITION: Geo.valid_size(n). Call new_checked for untrusted sizes.
 def new(+n: U32) -> MineWords:
-  MineWords{n, Array.new(U32, depth_loop(10n, 1, 0n, word_count(n)), 0)}
+  MineWords{n, Array.new(U32, depth_loop(10n, U32.is_lt(1, word_count(n)), 1, 0n, word_count(n)), 0)}
 
 def new_if_valid(valid: Bool, n: U32) -> Maybe<&2, MineWords>:
   match valid:
