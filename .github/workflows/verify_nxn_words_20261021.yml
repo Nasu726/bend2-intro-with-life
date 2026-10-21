@@ -3,7 +3,7 @@ on:
   push:
     branches: [verify/nxn-word-validation-20261021]
 permissions:
-  contents: read
+  contents: write
 jobs:
   bend-and-python:
     runs-on: ubuntu-24.04
@@ -56,7 +56,7 @@ jobs:
           if test -s intermediate/Intermediate_Textbook.log; then LOG='intermediate/Intermediate_Textbook.log'; fi
           test -s "$LOG"
           if grep -nE 'Overfull|Underfull|LaTeX Font Warning|LaTeX Warning' "$LOG"; then exit 1; fi
-      - name: Rebuild and compare PDF and reader ZIP
+      - name: Rebuild, verify cover and synchronize PDF plus learner ZIP on verification branch
         run: |
           set -euo pipefail
           if test -s Intermediate_Textbook.pdf; then cp Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'; else cp intermediate/Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'; fi
@@ -65,17 +65,35 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq poppler-utils
           python3 - <<'PY'
-          import difflib
           import subprocess
+          import tempfile
           from pathlib import Path
-          path = 'intermediate/Bend2を使いこなす_プレビュー.pdf'
-          before = subprocess.check_output(['git', 'show', 'HEAD:' + path])
-          after = Path(path).read_bytes()
-          def extract(pdf):
-              return subprocess.check_output(['pdftotext', '-layout', '-', '-'], input=pdf).decode('utf8', 'replace').splitlines()
-          old, new = extract(before), extract(after)
-          print('PDF text lines committed/regenerated:', len(old), len(new))
-          for line in list(difflib.unified_diff(old, new, fromfile='committed', tofile='regenerated'))[:95]:
-              print(line)
+          import zipfile
+          pdfname = 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          old = subprocess.check_output(['git','show','HEAD:' + pdfname])
+          new = Path(pdfname).read_bytes()
+          with tempfile.TemporaryDirectory() as td:
+              outputs = []
+              for name, data in [('old',old),('new',new)]:
+                  p = Path(td) / (name + '.pdf')
+                  p.write_bytes(data)
+                  subprocess.run(['pdftoppm','-f','1','-l','1','-r','72','-png',str(p),str(Path(td)/name)], check=True)
+                  images = sorted(Path(td).glob(name+'-*.png'))
+                  if len(images) != 1:
+                      raise AssertionError('first page not rendered')
+                  outputs.append(images[0].read_bytes())
+              if outputs[0] != outputs[1]:
+                  raise AssertionError('adopted cover appearance changed')
+          reader = Path('reader-packages/bend2-intermediate-reader-preview.zip')
+          with zipfile.ZipFile(reader) as zf:
+              embedded = [n for n in zf.namelist() if n.endswith('/textbook.pdf')]
+              if len(embedded) != 1 or zf.read(embedded[0]) != new:
+                  raise AssertionError('ZIP embedded PDF does not match source PDF bytes')
+          print('PASS: adopted cover pixels unchanged; ZIP PDF exactly matches rebuilt PDF')
           PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 'intermediate/Bend2を使いこなす_プレビュー.pdf' 'reader-packages/bend2-intermediate-reader-preview.zip'
+          git commit -m "build(verify): align TCP source listing, PDF and reader ZIP"
           python3 intermediate/scripts/check_bundle_consistency.py
+          git push origin HEAD:refs/heads/verify/nxn-word-validation-20261021
