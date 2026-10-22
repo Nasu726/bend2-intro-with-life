@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from elapsed_output import is_nat_decimal
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SAMPLES = ROOT / "src"
@@ -475,7 +476,7 @@ def main():
         print("PASS binary File.open failure exits without reading", flush=True)
 
     clock = run("bend", str(SAMPLES / "46_elapsed_clock.bend"))
-    if not clock.isdecimal() or not 1 <= int(clock) < 60000:
+    if not is_nat_decimal(clock):
         raise AssertionError(f"Invalid elapsed clock output: {clock!r}")
     print("PASS variable numeric IO.now/IO.sleep measurement", flush=True)
 
