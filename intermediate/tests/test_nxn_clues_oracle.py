@@ -3,6 +3,7 @@
 No Bend binary is needed here; successful tests do not certify Bend execution.
 """
 from pathlib import Path
+import random
 import sys
 import unittest
 
@@ -45,12 +46,29 @@ class ClueOracleContract(unittest.TestCase):
             cells = n * n
             mines = {i for i in (0, 1, n - 1, n, n + 1, 31, 32, 63, 64,
                                  99, cells - 1) if i < cells}
-            indices = {0, 1, n - 1, n, n + 1, cells // 2, cells - 1,
-                       31, 32, 63, 64, 99, cells, cells + 27, 4294967295}
+            indices = {-4294967295, -n, -1, 0, 1, n - 1, n, n + 1,
+                       cells // 2, cells - 1, 31, 32, 63, 64, 99,
+                       cells, cells + 27, 4294967295}
             for index in sorted(indices):
                 self.assertEqual(expected(n, mines, index),
                                  eight_directions(n, mines, index),
                                  (n, index))
+
+    def test_randomized_all_sizes_against_independent_eight_offsets(self):
+        rng = random.Random(20261022)
+        comparisons = 0
+        for n in range(2, 101):
+            cells = n * n
+            probes = {0, n - 1, n, cells - 1, min(31, cells - 1),
+                      min(32, cells - 1), rng.randrange(cells)}
+            for _ in range(3):
+                mines = set(rng.sample(range(cells), min(cells, 12)))
+                for index in probes:
+                    self.assertEqual(expected(n, mines, index),
+                                     eight_directions(n, mines, index),
+                                     (n, sorted(mines), index))
+                    comparisons += 1
+        self.assertGreaterEqual(comparisons, 1000)
 
     def test_generator_is_deterministic_and_has_a_main(self):
         checks = cases()
