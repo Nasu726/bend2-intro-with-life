@@ -42,5 +42,25 @@ class ByteClockSourceContract(unittest.TestCase):
         self.assertRegex(code, r'clock\.isdecimal\(\)')
 
 
+    def test_chapter_7_reader_can_check_actual_bytes(self):
+        tex = (ROOT / 'Intermediate_Textbook.tex').read_text(encoding='utf-8')
+        ch7 = tex.split(r'\chapter{Fileとリソースの受け渡し}', 1)[1].split(
+            r'\chapter{引数、時刻、乱数、プロセス}', 1)[0]
+        self.assertIn('実ファイルの4バイトを確かめる', ch7)
+        self.assertIn('raw = Path("sample_bytes.bin").read_bytes()', ch7)
+        self.assertIn('assert raw == bytes([0, 10, 13, 255])', ch7)
+        self.assertIn('00 0a 0d ff', ch7)
+        self.assertIn('Bend内部で全バイトを比較した証明ではありません', ch7)
+
+    def test_chapter_8_explains_clock_measurement_limits(self):
+        tex = (ROOT / 'Intermediate_Textbook.tex').read_text(encoding='utf-8')
+        ch8 = tex.split(r'\chapter{引数、時刻、乱数、プロセス}', 1)[1].split(
+            r'\chapter{IO.fork、Chanとタイムアウト}', 1)[0]
+        self.assertIn('待機時間と測定値を区別する', ch8)
+        self.assertIn('46_elapsed_clock.bend', ch8)
+        self.assertIn('Nat.sub(130n, 100n)', ch8)
+        self.assertIn('時計の精度やOSの待機精度までは保証しません', ch8)
+
+
 if __name__ == '__main__':
     unittest.main()

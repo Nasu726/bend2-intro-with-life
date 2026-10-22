@@ -722,6 +722,21 @@ File.write_bytes(file, [0, 10, 13, 255])
 本書のCIでは、Bendの出力\code{4}だけでなく、\textbf{実際のファイルの4バイト}が\code{00 0A 0D FF}であることを別のプログラムで確かめています。読み取れた「量」と読み取れた「内容」を分けて確認するためです。
 \end{pointbox}
 
+\paragraph{実ファイルの4バイトを確かめる}
+Bendの出力\code{4}は読み取った要素数です。内容と順序も確かめるには、\code{45_binary_file.bend}を実行した後、同じ作業フォルダーで次の検査を行いましょう。読者ZIPを展開したフォルダーから実行する場合も同じです。
+
+\begin{lstlisting}[language={},caption={Pythonで実ファイルの4バイトを照合する}]
+python3 - <<'PY'
+from pathlib import Path
+raw = Path("sample_bytes.bin").read_bytes()
+print(raw.hex(" "))
+assert raw == bytes([0, 10, 13, 255])
+print("byte content OK")
+PY
+\end{lstlisting}
+
+表示は\code{00 0a 0d ff}と\code{byte content OK}です。\code{assert}が失敗した場合は、期待したバイト列と一致していません。このPythonの検査はBendを実行した後のファイルを調べるもので、Bend内部で全バイトを比較した証明ではありません。
+
 文字列用APIと同じく、バイト列用の読み書きも\code{File & Result<...>}を返します。\code{Done}と\code{Fail}のいずれの分岐でも戻された\code{File}を\code{File.close}へ渡します。\textbf{どんなデータを保存するか}と\textbf{ハンドルをどう扱うか}は別の問題です。
 
 \exercise{\code{45_binary_file.bend}のリストを\code{[1, 2, 3]}に変え、実行結果を確かめてみましょう。次に4バイトの順序を逆にした場合、個数を数えるだけでは変更を検出できない理由を説明してみましょう。}
@@ -769,6 +784,9 @@ IO.print(Nat.show(Nat.sub(finish, start)))
 現行のネイティブ・JavaScript実装では\code{IO.now}はミリ秒単位で経過時間を測るための時計値を返します。\textbf{年月日や日本時間の時刻ではありません}。\code{Nat.sub(130n, 100n)}の結果は常に\code{30n}ですが、時計から取得する値は実行ごとに異なります。
 
 \code{IO.sleep(20)}は20ミリ秒の待機を要求します。実際の経過時間にはOSのスケジューリングなども含まれるため、\textbf{表示が毎回ちょうど20になるとは限りません}。CIでも出力が数値であることを確認し、20との一致を要求しません。
+
+\paragraph{待機時間と測定値を区別する}
+\code{46_elapsed_clock.bend}を3回実行し、表示される数値を比べてみましょう。これは実測値なので、必ず\code{20}と表示されるとは限りません。一方、同じ入力に対する純粋計算\code{Nat.sub(130n, 100n)}の結果は常に\code{30n}です。テストでは経過時間の数値形式を確認し、時計の精度やOSの待機精度までは保証しません。
 
 \begin{pointbox}
 ゲームにタイマーを追加するなら、最初の有効なクリックで計測を開始し、勝敗が決まった時点で終了する構成が考えられます。勝敗の判断は純粋な関数として保ち、時計の取得と表示をアプリ側へ置きます。
