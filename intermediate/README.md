@@ -41,7 +41,7 @@ bend examples/minesweeper/cli_save.bend save c0 f1
 bend examples/minesweeper/cli_save.bend load
 ```
 
-サンプルは**Bend 2.0.37**を基準に検証しています。`--verdict`による証明の確認にはLean 4も必要です。GUIの例はデスクトップ環境で動かしてください。LinuxでのネイティブGUIビルドには `libx11-dev` が必要です。
+収録済みサンプルはBend 2.0.37を基準に検証し、TCP送信APIを含む回帰検証はBend 2.0.38でも行いました。`--verdict`による証明の確認にはLean 4も必要です。GUIの例はデスクトップ環境で動かしてください。LinuxでのネイティブGUIビルドには `libx11-dev` が必要です。
 
 第21章では、同梱の `examples/minesweeper/cli_replay.bend` と関連6モジュールで4×4ゲームの操作を再生できます。`c0` は番号0のクリック、`f1` は番号1の旗、`r` はリセットです。これは**引数を一括指定する実習**であり、まだ対話式CLIではありません。固定の地雷配置で初手安全・勝敗・0連鎖を学びます。
 
