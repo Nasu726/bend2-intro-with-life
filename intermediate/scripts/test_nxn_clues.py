@@ -15,7 +15,8 @@ GAME = ROOT / "minesweeper"
 
 
 def expected(n, mines, i):
-    if i >= n*n:
+    # Reject invalid negative indices instead of interpreting them as cells.
+    if not 0 <= i < n*n:
         return 0
     x, y = i % n, i // n
     return sum(j in mines for j in range(n*n) if j != i
