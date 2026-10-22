@@ -99,22 +99,52 @@ def program(checks):
             + " : U32)\n")
 
 
-def main():
-    checks = cases()
+def verify(checks, *, batch_size=None, runner=subprocess.run):
+    """Typecheck and execute every check; optionally split for diagnosis.
+
+    The default remains one Bend program, preserving the existing CI gate.
+    BEND_NXN_CLUE_BATCH_SIZE can be set to 64, for example, to isolate a
+    compiler failure without weakening the full 533-case acceptance test.
+    """
+    if batch_size is None:
+        batch_size = len(checks)
+    if not isinstance(batch_size, int) or batch_size < 1:
+        raise ValueError("Bend clue batch size must be a positive integer")
+    if not checks:
+        raise ValueError("Bend clue gate cannot run zero checks")
     with tempfile.TemporaryDirectory() as td:
         folder = Path(td)
         for name in ("nxn_geometry.bend", "nxn_mine_words.bend", "nxn_clues.bend"):
             shutil.copyfile(GAME / name, folder / name)
         entry = folder / "check_clues.bend"
-        entry.write_text(program(checks), encoding="utf8")
-        for args in (("bend", str(entry), "--check-only"), ("bend", str(entry))):
-            p = subprocess.run(args, capture_output=True, text=True, timeout=240,
+        for offset in range(0, len(checks), batch_size):
+            subset = checks[offset:offset + batch_size]
+            entry.write_text(program(subset), encoding="utf8")
+            for check_only in (True, False):
+                args = ("bend", str(entry), "--check-only") if check_only else ("bend", str(entry))
+                stage = "typecheck" if check_only else "execution"
+                label = f"N x N clues {stage}, checks {offset + 1}..{offset + len(subset)}"
+                try:
+                    p = runner(args, capture_output=True, text=True, timeout=240,
                                cwd=folder, env=dict(os.environ, BEND_NO_TELEMETRY="1"))
-            if p.returncode:
-                raise AssertionError(f"{args}: {p.stdout}\n{p.stderr}")
-            if len(args) == 2 and p.stdout.strip().splitlines()[-1] != str(len(checks)):
-                raise AssertionError(f"N x N clues: {p.stdout} != {len(checks)}")
-    print(f"PASS Bend N x N clues: {len(checks)} finite independent checks")
+                except subprocess.TimeoutExpired as error:
+                    raise AssertionError(f"{label}: timed out after 240 seconds") from error
+                if p.returncode:
+                    raise AssertionError(f"{label}: exited {p.returncode}:\n{p.stdout}\n{p.stderr}")
+                if not check_only:
+                    lines = [line.strip() for line in p.stdout.splitlines() if line.strip()]
+                    actual = lines[-1] if lines else "<empty output>"
+                    if actual != str(len(subset)):
+                        raise AssertionError(f"{label}: got {actual}, expected {len(subset)}")
+    return len(checks)
+
+
+def main():
+    checks = cases()
+    size = os.environ.get("BEND_NXN_CLUE_BATCH_SIZE")
+    batch_size = int(size) if size is not None else None
+    verified = verify(checks, batch_size=batch_size)
+    print(f"PASS Bend N x N clues: {verified} finite independent checks")
 
 
 if __name__ == "__main__":
