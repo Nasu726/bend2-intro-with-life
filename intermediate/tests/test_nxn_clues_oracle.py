@@ -8,7 +8,7 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from test_nxn_clues import cases, expected, neighbor_ring, program
+from test_nxn_clues import cases, check_expression, expected, neighbor_ring, program
 
 
 def eight_directions(n, mines, index):
@@ -88,6 +88,24 @@ class ClueOracleContract(unittest.TestCase):
         checks = cases()
         self.assertTrue(any(', 8))' in check for check in checks))
         self.assertTrue(any(', 7))' in check for check in checks))
+
+    def test_every_clue_value_and_center_mine_exclusion(self):
+        generated = set(cases())
+        for n in (3, 10):
+            focus = n + 1
+            ring = neighbor_ring(n, focus)
+            self.assertEqual(len(ring), 8)
+            for k in range(9):
+                neighbors = set(ring[:k])
+                with_center = neighbors | {focus}
+                self.assertEqual(expected(n, neighbors, focus), k)
+                self.assertEqual(expected(n, with_center, focus), k)
+                self.assertEqual(eight_directions(n, neighbors, focus), k)
+                self.assertEqual(eight_directions(n, with_center, focus), k)
+                # Both scenarios must reach the generated Bend gate, not
+                # merely pass the Python-only independent oracle.
+                self.assertIn(check_expression(n, neighbors, focus), generated)
+                self.assertIn(check_expression(n, with_center, focus), generated)
 
     def test_generator_is_deterministic_and_has_a_main(self):
         checks = cases()

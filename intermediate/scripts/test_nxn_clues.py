@@ -35,6 +35,15 @@ def neighbor_ring(n, i):
                         if (xx, yy) != (x, y)))
 
 
+def check_expression(n, mines, index):
+    """Render one Bend check, using the independent finite oracle."""
+    state = f"Mines.new({n})"
+    for cell in sorted(set(mines)):
+        state = f"Mines.set_checked({state}, {cell}, True{{}})"
+    want = expected(n, set(mines), index)
+    return f"bit(U32.is_eq(Clues.read_count(Clues.clue({state}, {index})), {want}))"
+
+
 def cases():
     checks = []
     for n in (2, 3, 4, 10, 17, 100):
@@ -46,12 +55,8 @@ def cases():
         for _ in range(2):
             layouts.append(tuple(sorted(rng.sample(range(cells), min(5, cells)))))
         def add_layout(mines, probes):
-            state = f"Mines.new({n})"
-            for index in sorted(set(mines)):
-                state = f"Mines.set_checked({state}, {index}, True{{}})"
             for index in probes:
-                want = expected(n, set(mines), index)
-                checks.append(f"bit(U32.is_eq(Clues.read_count(Clues.clue({state}, {index})), {want}))")
+                checks.append(check_expression(n, mines, index))
 
         for mines in layouts:
             add_layout(mines, positions + [cells, cells+27, 4294967295])
@@ -62,6 +67,14 @@ def cases():
             ring = neighbor_ring(n, focus)
             for dense in (ring, ring[1:]):
                 add_layout(dense, (focus,))
+        # Full 0..8 spectrum and the self-mine exclusion rule. A mine on
+        # the queried cell must never contribute to its own clue.
+        if n in (3, 10):
+            focus = n + 1
+            ring = neighbor_ring(n, focus)
+            for k in range(9):
+                add_layout(ring[:k], (focus,))
+                add_layout((*ring[:k], focus), (focus,))
     return list(dict.fromkeys(checks))
 
 
