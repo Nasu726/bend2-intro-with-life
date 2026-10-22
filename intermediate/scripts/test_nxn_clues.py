@@ -67,6 +67,13 @@ def cases():
             ring = neighbor_ring(n, focus)
             for dense in (ring, ring[1:]):
                 add_layout(dense, (focus,))
+        # Cross a U32 word boundary with all eight surrounding mines.
+        # For n=10,17,100, the ring at boundary+n includes both bits
+        # boundary and boundary+1 (31/32 and 63/64).
+        if n in (10, 17, 100):
+            for boundary in (31, 63):
+                focus = boundary + n
+                add_layout(neighbor_ring(n, focus), (focus,))
         # Full 0..8 spectrum and the self-mine exclusion rule. A mine on
         # the queried cell must never contribute to its own clue.
         if n in (3, 10):

@@ -89,6 +89,18 @@ class ClueOracleContract(unittest.TestCase):
         self.assertTrue(any(', 8))' in check for check in checks))
         self.assertTrue(any(', 7))' in check for check in checks))
 
+    def test_dense_neighbors_cross_word_boundaries(self):
+        generated = set(cases())
+        for n in (10, 17, 100):
+            for boundary in (31, 63):
+                focus = boundary + n
+                ring = neighbor_ring(n, focus)
+                self.assertEqual(len(ring), 8)
+                self.assertTrue({boundary, boundary + 1}.issubset(ring))
+                self.assertEqual(expected(n, set(ring), focus), 8)
+                self.assertEqual(eight_directions(n, set(ring), focus), 8)
+                self.assertIn(check_expression(n, ring, focus), generated)
+
     def test_every_clue_value_and_center_mine_exclusion(self):
         generated = set(cases())
         for n in (3, 10):
