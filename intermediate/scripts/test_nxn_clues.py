@@ -23,6 +23,18 @@ def expected(n, mines, i):
                and max(abs(j % n - x), abs(j // n - y)) == 1)
 
 
+def neighbor_ring(n, i):
+    """A dense layout around one cell, excluding the cell itself.
+
+    The set is built from bounded coordinates, not from expected(), so
+    the finite Bend suite also reaches clue values 7 and 8.
+    """
+    x, y = i % n, i // n
+    return tuple(sorted(yy*n + xx for yy in range(max(0, y-1), min(n, y+2))
+                        for xx in range(max(0, x-1), min(n, x+2))
+                        if (xx, yy) != (x, y)))
+
+
 def cases():
     checks = []
     for n in (2, 3, 4, 10, 17, 100):
@@ -33,13 +45,23 @@ def cases():
         rng = random.Random(20261022 + n)
         for _ in range(2):
             layouts.append(tuple(sorted(rng.sample(range(cells), min(5, cells)))))
-        for mines in layouts:
+        def add_layout(mines, probes):
             state = f"Mines.new({n})"
-            for i in sorted(set(mines)):
-                state = f"Mines.set_checked({state}, {i}, True{{}})"
-            for i in positions + [cells, cells+27, 4294967295]:
-                want = expected(n, set(mines), i)
-                checks.append(f"bit(U32.is_eq(Clues.read_count(Clues.clue({state}, {i})), {want}))")
+            for index in sorted(set(mines)):
+                state = f"Mines.set_checked({state}, {index}, True{{}})"
+            for index in probes:
+                want = expected(n, set(mines), index)
+                checks.append(f"bit(U32.is_eq(Clues.read_count(Clues.clue({state}, {index})), {want}))")
+
+        for mines in layouts:
+            add_layout(mines, positions + [cells, cells+27, 4294967295])
+        # Sparse layouts alone never exercise a clue of 8. Add full
+        # rings and one-mine-short rings, but only probe the affected
+        # cells so that Bend compilation remains a finite, bounded gate.
+        for focus in (0, n+1):
+            ring = neighbor_ring(n, focus)
+            for dense in (ring, ring[1:]):
+                add_layout(dense, (focus,))
     return list(dict.fromkeys(checks))
 
 

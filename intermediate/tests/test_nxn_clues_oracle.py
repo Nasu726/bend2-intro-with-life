@@ -8,7 +8,7 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from test_nxn_clues import cases, expected, program
+from test_nxn_clues import cases, expected, neighbor_ring, program
 
 
 def eight_directions(n, mines, index):
@@ -69,6 +69,25 @@ class ClueOracleContract(unittest.TestCase):
                                      (n, sorted(mines), index))
                     comparisons += 1
         self.assertGreaterEqual(comparisons, 1000)
+
+    def test_dense_neighbor_rings_reach_high_clue_values(self):
+        for n in (2, 3, 4, 10, 17, 100):
+            corner = neighbor_ring(n, 0)
+            self.assertEqual(len(corner), 3)
+            self.assertEqual(expected(n, set(corner), 0), 3)
+            self.assertEqual(expected(n, set(corner[1:]), 0), 2)
+            center = n + 1
+            ring = neighbor_ring(n, center)
+            maximum = 3 if n == 2 else 8
+            self.assertEqual(len(ring), maximum)
+            self.assertNotIn(center, ring)
+            self.assertEqual(expected(n, set(ring), center), maximum)
+            self.assertEqual(expected(n, set(ring[1:]), center), maximum - 1)
+            self.assertEqual(eight_directions(n, set(ring), center), maximum)
+            self.assertEqual(eight_directions(n, set(ring[1:]), center), maximum - 1)
+        checks = cases()
+        self.assertTrue(any(', 8))' in check for check in checks))
+        self.assertTrue(any(', 7))' in check for check in checks))
 
     def test_generator_is_deterministic_and_has_a_main(self):
         checks = cases()
