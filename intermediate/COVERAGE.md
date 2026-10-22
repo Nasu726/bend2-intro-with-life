@@ -168,5 +168,5 @@ BendのN×NエンジンやGUI・運ゲー無し一般化を検証したもので
 tests/test_nxn_clues_oracle.py の独立Python検査を6件へ拡充。
 3×3・10×10の内部マスについて、近傍地雷数0〜8の全値と、
 注目マス自身の地雷が数字に加算されないことを二つのPython計算法で確認。
-scripts/test_nxn_clues.py の生成するBend照合式527件にも両方の配置を収録。
+scripts/test_nxn_clues.py の生成するBend照合式533件にも両方の配置を収録。
 **Pythonの検査は成功、Bendの型検査・実行は未実施**。
