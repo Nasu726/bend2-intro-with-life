@@ -12,6 +12,7 @@ import random
 
 from noguess_reference import GenerationFailed, SearchLimit, Visible, expose, neighbors
 from nxn_frontier_solver import provably_safe_frontier, verify_no_guess_frontier
+from nxn_certificate_audit import audit_certificate
 
 
 @dataclass(frozen=True)
@@ -97,5 +98,7 @@ def generate_no_guess_frontier(width: int, height: int, mine_count: int,
         cert = Certificate(width, height, mine_count, first_click, mines, trace)
         if not verify_certificate(cert, node_limit=node_limit):
             raise AssertionError("solver produced an invalid replay certificate")
+        if not audit_certificate(cert, node_limit=node_limit):
+            raise AssertionError("independent replay audit rejected the certificate")
         return cert
     raise GenerationFailed(f"no certified board in {attempts} attempts")
