@@ -432,12 +432,15 @@ def main():
     print("PASS Array.atomic.add returns previous value 5, then Array.get returns 8", flush=True)
 
     with tempfile.TemporaryDirectory() as td:
+        # An existing longer save must be replaced, not merely overwritten
+        # at its beginning.  This checks File.open(..., "w") truncation.
+        saved = pathlib.Path(td) / "sample_board.txt"
+        saved.write_text("old-save\n" * 32, encoding="utf-8")
         p = subprocess.run(["bend", str(SAMPLES / "12_file_write.bend")],
                            text=True, capture_output=True, timeout=180, cwd=td,
                            env=dict(os.environ, BEND_NO_TELEMETRY="1"))
         if p.returncode != 0:
             raise AssertionError(f"File sample failed: {p.stdout}\n{p.stderr}")
-        saved = pathlib.Path(td) / "sample_board.txt"
         if saved.read_text() != "board-size=4\nmines=1,1\n":
             raise AssertionError("File sample wrote unexpected content")
         print("PASS file write/open/close", flush=True)
@@ -448,24 +451,36 @@ def main():
             raise AssertionError(f"File read failed: {read.stdout}\n{read.stderr}")
         if read.stdout.strip() != "board-size=4\nmines=1,1":
             raise AssertionError(f"Unexpected read content: {read.stdout!r}")
-        print("PASS file read/open/close", flush=True)
+        print("PASS file read/open/close and write-mode truncation", flush=True)
+        # File.open("r") must fail on a missing path, rather than silently
+        # returning an empty board or treating the error as a valid save.
+        saved.unlink()
+        missing = subprocess.run(
+            ["bend", str(SAMPLES / "13_file_read.bend")],
+            text=True, capture_output=True, timeout=180, cwd=td,
+            env=dict(os.environ, BEND_NO_TELEMETRY="1"))
+        if missing.returncode == 0:
+            raise AssertionError("Missing text file was accepted as a valid save")
+        print("PASS missing text file rejected", flush=True)
 
     # Side-effecting samples require isolated, real IO checks.
     with tempfile.TemporaryDirectory() as td:
+        binary = pathlib.Path(td) / "sample_bytes.bin"
+        binary.write_bytes(bytes((0xEE,)) * 128)
         p = subprocess.run(
             ["bend", str(SAMPLES / "45_binary_file.bend")],
             capture_output=True, text=True, timeout=180, cwd=td,
             env=dict(os.environ, BEND_NO_TELEMETRY="1"))
         if p.returncode != 0 or p.stdout.strip() != "4":
             raise AssertionError(f"Binary File example failed: {p.stdout!r} {p.stderr!r}")
-        raw = (pathlib.Path(td) / "sample_bytes.bin").read_bytes()
+        raw = binary.read_bytes()
         if raw != bytes((0, 10, 13, 255)):
             raise AssertionError(f"Incorrect binary bytes: {raw!r}")
-        print("PASS binary File write/read 00 0A 0D FF", flush=True)
+        print("PASS binary File write/read 00 0A 0D FF and truncation", flush=True)
         # A directory cannot be opened as a regular file for writing.
         # The sample must report failure rather than continue to read bytes.
-        (pathlib.Path(td) / "sample_bytes.bin").unlink()
-        (pathlib.Path(td) / "sample_bytes.bin").mkdir()
+        binary.unlink()
+        binary.mkdir()
         failed = subprocess.run(
             ["bend", str(SAMPLES / "45_binary_file.bend")],
             capture_output=True, text=True, timeout=180, cwd=td,
@@ -474,10 +489,13 @@ def main():
             raise AssertionError("Binary File sample ignored a failed File.open")
         print("PASS binary File.open failure exits without reading", flush=True)
 
-    clock = run("bend", str(SAMPLES / "46_elapsed_clock.bend"))
-    if not clock.isdecimal() or not 1 <= int(clock) < 60000:
-        raise AssertionError(f"Invalid elapsed clock output: {clock!r}")
-    print("PASS variable numeric IO.now/IO.sleep measurement", flush=True)
+    # Repeat the clock test, but do not assert equality to the requested
+    # 20 ms: scheduling overhead makes elapsed time environment-dependent.
+    for trial in range(2):
+        clock = run("bend", str(SAMPLES / "46_elapsed_clock.bend"))
+        if not clock.isdecimal() or not 1 <= int(clock) < 60000:
+            raise AssertionError(f"Invalid elapsed clock output on trial {trial}: {clock!r}")
+    print("PASS two numeric IO.now/IO.sleep measurements", flush=True)
 
     env_output = run("bend", str(SAMPLES / "19_environment.bend"))
     if not env_output.splitlines()[-1].isdigit():
