@@ -5,23 +5,33 @@ import Base
 import ./nxn_geometry.bend as Geo
 import ./nxn_mine_words.bend as Mines
 
-# An out-of-bounds coordinate can wrap to a valid linear index in U32.
-# Mines.has safely bounds the read; Geo.neighbor masks its contribution.
-# No match on a computed neighbor Bool is needed (Bend 2.0.37).
-def add_neighbor(board: Mines.MineWords, +n: U32, +x: U32, +y: U32, +u: U32, +v: U32) -> Mines.MineWords & U32:
-  (board, present) = Mines.has(board, Geo.index(n, u, v))
-  (board, Bool.to_u32(Bool.and(Geo.neighbor(n, x, y, u, v), present)))
+# Convert both Boolean parameters before combining them. An out-of-bounds
+# coordinate may wrap to a valid U32 linear index; the geometric mask must
+# prevent that unrelated mine from contributing to the clue.
+def masked_bit(near: Bool, present: Bool) -> U32:
+  U32.and(Bool.to_u32(near), Bool.to_u32(present))
+
+# Bend matches a parameter, not a computed function result. Pass the
+# resource-bearing read pair into this helper before destructuring it.
+def accumulate_read(pair: Mines.MineWords & Bool, near: Bool, +total: U32) -> Mines.MineWords & U32:
+  (board, present) = pair
+  (board, (total + masked_bit(near, present) : U32))
+
+# Likewise, the running (board, count) pair is a parameter here. Do not
+# destructure a computed result in count_neighbors itself.
+def add_neighbor_acc(pair: Mines.MineWords & U32, +n: U32, +x: U32, +y: U32, +u: U32, +v: U32) -> Mines.MineWords & U32:
+  (board, total) = pair
+  accumulate_read(Mines.has(board, Geo.index(n, u, v)), Geo.neighbor(n, x, y, u, v), total)
 
 def count_neighbors(board: Mines.MineWords, +n: U32, +x: U32, +y: U32) -> Mines.MineWords & U32:
-  (board, a) = add_neighbor(board, n, x, y, (x - 1 : U32), (y - 1 : U32))
-  (board, b) = add_neighbor(board, n, x, y, x, (y - 1 : U32))
-  (board, c) = add_neighbor(board, n, x, y, (x + 1 : U32), (y - 1 : U32))
-  (board, d) = add_neighbor(board, n, x, y, (x - 1 : U32), y)
-  (board, e) = add_neighbor(board, n, x, y, (x + 1 : U32), y)
-  (board, f) = add_neighbor(board, n, x, y, (x - 1 : U32), (y + 1 : U32))
-  (board, g) = add_neighbor(board, n, x, y, x, (y + 1 : U32))
-  (board, h) = add_neighbor(board, n, x, y, (x + 1 : U32), (y + 1 : U32))
-  (board, (a + b + c + d + e + f + g + h : U32))
+  p0 = add_neighbor_acc((board, 0), n, x, y, (x - 1 : U32), (y - 1 : U32))
+  p1 = add_neighbor_acc(p0, n, x, y, x, (y - 1 : U32))
+  p2 = add_neighbor_acc(p1, n, x, y, (x + 1 : U32), (y - 1 : U32))
+  p3 = add_neighbor_acc(p2, n, x, y, (x - 1 : U32), y)
+  p4 = add_neighbor_acc(p3, n, x, y, (x + 1 : U32), y)
+  p5 = add_neighbor_acc(p4, n, x, y, (x - 1 : U32), (y + 1 : U32))
+  p6 = add_neighbor_acc(p5, n, x, y, x, (y + 1 : U32))
+  add_neighbor_acc(p6, n, x, y, (x + 1 : U32), (y + 1 : U32))
 
 def count_checked_if(valid: Bool, board: Mines.MineWords, +n: U32, +i: U32) -> Mines.MineWords & U32:
   match valid:
