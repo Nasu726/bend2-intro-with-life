@@ -1,0 +1,101 @@
+name: Intermediate chapter 7-8 preflight (temporary)
+on:
+  push:
+    branches:
+      - validation/intermediate-file-clock-20261024
+    paths:
+      - 'intermediate/**'
+      - '.github/workflows/intermediate-file-clock-preflight.yml'
+permissions:
+  contents: write
+jobs:
+  verify-and-sync:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      BEND_NO_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify preserved cover and structural tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object intermediate/cover_art.tex)" = ba9b5c4cb296e3adfd119ace6b55abc419c6faf1
+          python3 -m unittest discover -s intermediate/tests -v
+          python3 -m py_compile intermediate/scripts/test_examples.py
+      - name: Install Bend 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://bend-lang.com/install.sh -o /tmp/install-bend.sh
+          sh /tmp/install-bend.sh
+          echo "$HOME/.bend/bin" >> "$GITHUB_PATH"
+      - name: Install Lean 4 kernel
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o /tmp/elan-init.sh
+          sh /tmp/elan-init.sh -y --default-toolchain leanprover/lean4:v4.34.0 --no-modify-path
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Bend typecheck, execution, proofs, N x N and targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          bend version
+          python3 intermediate/scripts/test_examples.py
+          python3 intermediate/scripts/test_nxn_geometry.py
+          python3 intermediate/scripts/test_targets.py
+      - name: XeLaTeX build
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: intermediate/Intermediate_Textbook.tex
+          latexmk_use_xelatex: true
+          texlive_version: '2025'
+          os: debian
+          extra_system_packages: fonts-noto-cjk fonts-noto-core
+      - name: Verify layout and build reader package
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOG='Intermediate_Textbook.log'
+          if test -s intermediate/Intermediate_Textbook.log; then LOG='intermediate/Intermediate_Textbook.log'; fi
+          test -s "$LOG"
+          if grep -nE 'Overfull|Underfull|LaTeX Font Warning|LaTeX Warning' "$LOG"; then
+            echo 'TeX layout/compatibility warnings detected' >&2
+            exit 1
+          fi
+          if test -s Intermediate_Textbook.pdf; then
+            cp Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          else
+            cp intermediate/Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          fi
+          python3 scripts/build_reader_bundle.py intermediate
+          python3 -m unittest discover -s tests -p 'test_reader_bundle.py' -v
+          test "$(git hash-object intermediate/cover_art.tex)" = ba9b5c4cb296e3adfd119ace6b55abc419c6faf1
+      - name: Verify exact PDF-in-ZIP bytes and synchronized output
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
+          python3 - <<'PY'
+          import pathlib, zipfile
+          pdf = pathlib.Path('intermediate/Bend2を使いこなす_プレビュー.pdf').read_bytes()
+          with zipfile.ZipFile('reader-packages/bend2-intermediate-reader-preview.zip') as z:
+              names = [n for n in z.namelist() if n.endswith('/textbook.pdf')]
+              assert len(names) == 1, names
+              assert z.read(names[0]) == pdf, 'ZIP PDF differs from standalone'
+          print('PASS: exact standalone/ZIP PDF match')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 'intermediate/Bend2を使いこなす_プレビュー.pdf' 'reader-packages/bend2-intermediate-reader-preview.zip'
+          git diff --cached --quiet && { echo 'Expected refreshed PDF/ZIP missing'; exit 1; }
+          git commit -m "validation: regenerate chapter 7-8 reader materials [skip ci]"
+          python3 intermediate/scripts/check_bundle_consistency.py
+          git push origin HEAD:validation/intermediate-file-clock-20261024

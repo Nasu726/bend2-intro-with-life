@@ -462,6 +462,22 @@ def main():
         if missing.returncode == 0:
             raise AssertionError("Missing text file was accepted as a valid save")
         print("PASS missing text file rejected", flush=True)
+        # A path that names a directory is not a valid text save file.
+        # This checks both the read path and the write path independently.
+        saved.mkdir()
+        read_directory = subprocess.run(
+            ["bend", str(SAMPLES / "13_file_read.bend")],
+            text=True, capture_output=True, timeout=180, cwd=td,
+            env=dict(os.environ, BEND_NO_TELEMETRY="1"))
+        if read_directory.returncode == 0:
+            raise AssertionError("Text File.read accepted a directory as a save")
+        write_directory = subprocess.run(
+            ["bend", str(SAMPLES / "12_file_write.bend")],
+            text=True, capture_output=True, timeout=180, cwd=td,
+            env=dict(os.environ, BEND_NO_TELEMETRY="1"))
+        if write_directory.returncode == 0:
+            raise AssertionError("Text File.write accepted a directory as a save")
+        print("PASS directory rejected by text File read and write", flush=True)
 
     # Side-effecting samples require isolated, real IO checks.
     with tempfile.TemporaryDirectory() as td:
