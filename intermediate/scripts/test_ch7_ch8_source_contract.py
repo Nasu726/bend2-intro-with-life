@@ -39,8 +39,8 @@ class ByteClockSourceContract(unittest.TestCase):
         self.assertIn('sample_bytes.bin', code)
         self.assertIn('45_binary_file.bend', code)
         self.assertIn('46_elapsed_clock.bend', code)
-        self.assertIn('is_nat_decimal(clock)', code)
-        self.assertIn('from elapsed_output import is_nat_decimal', code)
+        self.assertIn('is_nat_stdout(clock_run.stdout)', code)
+        self.assertIn('from elapsed_output import is_nat_stdout', code)
 
 
     def test_chapter_7_reader_can_check_actual_bytes(self):

@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from elapsed_output import is_nat_decimal
+from elapsed_output import is_nat_stdout
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SAMPLES = ROOT / "src"
@@ -475,9 +475,15 @@ def main():
             raise AssertionError("Binary File sample ignored a failed File.open")
         print("PASS binary File.open failure exits without reading", flush=True)
 
-    clock = run("bend", str(SAMPLES / "46_elapsed_clock.bend"))
-    if not is_nat_decimal(clock):
-        raise AssertionError(f"Invalid elapsed clock output: {clock!r}")
+    # Keep raw stdout: run() strips whitespace and hides malformed output.
+    clock_run = subprocess.run(
+        ["bend", str(SAMPLES / "46_elapsed_clock.bend")],
+        capture_output=True, text=True, timeout=180, cwd=ROOT.parent,
+        env=dict(os.environ, BEND_NO_TELEMETRY="1"))
+    if clock_run.returncode != 0 or not is_nat_stdout(clock_run.stdout):
+        raise AssertionError(
+            f"Invalid elapsed clock output: returncode={clock_run.returncode}, "
+            f"stdout={clock_run.stdout!r}, stderr={clock_run.stderr!r}")
     print("PASS variable numeric IO.now/IO.sleep measurement", flush=True)
 
     env_output = run("bend", str(SAMPLES / "19_environment.bend"))
