@@ -13,13 +13,16 @@ def count_bit(pair: Mines.MineWords & Bool) -> Mines.MineWords & U32:
     case False{}:
       (board, 0)
 
-def add_neighbor(board: Mines.MineWords, +n: U32, +x: U32, +y: U32, +u: U32, +v: U32) -> Mines.MineWords & U32:
-  near = Geo.neighbor(n, x, y, u, v)
+# Match a parameter, not a local binder (Bend 2.0.37 restriction).
+def add_neighbor_if(near: Bool, board: Mines.MineWords, +n: U32, +u: U32, +v: U32) -> Mines.MineWords & U32:
   match near:
     case True{}:
       count_bit(Mines.has(board, Geo.index(n, u, v)))
     case False{}:
       (board, 0)
+
+def add_neighbor(board: Mines.MineWords, +n: U32, +x: U32, +y: U32, +u: U32, +v: U32) -> Mines.MineWords & U32:
+  add_neighbor_if(Geo.neighbor(n, x, y, u, v), board, n, u, v)
 
 def count_neighbors(board: Mines.MineWords, +n: U32, +x: U32, +y: U32) -> Mines.MineWords & U32:
   (board, a) = add_neighbor(board, n, x, y, (x - 1 : U32), (y - 1 : U32))
@@ -32,13 +35,15 @@ def count_neighbors(board: Mines.MineWords, +n: U32, +x: U32, +y: U32) -> Mines.
   (board, h) = add_neighbor(board, n, x, y, (x + 1 : U32), (y + 1 : U32))
   (board, (a + b + c + d + e + f + g + h : U32))
 
-def count_checked(board: Mines.MineWords, +n: U32, +i: U32) -> Mines.MineWords & U32:
-  valid = Geo.valid_index(n, i)
+def count_checked_if(valid: Bool, board: Mines.MineWords, +n: U32, +i: U32) -> Mines.MineWords & U32:
   match valid:
     case True{}:
       count_neighbors(board, n, U32.mod(i, n), U32.div(i, n))
     case False{}:
       (board, 0)
+
+def count_checked(board: Mines.MineWords, +n: U32, +i: U32) -> Mines.MineWords & U32:
+  count_checked_if(Geo.valid_index(n, i), board, n, i)
 
 def clue(board: Mines.MineWords, +i: U32) -> Mines.MineWords & U32:
   match board:

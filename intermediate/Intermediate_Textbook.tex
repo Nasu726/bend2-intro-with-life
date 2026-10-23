@@ -1350,7 +1350,14 @@ def index(+n: U32, +x: U32, +y: U32) -> U32:
   (y * n + x : U32)
 \end{lstlisting}
 
-\code{index(10, 3, 2)}は\code{23}です。ただし、この関数は\textbf{有効な座標だけを受け取る}前提です。利用者の入力を扱うときは、先に\code{checked_index}で\code{Maybe}に変換します。例えば\code{checked_index(10, 9, 9)}は\code{Some{99}}、\code{checked_index(10, 10, 0)}は\code{None{}}になるはずです。これらは\file{intermediate/minesweeper/nxn\_geometry.bend}にある関数の仕様であり、読者ZIPの\file{examples/}にはまだ追加していない開発用モジュールです。
+\code{index(10, 3, 2)}は\code{23}です。ただし、この関数は\textbf{有効な座標だけを受け取る}前提です。利用者の入力を扱うときは、先に\code{checked_index}で\code{Maybe}に変換します。
+
+\begin{lstlisting}[language={},caption={N×N座標の境界判定（期待する値）}]
+checked_index(10, 9, 9)  -> Some{99}
+checked_index(10, 10, 0) -> None{}
+\end{lstlisting}
+
+これらは\file{intermediate/minesweeper/nxn\_geometry.bend}にある関数の仕様であり、読者ZIPの\file{examples/}にはまだ追加していない開発用モジュールです。
 
 \subsection{配列の容量と有効なマス数は同じとは限らない}
 \code{Array.new}は深さに応じて\(2^d\)要素を確保します。100マスを表示状態の配列へ格納するなら、容量128の配列を用意しても、\textbf{有効な添字は0から99まで}です。100から127は盤面のマスではありません。\code{Array.get}に渡す前に\code{valid_index(n,i)}で\(i<n^2\)を確かめましょう。
