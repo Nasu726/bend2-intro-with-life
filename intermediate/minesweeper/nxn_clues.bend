@@ -43,10 +43,16 @@ def count_checked_if(valid: Bool, board: Mines.MineWords, +n: U32, +i: U32) -> M
 def count_checked(board: Mines.MineWords, +n: U32, +i: U32) -> Mines.MineWords & U32:
   count_checked_if(Geo.valid_index(n, i), board, n, i)
 
+# The size extracted from MineWords is affine. Pass it once to a helper
+# that explicitly accepts a reusable U32 before using it both to rebuild
+# the board and to check the requested cell.
+def count_checked_parts(+n: U32, words: Array<U32>, +i: U32) -> Mines.MineWords & U32:
+  count_checked(Mines.MineWords{n, words}, n, i)
+
 def clue(board: Mines.MineWords, +i: U32) -> Mines.MineWords & U32:
   match board:
     case Mines.MineWords{n, words}:
-      count_checked(Mines.MineWords{n, words}, n, i)
+      count_checked_parts(n, words, i)
 
 def read_count(pair: Mines.MineWords & U32) -> U32:
   (unused, count) = pair

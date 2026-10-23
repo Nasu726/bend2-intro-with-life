@@ -132,10 +132,13 @@ def verify(checks, *, batch_size=None, runner=subprocess.run):
                 if p.returncode:
                     raise AssertionError(f"{label}: exited {p.returncode}:\n{p.stdout}\n{p.stderr}")
                 if not check_only:
-                    lines = [line.strip() for line in p.stdout.splitlines() if line.strip()]
-                    actual = lines[-1] if lines else "<empty output>"
-                    if actual != str(len(subset)):
-                        raise AssertionError(f"{label}: got {actual}, expected {len(subset)}")
+                    # A generated main prints exactly one U32. Do not hide
+                    # diagnostics or malformed extra lines with strip/splitlines.
+                    want = str(len(subset))
+                    if p.stdout not in (want, want + "\n", want + "\r\n"):
+                        raise AssertionError(
+                            f"{label}: invalid stdout {p.stdout!r}; "
+                            f"expected {want!r} with at most one line ending")
     return len(checks)
 
 

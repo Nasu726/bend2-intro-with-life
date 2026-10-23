@@ -58,7 +58,7 @@ class ClueRunnerContract(unittest.TestCase):
             if len(args) == 2:
                 result.stdout = "532\n"
             return result
-        with self.assertRaisesRegex(AssertionError, "checks 1..533: got 532, expected 533"):
+        with self.assertRaisesRegex(AssertionError, r"checks 1\.\.533: invalid stdout '532\\n'"):
             verify(cases(), runner=wrong)
 
     def test_empty_output_is_a_diagnostic_failure(self):
@@ -67,8 +67,51 @@ class ClueRunnerContract(unittest.TestCase):
             if len(args) == 2:
                 result.stdout = "\n"
             return result
-        with self.assertRaisesRegex(AssertionError, "empty output"):
+        with self.assertRaisesRegex(AssertionError, "invalid stdout"):
             verify(cases()[:2], runner=empty)
+
+    def test_only_one_canonical_result_line_is_accepted(self):
+        checks = cases()[:2]
+        for valid in ("2", "2\n", "2\r\n"):
+            with self.subTest(valid=repr(valid)):
+                def good(args, **kwargs):
+                    result = self.fake_bend(args, **kwargs)
+                    if len(args) == 2:
+                        result.stdout = valid
+                    return result
+                self.assertEqual(verify(checks, runner=good), 2)
+
+        invalid = ("", "\n", " 2\n", "2 \n", "02\n", "２\n",
+                   "2\n\n", "2\r", "debug\n2\n", "2\nwarning\n")
+        for stdout in invalid:
+            with self.subTest(invalid=repr(stdout)):
+                def bad(args, **kwargs):
+                    result = self.fake_bend(args, **kwargs)
+                    if len(args) == 2:
+                        result.stdout = stdout
+                    return result
+                with self.assertRaisesRegex(AssertionError, "invalid stdout"):
+                    verify(checks, runner=bad)
+
+    def test_malformed_later_batch_reports_exact_range(self):
+        def bad_second_batch(args, **kwargs):
+            result = self.fake_bend(args, **kwargs)
+            if len(args) == 2 and len(self.counts) == 2:
+                result.stdout = "debug\n64\n"
+            return result
+        with self.assertRaisesRegex(AssertionError,
+                                    r"execution, checks 65\.\.128: invalid stdout"):
+            verify(cases(), batch_size=64, runner=bad_second_batch)
+
+    def test_nonzero_execution_is_not_ignored(self):
+        def failed(args, **kwargs):
+            result = self.fake_bend(args, **kwargs)
+            if len(args) == 2:
+                result.returncode = 9
+                result.stderr = "simulated execution failure"
+            return result
+        with self.assertRaisesRegex(AssertionError, r"execution, checks 1\.\.2: exited 9"):
+            verify(cases()[:2], runner=failed)
 
     def test_failed_typecheck_is_not_ignored(self):
         def failed(args, **kwargs):
