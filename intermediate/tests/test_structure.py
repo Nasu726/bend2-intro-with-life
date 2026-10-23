@@ -53,6 +53,10 @@ class BookStructure(unittest.TestCase):
         self.assertIn("IO.sleep(20)", clock)
         self.assertIn("00 0A 0D FF", text)
         self.assertIn(r"\code{Nat.sub}", text)
+        self.assertIn(r"\section{古い保存を上書きし、失敗も確かめる}", text)
+        self.assertIn("old-save", text)
+        self.assertIn("sample_bytes.bin').read_bytes().hex(' ')", text)
+        self.assertIn("この\code{21}は表示形式を示す一例", text)
 
     def test_each_chapter_has_a_goal_and_an_exercise(self):
         text = BOOK.read_text(encoding="utf-8")

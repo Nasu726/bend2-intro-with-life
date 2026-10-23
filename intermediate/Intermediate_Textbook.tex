@@ -698,7 +698,23 @@ bend examples/13_file_read.bend
 
 まず\code{12_file_write.bend}を実行し、次に\code{13_file_read.bend}を実行してみましょう。読み込んだ文字列が保存した二行と同じであることを確認します。このように\textbf{書き込みから読み込みまで一組として確かめること}をラウンドトリップテストと呼びます。
 
+\begin{lstlisting}[language={},caption={読み戻した二行}]
+board-size=4
+mines=1,1
+\end{lstlisting}
+
+
 \code{File.read(file,4096)}の数値は、一度に読み取る最大量です。大きなファイルを読んだときに、一度の呼び出しで必ず全体が戻ると思ってはいけません。終端まで繰り返す必要がある場合もあります。また、\code{File.read_bytes}と\code{File.write_bytes}は、文字列ではなくバイト列を扱うAPIです。
+
+\section{古い保存を上書きし、失敗も確かめる}
+すでに長い保存ファイルがあるとき、新しい短い内容を書いた後に古い末尾が残っては困ります。\code{File.open("sample_board.txt", "w")}の\code{"w"}は既存ファイルを切り詰めて開きます。先に\code{sample_board.txt}へ\code{old-save}を何行も書いてから、\code{12_file_write.bend}と\code{13_file_read.bend}を順に実行してみましょう。表示は先ほどの二行だけになり、古い末尾は残りません。
+
+反対に、保存ファイルを削除してから\code{13_file_read.bend}を実行すると、\code{File.open(..., "r")}は失敗します。読み込みに失敗したことを「空の盤面を読み込めた」と扱ってはいけません。保存先に同名の\textbf{ディレクトリ}がある場合も、書き込み用の通常ファイルとして開けません。
+
+本書の回帰テストは、長い旧ファイルを置いてからの上書きと、存在しないファイルの読み込み、ディレクトリを保存先にした書き込みを\textbf{別々に}検査します。これは実際のファイル操作を使った有限の検査です。ディスク容量不足や権限変更など、すべての障害を網羅したわけではありません。
+
+\exercise{長い旧データを保存先に用意し、短い二行で上書きした後に末尾まで読んでみましょう。次に保存先と同名のディレクトリを作り、書き込み例が成功しないことを確かめてみましょう。}
+
 
 \section{文字ではなくバイトを保存する}
 これまでは文字列をファイルに書きました。画像、圧縮データ、独自形式のファイルには、文字では表せない値が含まれます。そこでBendの\code{File.write_bytes}と\code{File.read_bytes}を使い、\term{バイト列（byte sequence）}を扱ってみましょう。
@@ -721,6 +737,17 @@ File.write_bytes(file, [0, 10, 13, 255])
 \begin{pointbox}
 本書のCIでは、Bendの出力\code{4}だけでなく、\textbf{実際のファイルの4バイト}が\code{00 0A 0D FF}であることを別のプログラムで確かめています。読み取れた「量」と読み取れた「内容」を分けて確認するためです。
 \end{pointbox}
+
+ファイルの中身も自分で見てみましょう。Python 3を使うと、保存された各バイトを16進数で表示できます。
+
+\begin{lstlisting}[language={},caption={保存された4バイトを確認する}]
+python3 -c "from pathlib import Path; print(Path('sample_bytes.bin').read_bytes().hex(' '))"
+\end{lstlisting}
+\begin{lstlisting}[language={},caption={表示結果}]
+00 0a 0d ff
+\end{lstlisting}
+
+長い旧バイナリファイルを上書きした場合も、実ファイルが\textbf{ちょうど4バイト}になっていることを確認します。読み戻しの個数が4でも、書き込んだバイトの順序が正しい証明にはならないためです。
 
 文字列用APIと同じく、バイト列用の読み書きも\code{File & Result<...>}を返します。\code{Done}と\code{Fail}のいずれの分岐でも戻された\code{File}を\code{File.close}へ渡します。\textbf{どんなデータを保存するか}と\textbf{ハンドルをどう扱うか}は別の問題です。
 
@@ -769,6 +796,12 @@ IO.print(Nat.show(Nat.sub(finish, start)))
 現行のネイティブ・JavaScript実装では\code{IO.now}はミリ秒単位で経過時間を測るための時計値を返します。\textbf{年月日や日本時間の時刻ではありません}。\code{Nat.sub(130n, 100n)}の結果は常に\code{30n}ですが、時計から取得する値は実行ごとに異なります。
 
 \code{IO.sleep(20)}は20ミリ秒の待機を要求します。実際の経過時間にはOSのスケジューリングなども含まれるため、\textbf{表示が毎回ちょうど20になるとは限りません}。CIでも出力が数値であることを確認し、20との一致を要求しません。
+
+\begin{lstlisting}[language={},caption={表示例（実行環境で値は変わる）}]
+21
+\end{lstlisting}
+
+この\code{21}は表示形式を示す一例であり、固定の期待値ではありません。テストでは二回実行して整数として読めることを確かめます。一方、待機を要求した\code{20}と実測値を等号で比較するテストにはしません。長い処理が割り込む可能性もあるため、ここで時計の精度や待機時間の上限を保証することはできません。
 
 \begin{pointbox}
 ゲームにタイマーを追加するなら、最初の有効なクリックで計測を開始し、勝敗が決まった時点で終了する構成が考えられます。勝敗の判断は純粋な関数として保ち、時計の取得と表示をアプリ側へ置きます。

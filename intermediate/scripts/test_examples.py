@@ -462,6 +462,17 @@ def main():
         if missing.returncode == 0:
             raise AssertionError("Missing text file was accepted as a valid save")
         print("PASS missing text file rejected", flush=True)
+        # A directory at the save path is not a writable regular file.
+        saved.mkdir()
+        invalid_save = subprocess.run(
+            ["bend", str(SAMPLES / "12_file_write.bend")],
+            text=True, capture_output=True, timeout=180, cwd=td,
+            env=dict(os.environ, BEND_NO_TELEMETRY="1"))
+        if invalid_save.returncode == 0:
+            raise AssertionError("Directory path was accepted as a writable text file")
+        if not saved.is_dir():
+            raise AssertionError("Failed text save unexpectedly replaced the directory")
+        print("PASS text File.open rejects directory save target", flush=True)
 
     # Side-effecting samples require isolated, real IO checks.
     with tempfile.TemporaryDirectory() as td:

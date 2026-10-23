@@ -1,0 +1,93 @@
+name: Verify intermediate File and clock chapter (temporary)
+on:
+  push:
+    branches:
+      - verify/intermediate-file-clock-20261024-04
+permissions:
+  contents: write
+jobs:
+  verify-and-sync:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    env:
+      BEND_NO_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Structural and independent tests
+        run: python3 -m unittest discover -s intermediate/tests -v
+      - name: Install Bend 2
+        run: |
+          set -euo pipefail
+          curl -fsSL https://bend-lang.com/install.sh -o /tmp/install-bend.sh
+          sh /tmp/install-bend.sh
+          echo "$HOME/.bend/bin" >> "$GITHUB_PATH"
+      - name: Install Lean 4
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o /tmp/elan-init.sh
+          sh /tmp/elan-init.sh -y --default-toolchain leanprover/lean4:v4.34.0 --no-modify-path
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Bend typechecks, real IO, proofs and target executions
+        run: |
+          bend version
+          python3 intermediate/scripts/test_examples.py
+          python3 intermediate/scripts/test_nxn_geometry.py
+          python3 intermediate/scripts/test_targets.py
+      - name: Preserve previous PDF for cover comparison
+        run: cp 'intermediate/Bend2を使いこなす_プレビュー.pdf' /tmp/previous-intermediate.pdf
+      - name: Compile textbook using XeLaTeX
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: intermediate/Intermediate_Textbook.tex
+          latexmk_use_xelatex: true
+          texlive_version: '2025'
+          os: debian
+          extra_system_packages: fonts-noto-cjk fonts-noto-core
+      - name: Check layout and prepare matching reader artifacts
+        run: |
+          set -euo pipefail
+          LOG='Intermediate_Textbook.log'
+          if test -s intermediate/Intermediate_Textbook.log; then LOG='intermediate/Intermediate_Textbook.log'; fi
+          test -s "$LOG"
+          if grep -nE 'Overfull|Underfull|LaTeX Font Warning|LaTeX Warning' "$LOG"; then
+            echo 'TeX warnings detected' >&2
+            exit 1
+          fi
+          if test -s Intermediate_Textbook.pdf; then
+            cp Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          else
+            cp intermediate/Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          fi
+          python3 scripts/build_reader_bundle.py intermediate
+          python3 -m unittest discover -s tests -p 'test_reader_bundle.py' -v
+      - name: Verify unchanged cover and exact PDF in learner ZIP
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
+          pdftoppm -f 1 -l 1 -r 72 -singlefile -png /tmp/previous-intermediate.pdf /tmp/cover-before
+          pdftoppm -f 1 -l 1 -r 72 -singlefile -png 'intermediate/Bend2を使いこなす_プレビュー.pdf' /tmp/cover-after
+          cmp /tmp/cover-before.png /tmp/cover-after.png
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          pdf = Path('intermediate/Bend2を使いこなす_プレビュー.pdf').read_bytes()
+          with ZipFile('reader-packages/bend2-intermediate-reader-preview.zip') as z:
+              names = [n for n in z.namelist() if n.endswith('/textbook.pdf')]
+              assert len(names) == 1, names
+              assert z.read(names[0]) == pdf
+          print('PASS unchanged cover raster and byte-identical ZIP PDF')
+          PY
+      - name: Commit generated artifacts only after checks pass
+        run: |
+          set -euo pipefail
+          git config user.name 'intermediate-validation[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- 'intermediate/Bend2を使いこなす_プレビュー.pdf' 'reader-packages/bend2-intermediate-reader-preview.zip'
+          git diff --cached --quiet && { echo 'No generated artifact changes'; exit 1; }
+          git commit -m 'build: synchronize validated intermediate PDF and reader ZIP'
+          python3 intermediate/scripts/check_bundle_consistency.py
+          git push origin HEAD:verify/intermediate-file-clock-20261024-04
