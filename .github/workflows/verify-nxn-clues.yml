@@ -1,0 +1,24 @@
+name: Verify N x N clues (isolated)
+on:
+  push:
+    branches: [verify/nxn-clues-20261024]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 -m py_compile intermediate/scripts/test_nxn_clues.py
+      - name: Install Bend 2
+        run: |
+          curl -fsSL https://bend-lang.com/install.sh -o /tmp/install-bend.sh
+          sh /tmp/install-bend.sh
+          echo "$HOME/.bend/bin" >> "$GITHUB_PATH"
+      - run: python3 intermediate/scripts/test_nxn_clues.py
+        env:
+          BEND_NO_TELEMETRY: '1'
