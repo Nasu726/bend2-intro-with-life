@@ -1,0 +1,76 @@
+# N x N public opened cells and their displayed clues, n=2..100.
+# This is NOT the mine board, a zero-flood algorithm, or a complete game.
+# The MineWords module is reused only as a checked U32 bitset implementation:
+# the freshly allocated `opened` value never contains hidden mine truth.
+# A read returns 9 for a hidden/invalid cell; displayed clues are 0..8.
+import Base
+import ./nxn_geometry.bend as Geo
+import ./nxn_mine_words.bend as Bits
+
+type PublicState is Type:
+  PublicState{n: U32, opened: Bits.MineWords, clues: Array<U32>}
+
+# PRECONDITION: Geo.valid_size(n). The Array capacity covers n*n cells.
+def new(+n: U32) -> PublicState:
+  PublicState{n, Bits.new(n),
+    Array.new(U32,
+      Bits.depth_loop(15n, U32.is_lt(1, (n * n : U32)), 1, 0n, (n * n : U32)), 0)}
+
+# Keep the first published clue: repeated reveals must not rewrite history.
+def reveal_unopened(pair: Bits.MineWords & Bool, +n: U32,
+                    clues: Array<U32>, +i: U32, +value: U32) -> PublicState:
+  (opened, already) = pair
+  match already:
+    case True{}:
+      PublicState{n, opened, clues}
+    case False{}:
+      PublicState{n, Bits.set_checked(opened, i, True{}),
+                  Array.set(U32, clues, i, value)}
+
+def reveal_if_valid(valid: Bool, +n: U32, opened: Bits.MineWords,
+                    clues: Array<U32>, +i: U32, +value: U32) -> PublicState:
+  match valid:
+    case True{}:
+      reveal_unopened(Bits.has(opened, i), n, clues, i, value)
+    case False{}:
+      PublicState{n, opened, clues}
+
+def reveal(board: PublicState, +i: U32, +value: U32) -> PublicState:
+  match board:
+    case PublicState{n, opened, clues}:
+      reveal_if_valid(Bool.and(Geo.valid_index(n, i), U32.is_lt(value, 9)),
+                      n, opened, clues, i, value)
+
+def read_known(pair: Array<U32> & U32, +n: U32,
+               opened: Bits.MineWords) -> PublicState & U32:
+  (clues, value) = pair
+  (PublicState{n, opened, clues}, value)
+
+def read_opened(pair: Bits.MineWords & Bool, +n: U32,
+                clues: Array<U32>, +i: U32) -> PublicState & U32:
+  (opened, present) = pair
+  match present:
+    case True{}:
+      read_known(Array.get(U32, clues, i), n, opened)
+    case False{}:
+      (PublicState{n, opened, clues}, 9)
+
+def read_if_valid(valid: Bool, +n: U32, opened: Bits.MineWords,
+                  clues: Array<U32>, +i: U32) -> PublicState & U32:
+  match valid:
+    case True{}:
+      read_opened(Bits.has(opened, i), n, clues, i)
+    case False{}:
+      (PublicState{n, opened, clues}, 9)
+
+def read(board: PublicState, +i: U32) -> PublicState & U32:
+  match board:
+    case PublicState{n, opened, clues}:
+      read_if_valid(Geo.valid_index(n, i), n, opened, clues, i)
+
+def read_value(pair: PublicState & U32) -> U32:
+  (unused, value) = pair
+  value
+
+def main() -> U32:
+  read_value(read(reveal(reveal(new(10), 31, 2), 32, 3), 32))
