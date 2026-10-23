@@ -28,6 +28,32 @@ def eight_directions(n, mines, index):
 
 
 class ClueOracleContract(unittest.TestCase):
+    def test_masked_reads_do_not_count_wrapped_coordinates(self):
+        # Model the branchless Bend step: storage bounds-checks the U32
+        # linear index, then the geometric predicate masks non-neighbors.
+        # For (x=0,y=1), the left candidate wraps to linear index 9 on
+        # a 10x10 board; reading mine 9 must still contribute zero.
+        self.assertEqual((10 + 0xffffffff) & 0xffffffff, 9)
+        offsets = ((-1, -1), (0, -1), (1, -1), (-1, 0),
+                   (1, 0), (-1, 1), (0, 1), (1, 1))
+        rng = random.Random(20261023)
+        for n in (2, 3, 4, 10, 17, 100):
+            cells = n * n
+            layouts = [{9} if n == 10 else {0},
+                       set(rng.sample(range(cells), min(cells, 12)))]
+            for mines in layouts:
+                for index in (0, n - 1, n, n + 1, cells - 1):
+                    x, y = index % n, index // n
+                    total = 0
+                    for dx, dy in offsets:
+                        u, v = (x + dx) & 0xffffffff, (y + dy) & 0xffffffff
+                        linear = (v * n + u) & 0xffffffff
+                        present = linear < cells and linear in mines
+                        near = u < n and v < n and max(abs(u - x), abs(v - y)) == 1
+                        total += int(present and near)
+                    self.assertEqual(total, eight_directions(n, mines, index),
+                                     (n, sorted(mines), index))
+
     def test_exhaustive_two_and_three_square_boards(self):
         comparisons = 0
         for n in (2, 3):

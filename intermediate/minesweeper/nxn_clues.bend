@@ -5,24 +5,12 @@ import Base
 import ./nxn_geometry.bend as Geo
 import ./nxn_mine_words.bend as Mines
 
-def count_bit(pair: Mines.MineWords & Bool) -> Mines.MineWords & U32:
-  (board, found) = pair
-  match found:
-    case True{}:
-      (board, 1)
-    case False{}:
-      (board, 0)
-
-# Match a parameter, not a local binder (Bend 2.0.37 restriction).
-def add_neighbor_if(near: Bool, board: Mines.MineWords, +n: U32, +u: U32, +v: U32) -> Mines.MineWords & U32:
-  match near:
-    case True{}:
-      count_bit(Mines.has(board, Geo.index(n, u, v)))
-    case False{}:
-      (board, 0)
-
+# An out-of-bounds coordinate can wrap to a valid linear index in U32.
+# Mines.has safely bounds the read; Geo.neighbor masks its contribution.
+# No match on a computed neighbor Bool is needed (Bend 2.0.37).
 def add_neighbor(board: Mines.MineWords, +n: U32, +x: U32, +y: U32, +u: U32, +v: U32) -> Mines.MineWords & U32:
-  add_neighbor_if(Geo.neighbor(n, x, y, u, v), board, n, u, v)
+  (board, present) = Mines.has(board, Geo.index(n, u, v))
+  (board, Bool.to_u32(Bool.and(Geo.neighbor(n, x, y, u, v), present)))
 
 def count_neighbors(board: Mines.MineWords, +n: U32, +x: U32, +y: U32) -> Mines.MineWords & U32:
   (board, a) = add_neighbor(board, n, x, y, (x - 1 : U32), (y - 1 : U32))
