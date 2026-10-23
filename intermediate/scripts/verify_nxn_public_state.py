@@ -23,7 +23,7 @@ BOUNDARY = (0, 1, 4, 14, 29, 31, 32, 34, 36, 37, 49, 50, 56,
 
 
 def cases():
-    """Each case: function name, initial expression, updates, expected reads."""
+    """Each case: name, initial state, M, reveals, expected visible reads."""
     frames = replay_vectors(10, MINES, CLICKS)
     result = []
     for step, frame in enumerate(frames):
@@ -32,8 +32,8 @@ def cases():
                           {i for i, _ in frame.newly_opened[-2:]})
         reads = [(i, dict(frame.opened).get(i, 9)) for i in selected]
         result.append((f"frame_{step}",
-                       "Public.new(10)" if step == 0 else f"frame_{step-1}()",
-                       frame.newly_opened, reads))
+                       "Public.new(10, 10)" if step == 0 else f"frame_{step-1}()",
+                       10, frame.newly_opened, reads))
 
     for n in (2, 3, 4, 10, 17, 100):
         # A duplicate reveal, invalid clue and out-of-range indices are no-ops.
@@ -46,7 +46,10 @@ def cases():
             expected[32] = 4
         reads = [(i, expected.get(i, 9))
                  for i in sorted({0, 1, 31, 32, n*n-1, n*n, 4294967295})]
-        result.append((f"boundary_{n}", f"Public.new({n})", actions, reads))
+        # The storage contract is independent of M (including M=0).
+        m = {2: 0, 3: 2, 4: 5, 10: 99, 17: 20, 100: 9999}[n]
+        result.append((f"boundary_{n}", f"Public.new({n}, {m})",
+                       m, actions, reads))
     return result
 
 
@@ -66,13 +69,17 @@ def program(test_cases):
         "  (board, total) = pair",
         "  compare_read(Public.read(board, i), want, total)",
         "",
+        "def check_total(pair: Public.PublicState & U32, +want: U32) -> Public.PublicState & U32:",
+        "  (board, total) = pair",
+        "  compare_read(Public.total_mines(board), want, total)",
+        "",
         "def score(pair: Public.PublicState & U32) -> U32:",
         "  (unused, total) = pair",
         "  total",
         "",
     ]
     total = 0
-    for name, initial, actions, reads in test_cases:
+    for name, initial, mines, actions, reads in test_cases:
         parts += [f"def {name}() -> Public.PublicState:", f"  b0 = {initial}"]
         for j, (i, clue) in enumerate(actions, 1):
             parts.append(f"  b{j} = Public.reveal(b{j-1}, {i}, {clue})")
@@ -81,10 +88,23 @@ def program(test_cases):
                   f"  p0 = check_one(({name}(), 0), {reads[0][0]}, {reads[0][1]})"]
         for j, (i, want) in enumerate(reads[1:], 1):
             parts.append(f"  p{j} = check_one(p{j-1}, {i}, {want})")
-        parts += [f"  score(p{len(reads)-1})", ""]
-        total += len(reads)
+        parts += [f"  p{len(reads)} = check_total(p{len(reads)-1}, {mines})",
+                  f"  score(p{len(reads)})", ""]
+        total += len(reads) + 1
+    # Invalid configurations must be rejected before Public.new is called.
+    configurations = ((2, 0, True), (2, 3, True), (2, 4, False),
+                      (10, 0, True), (10, 99, True), (10, 100, False),
+                      (100, 9999, True), (100, 10000, False),
+                      (1, 0, False), (101, 0, False))
+    parts.append("def check_config() -> U32:")
+    checks = [f"Bool.to_u32(Public.valid_config({n}, {m}))"
+              if valid else f"Bool.to_u32(Bool.not(Public.valid_config({n}, {m})))"
+              for n, m, valid in configurations]
+    parts += ["  (" + " + ".join(checks) + " : U32)", ""]
+    total += len(configurations)
     parts += ["def main() -> U32:",
-              "  (" + " + ".join(f"check_{name}()" for name, *_ in test_cases) + " : U32)", ""]
+              "  (" + " + ".join(f"check_{name}()" for name, *_ in test_cases)
+              + " + check_config() : U32)", ""]
     return "\n".join(parts), total
 
 
@@ -108,4 +128,4 @@ def verify(runner=subprocess.run):
 
 
 if __name__ == "__main__":
-    print(f"PASS Bend public state: {verify()} finite public-clue reads")
+    print(f"PASS Bend public state: {verify()} clue, M and config checks")
