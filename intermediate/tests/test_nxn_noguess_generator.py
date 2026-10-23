@@ -16,6 +16,14 @@ from itertools import combinations
 
 
 class NoGuessGenerationContracts(unittest.TestCase):
+    def test_zero_mines_is_supported_as_a_distinct_configuration(self):
+        cert = generator.generate_no_guess_frontier(10, 10, 0, 0, 20261024,
+                                                     attempts=1)
+        self.assertEqual(cert.mine_count, 0)
+        self.assertEqual(cert.mines, frozenset())
+        self.assertEqual(cert.clicks, (0,))
+        self.assertTrue(generator.verify_certificate(cert))
+
     def test_standard_ten_by_ten_ten_mines_is_reproducible_and_nontrivial(self):
         cert = generator.generate_no_guess_frontier(10, 10, 10, 0, 20261023)
         self.assertEqual(cert.mines, frozenset({4, 29, 34, 36, 37, 49, 50, 56, 72, 77}))
