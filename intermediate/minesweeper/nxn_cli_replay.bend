@@ -31,7 +31,7 @@ def choose_flag(game: Game.Game, command: String, flag: Bool) -> Game.Game:
     case False{}:
       game
 
-def choose_click(game: Game.Game, command: String, click: Bool) -> Game.Game:
+def choose_click(game: Game.Game, +command: String, click: Bool) -> Game.Game:
   match click:
     case True{}:
       click_number(game, U32.read(String.drop(command, 1n)))
@@ -45,7 +45,7 @@ def reset_or_action(game: Game.Game, command: String, reset: Bool) -> Game.Game:
     case False{}:
       choose_click(game, command, String.starts_with(command, "c"))
 
-def choose_action(game: Game.Game, command: String) -> Game.Game:
+def choose_action(game: Game.Game, +command: String) -> Game.Game:
   reset_or_action(game, command, String.eq(command, "r"))
 
 # The decreasing list comes first: the game state is a linear resource.
