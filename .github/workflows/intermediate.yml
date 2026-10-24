@@ -53,6 +53,8 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_victory.py
       - name: Verify N x N terminal-state controller
         run: python3 intermediate/scripts/test_nxn_terminal.py
+      - name: Verify N x N integrated first-click and terminal game
+        run: python3 intermediate/scripts/test_nxn_game.py
       - name: Verify N x N first-click relocation
         run: python3 intermediate/scripts/test_nxn_relocate.py
       - name: Verify N x N non-wrapping ordered neighbor frontier

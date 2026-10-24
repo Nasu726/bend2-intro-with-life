@@ -569,3 +569,10 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - `nxn_terminal.bend`で単一マスのクリック後に`nxn_victory.inspect`を呼び、`Playing`/`Won`/`Lost`の三状態を区別。勝利・敗北後はクリックと旗操作を無効にする。
 - `test_nxn_terminal.py`の**103ケース**についてBend 2.0.39の型検査と独立Python集合・座標オラクルとの実行照合が成功。**0連鎖と初手安全移動は未接続**。本稿はTeX/PDF未統合。
 - 検証用PR #23のCI（Intermediate textbook run #40090660306、Tests #40090660258、Reader download bundles #40090660259）はすべて成功。XeLaTeX組版、PDFと読者ZIPの一致検査も成功。採用表紙・TeX・生成済みPDF・読者ZIPは変更していない。
+
+## 2026-10-24：N×N初手安全と終局状態を一つのゲーム入口に統合（検証ブランチ）
+- `minesweeper/nxn_game.bend`は`Fresh`で初手移動を行い、成功した盤面を`Terminal.State`へ渡す。最初の一手で全安全マスを開いた場合も`Won`へ遷移する。
+- `scripts/test_nxn_game.py`は集合・座標ベースの独立Python参照モデルとN=2/3/4/10/17/100の**181ケース**を比較する。Fresh/Playing/Won/Lost、全地雷・盤外・余剰添字、旗と終局後の凍結を対象とする。
+- 第13〜14・21章の補稿に必要性→Bendコード→実行結果→仕組み→演習を追加。**TeX本編/PDFへは未統合**。
+- **未完成**：0連鎖、N×N公開情報ソルバー・運ゲー無し生成器、10×10 GUI実機検収、補稿のTeX統合、23章の最終校閲。有限実行照合は全称証明ではない。
+- TeX・生成済みPDF・読者ZIP・採用表紙`cover_art.tex`は変更しない。PR外の検証CIでBend・組版・配布一致を確認してから本Draft PRへ反映する。
