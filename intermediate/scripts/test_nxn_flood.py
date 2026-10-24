@@ -6,6 +6,7 @@ No first-click relocation, victory state, GUI, or general proof is assumed.
 """
 from collections import deque
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import tempfile
@@ -151,20 +152,31 @@ def main():
             (directory / name).write_bytes((GAME / name).read_bytes())
         program = directory / "check_nxn_flood.bend"
         program.write_text(source(checks), encoding="utf-8")
-        for args in (("bend", str(program), "--check-only"),
-                     ("bend", str(program))):
-            print(f"CHECK N x N zero flood: {len(checks)} cases / {args[-1]}", flush=True)
+        if shutil.which("clang") is None:
+            raise RuntimeError("clang is required for native Bend flood execution")
+        native = directory / "check_nxn_flood"
+        # The 53-case interpreter trace is prohibitively slow. Typecheck the
+        # generated Bend program, compile it to native code, then execute it.
+        # Keep a separate one-case interpreter smoke test of the real module.
+        commands = (
+            (("bend", str(program), "--check-only"), None, 360),
+            (("bend", str(program), "-o", str(native)), None, 360),
+            ((str(native),), str(len(checks)), 180),
+            (("bend", str(directory / "nxn_flood.bend")), "11", 120),
+        )
+        for args, want, timeout in commands:
+            print(f"CHECK N x N zero flood: {len(checks)} cases / {args}", flush=True)
             proc = subprocess.run(
                 args, cwd=directory, capture_output=True, text=True,
-                timeout=360, env=dict(os.environ, BEND_NO_TELEMETRY="1"),
+                timeout=timeout, env=dict(os.environ, BEND_NO_TELEMETRY="1"),
             )
             if proc.returncode:
                 raise AssertionError(f"{args}: {proc.stdout}\n{proc.stderr}")
-            if len(args) == 2 and proc.stdout.strip().splitlines()[-1] != str(len(checks)):
+            if want is not None and proc.stdout.strip().splitlines()[-1] != want:
                 raise AssertionError(
-                    f"Expected {len(checks)} independent matches; got {proc.stdout}"
+                    f"Expected {want} for {args}; got {proc.stdout}"
                 )
-    print(f"PASS {len(checks)} independent Bend zero-flood checks")
+    print(f"PASS {len(checks)} independent native Bend zero-flood checks")
 
 
 if __name__ == "__main__":
