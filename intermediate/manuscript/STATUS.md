@@ -606,3 +606,10 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - `manuscript/13_14_21_NxN_初手から0連鎖と勝利へ.md`に、各操作と期待する状態コード、Bend型検査・実行の方法、演習を追記。**TeX本編・PDF・読者ZIPには未統合**。
 - PR外の検証CIでBend型検査・実行、既存回帰、XeLaTeX、PDF/ZIP一致を確認してから本Draft PRへ反映する。採用表紙`cover_art.tex`、TeX・PDF・ZIP、第7・8章のByte/FileとIO.now/IO.sleep本文は変更しない。
 - 100×100全面連鎖の性能、N×N GUI実機、Bend版一般N×N公開ソルバー・運ゲー無し生成器、全23章の最終校閲は未完成。
+
+## 2026-10-25：N×N GUI用の純粋な画素→ゲーム操作アダプタ（検証対象）
+
+- `minesweeper/nxn_pointer.bend`に32×32ピクセルのマス座標から行優先添字への変換を追加。N=2〜100を対象に、盤外・不正サイズは`None`、左クリック0・右クリック1・未知ボタンを区別する。
+- `scripts/test_nxn_pointer.py`で独立Python座標計算と集合/BFSゲームモデルを使い、Bendの型検査・実行を有限照合するCIゲートを追加。第12・14・21章向け補稿に必要性→Bendコード→結果→仕組み→演習を記述。
+- **GUIの描画・App実機操作・N×Nの保存・100×100全面0連鎖性能は未検証**。この純粋部品だけでGUI完成とはしない。補稿はTeX/PDF未統合。
+- 採用済み表紙`intermediate/cover_art.tex`、第7・8章のByte/File・IO.now/IO.sleep、TeX・生成PDF・読者ZIPは変更しない。PR外検証CIの成功後にのみDraft PR #4へ反映する。
