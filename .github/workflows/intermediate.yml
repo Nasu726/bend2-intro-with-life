@@ -57,6 +57,8 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_relocate.py
       - name: Verify N x N non-wrapping ordered neighbor frontier
         run: python3 intermediate/scripts/test_nxn_neighbors.py
+      - name: Verify N x N active zero-flood expansion
+        run: python3 intermediate/scripts/test_nxn_flood.py
       - name: Verify N x N Fresh-to-Active first click
         run: python3 intermediate/scripts/test_nxn_start.py
       - name: Typecheck, run and verify proof examples
