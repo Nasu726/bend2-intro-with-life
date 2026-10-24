@@ -30,13 +30,20 @@ def next_work(zero: Bool, +n: U32, +index: U32, rest: List<U32>) -> List<U32>:
     case False{}:
       rest
 
-def opened(+n: U32, +index: U32, cells: Array<Game.Square>,
-           rest: List<U32>, pair: Words.MineWords & U32) -> Task:
-  (board, clue) = pair
+# The clue is read twice (to display it and to test for zero).
+# A + parameter makes that duplication explicit in Bend's affine checker.
+def store_open(+n: U32, +index: U32, +clue: U32,
+               board: Words.MineWords, cells: Array<Game.Square>,
+               rest: List<U32>) -> Task:
   Task{Step.Session{n, board,
                     Array.set(Game.Square, cells, index, Game.Open{clue}),
                     Step.Playing{}},
        next_work(U32.is_eq(clue, 0), n, index, rest)}
+
+def opened(+n: U32, +index: U32, cells: Array<Game.Square>,
+           rest: List<U32>, pair: Words.MineWords & U32) -> Task:
+  (board, clue) = pair
+  store_open(n, index, clue, board, cells, rest)
 
 def checked_mine(+n: U32, +index: U32, cells: Array<Game.Square>,
                  rest: List<U32>, pair: Words.MineWords & Bool) -> Task:
