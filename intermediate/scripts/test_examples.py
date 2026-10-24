@@ -567,12 +567,8 @@ def main():
     if "PASS independent Bend no-guess generator replay" not in generator:
         raise AssertionError(f"No-guess generator independent oracle missing: {generator!r}")
     print("PASS no-guess generator against independent Python game replay", flush=True)
-    # The N x N word-backed clue primitive is exercised against a separate
-    # coordinate-set oracle; this is a finite test, not a general proof.
-    clues = run(sys.executable, str(ROOT / "scripts" / "test_nxn_clues.py"))
-    if "PASS Bend N x N clues: 510 independent finite checks" not in clues:
-        raise AssertionError(f"N x N clue oracle gate missing: {clues!r}")
-    print("PASS N x N Bend clue counts against independent coordinates", flush=True)
+    # The expensive 510-case N x N clue oracle runs in its own CI step.
+    # Do not nest it inside run(): that wrapper has a 180-second timeout.
     storage = run(sys.executable, str(ROOT / "scripts" / "test_cli_storage.py"))
     if "PASS CLI save/load" not in storage:
         raise AssertionError(f"CLI save/load test gate missing: {storage!r}")

@@ -1,0 +1,67 @@
+name: Verify intermediate clue CI isolation
+on:
+  push:
+    branches: [verify/intermediate-clue-timeout-20261024]
+permissions:
+  contents: read
+jobs:
+  bend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      BEND_NO_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 -m unittest discover -s intermediate/tests -v
+      - name: Install Bend 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://bend-lang.com/install.sh -o /tmp/install-bend.sh
+          sh /tmp/install-bend.sh
+          echo "$HOME/.bend/bin" >> "$GITHUB_PATH"
+      - name: Install Lean 4 proof kernel
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o /tmp/elan-init.sh
+          sh /tmp/elan-init.sh -y --default-toolchain leanprover/lean4:v4.34.0 --no-modify-path
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - run: bend version
+      - run: python3 intermediate/scripts/test_examples.py
+      - run: python3 intermediate/scripts/test_nxn_clues.py
+      - run: python3 intermediate/scripts/test_nxn_geometry.py
+      - run: python3 intermediate/scripts/test_targets.py
+  pdf:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: xu-cheng/latex-action@v4
+        with:
+          root_file: intermediate/Intermediate_Textbook.tex
+          latexmk_use_xelatex: true
+          texlive_version: '2025'
+          os: debian
+          extra_system_packages: fonts-noto-cjk fonts-noto-core
+      - name: Check TeX warnings
+        run: |
+          set -euo pipefail
+          LOG='Intermediate_Textbook.log'
+          if test -s intermediate/Intermediate_Textbook.log; then LOG='intermediate/Intermediate_Textbook.log'; fi
+          test -s "$LOG"
+          if grep -nE 'Overfull|Underfull|LaTeX Font Warning|LaTeX Warning' "$LOG"; then exit 1; fi
+      - name: Prepare PDF
+        run: |
+          if test -s Intermediate_Textbook.pdf; then
+            cp Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          else
+            cp intermediate/Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          fi
+      - run: python3 scripts/build_reader_bundle.py intermediate
+      - run: python3 -m unittest discover -s tests -p 'test_reader_bundle.py' -v
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
+      - run: python3 intermediate/scripts/check_bundle_consistency.py
