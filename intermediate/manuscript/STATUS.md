@@ -519,3 +519,10 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - Pythonの構造回帰で510件とCIの分離を確認する。**PRへの反映はPR外の検証CIでBend・組版・PDF/ZIP一致が成功した後に限る。** 第7・8章の本文統合、TeX/PDF/ZIP、採用済み表紙は不変更。
 
 - PR外の検証ブランチ `verify/intermediate-clue-timeout-20261024` の [CI #40058758452](https://github.com/Nasu726/bend2-intro-with-life/actions/runs/40058758452) で、Python構造回帰・Bend型検査・実行・証明・510件の数字照合・N×N座標・C/JSターゲットとXeLaTeX組版・PDF/読者ZIP一致の2ジョブが成功した。PR本体のCIは反映後に別途確認する。
+
+## 2026-10-24：N×N一マスの旗・クリック・公開数字（検証ブランチ先行）
+
+- `minesweeper/nxn_actions.bend` にN=2〜100の地雷・開いたマス・旗の語列と敗北状態を持つ一マス遷移を追加。盤外入力、旗保護、開いたマスの旗禁止、地雷クリック後の入力停止を扱う。
+- `public_at` は公開済み数字（0〜8）、未公開（10）、旗（11）、無効（12）のみを返す。地雷真値を公開情報ソルバーに渡さない。
+- `scripts/test_nxn_actions.py` で独立したPython座標集合モデルと有限108ケース×公開状態・敗北状態の216照合を行う。`tests/test_nxn_actions_contract.py` は3件のPython構造・参照回帰。第13〜14章の必要性・コード・出力・仕組み・演習を補稿へ記録。
+- **範囲外**：初手地雷移動、0連鎖、勝利判定、N×N運ゲー無し生成、10×10 GUI実機、全称証明。補稿はTeX/PDFへ未統合。TeX・生成PDF・読者ZIP・採用表紙は変更しない。Bend型検査・実行照合・組版・配布一致は検証ブランチのCI成功をもってPRへ統合する。
