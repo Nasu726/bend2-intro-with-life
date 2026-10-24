@@ -146,12 +146,14 @@ def source(checks):
         "import ./nxn_step.bend as Step",
         "import ./nxn_flood.bend as Flood",
         "import ./nxn_victory.bend as Win", "",
-        "def eq(a: U32, b: U32) -> U32:",
-        "  match U32.is_eq(a, b):",
+        "def bool_to_u32(equal: Bool) -> U32:",
+        "  match equal:",
         "    case True{}:",
         "      1",
         "    case False{}:",
         "      0", "",
+        "def eq(a: U32, b: U32) -> U32:",
+        "  bool_to_u32(U32.is_eq(a, b))", "",
     ]
     for k, (n, mines, ops, probe) in enumerate(checks):
         lines += [f"def case_{k}() -> U32:", f"  board = Words.new({n})"]
