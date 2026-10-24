@@ -584,3 +584,11 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - `scripts/test_nxn_flood.py`に独立Python BFSとの有限照合を追加。Bend型検査・実行と組版・配布一致を検証ブランチCIで確認してから正本へ反映する。
 - 第13〜14・21章の補稿を追加。**TeX本編/PDFへは未統合**。既存`nxn_game.bend`の初手安全・終局状態にはまだ接続していない。
 - 第7・8章のByte/File・IO.now/IO.sleep統合済み本文、TeX・PDF・読者ZIP、採用表紙`cover_art.tex`は不変更。
+
+## 2026-10-25：N×N初手安全・0連鎖・終局の統合（検証対象）
+
+- `minesweeper/nxn_full_game.bend`で初手地雷移動→0連鎖→連鎖後の勝利判定を接続。従来の`nxn_game.bend`（単一クリック）と`nxn_flood.bend`（単独の連鎖部品）は段階別教材として維持。
+- `scripts/test_nxn_full_game.py`に独立した集合・BFS参照モデルを用意。N=2,3,4,10,17,100で計93ケースを生成し、初手移動、旗、連鎖、勝敗、盤外操作を照合する。100×100全面0連鎖の性能・メモリは未検証。
+- 第13〜14・21章向け補稿を「必要性→Bendコード→実行結果→仕組み→演習」で追加。**TeX本文・PDFには未統合**。
+- 検証用PRのBend型検査・独立実行照合・XeLaTeX・PDF/ZIP一致を通過するまで、Draft PR #4へは反映しない。表紙`intermediate/cover_art.tex`とTeX/PDF/読者ZIPは変更しない。
+- N×N GUI、公開情報ソルバー、一般サイズの運ゲー無し生成器、全23章の最終校閲は引き続き未完成。
