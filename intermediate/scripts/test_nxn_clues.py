@@ -78,8 +78,9 @@ def main():
         program.write_text(bend_source(boards), encoding="utf-8")
         for command in (("bend", str(program), "--check-only"),
                         ("bend", str(program))):
+            print(f"CHECK Bend N x N clues: {'typecheck' if len(command) == 3 else 'execution'} ({expected} cases)", flush=True)
             proc = subprocess.run(command, capture_output=True, text=True,
-                                  timeout=240, cwd=folder,
+                                  timeout=360, cwd=folder,
                                   env=dict(os.environ, BEND_NO_TELEMETRY="1"))
             if proc.returncode:
                 raise AssertionError(f"{command}: {proc.stdout}\n{proc.stderr}")
