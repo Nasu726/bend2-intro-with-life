@@ -541,3 +541,10 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - `scripts/test_nxn_relocate.py` はBendの型検査・実行と独立Python集合オラクルを照合する。第13〜14・21章の読者向け補稿を追加。
 - **統合範囲に注意**：この段階では `nxn_step.bend` の状態遷移にまだ接続していない。0連鎖・勝利・GUI・一般サイズの運ゲー無し生成器も未完成。検証ブランチのCI成功を確認してからDraft PR #4へ一括反映する。
 - TeX・PDF・読者ZIP・採用済み表紙 `intermediate/cover_art.tex` は不変更。第7・8章のByte/File・IO.now/IO.sleepの統合済み教材も維持する。
+
+## 2026-10-24：N×N初手安全を単一クリックの状態機械へ接続（検証対象）
+
+- `minesweeper/nxn_start.bend` に `Fresh{board}` と `Active{session}` を追加。最初の有効クリックだけ `nxn_relocate.bend` で地雷を移し、その盤面を `nxn_step.bend` へ渡して一マスを公開する。盤外・全マス地雷は `Fresh` を維持し、開始前の旗は無視する。
+- `scripts/test_nxn_start.py` に独立したPython集合・座標オラクルを追加。2・3・4・10・17・100の盤面、初手後の敗北、論理添字外、全マス地雷、開始前の旗を有限照合する。CIでBendの型検査・実行を行う。
+- `manuscript/13_14_21_NxN_初手と単一クリックの接続.md` に必要性→Bendコード→実行結果→仕組み→演習を記述。**TeX/PDFには未統合**。
+- **未完成**：N×Nの0連鎖・勝利判定・GUI・公開情報ソルバー・運ゲー無し生成器・全称証明。第7・8章のByte/FileとIO.now/IO.sleep本文、採用表紙、TeX・PDF・読者ZIPは変更しない。検証ブランチCIが成功するまでは本体PRへ反映しない。
