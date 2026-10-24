@@ -606,3 +606,10 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - `manuscript/13_14_21_NxN_初手から0連鎖と勝利へ.md`に、各操作と期待する状態コード、Bend型検査・実行の方法、演習を追記。**TeX本編・PDF・読者ZIPには未統合**。
 - PR外の検証CIでBend型検査・実行、既存回帰、XeLaTeX、PDF/ZIP一致を確認してから本Draft PRへ反映する。採用表紙`cover_art.tex`、TeX・PDF・ZIP、第7・8章のByte/FileとIO.now/IO.sleep本文は変更しない。
 - 100×100全面連鎖の性能、N×N GUI実機、Bend版一般N×N公開ソルバー・運ゲー無し生成器、全23章の最終校閲は未完成。
+
+## 2026-10-25：N=10二領域ゲームの入力境界を追加検査（検証ブランチ）
+
+- `scripts/test_nxn_playthrough.py` のBend実体と独立Python集合/BFSの照合を**7→31操作列**へ拡張。初手前の旗、盤外100と余剰127、公開済みマスの旗、旗の解除、地雷初手の移動先、逆順クリック、数字境界、勝敗後の操作凍結を対象とする。
+- `manuscript/13_14_21_NxN_初手から0連鎖と勝利へ.md` に読者が予想できる途中状態の表、実行方法、演習を追加。**TeX/PDF未統合**。
+- PR外の検証CIでBend型検査・実行照合・既存回帰・XeLaTeX・PDF/ZIP一致を確認するまではPR #4へ反映しない。採用済み表紙`cover_art.tex`（blob `ba9b5c4c...`）、TeX、PDF、ZIP、第7・8章のByte/File・IO.now/IO.sleep本文は不変更。
+- 固定10×10盤面の有限照合に限る。100×100全面連鎖性能、N×N GUI実機、Bend版一般N×N公開情報ソルバー・運ゲー無し生成器、23章最終校閲は未完成。
