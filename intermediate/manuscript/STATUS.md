@@ -592,3 +592,10 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - 第13〜14・21章向け補稿を「必要性→Bendコード→実行結果→仕組み→演習」で追加。**TeX本文・PDFには未統合**。
 - 検証用PRのBend型検査・独立実行照合・XeLaTeX・PDF/ZIP一致を通過するまで、Draft PR #4へは反映しない。表紙`intermediate/cover_art.tex`とTeX/PDF/読者ZIPは変更しない。
 - N×N GUI、公開情報ソルバー、一般サイズの運ゲー無し生成器、全23章の最終校閲は引き続き未完成。
+
+## 2026-10-25：N×Nの型付き操作列リプレイ（検証対象）
+
+- `minesweeper/nxn_trace.bend` に `Click`/`Mark` の型付き操作列と構造的再帰による純粋な再生器を追加。初手安全・0連鎖・勝敗は `nxn_full_game.bend` に委譲し、地雷の真値を操作データへ含めない。
+- `scripts/test_nxn_trace.py` に、N=2/3/4/10/17/100の**55ケース**を独立Python集合・BFSモデルと照合する検査を追加。空列・開始前旗・初手移動・0連鎖・終局後の入力・盤外添字を含む。Python構文と期待値生成はローカル検査済み、Bend型検査・実行は検証ブランチCIで判定する。
+- 第21章補稿 `manuscript/13_14_21_NxN_操作列を型で表す.md` を追加。**TeX/PDF未統合**。対話CLI・GUI・保存・100×100全面連鎖の性能・全称証明は未検証。
+- 採用済み `cover_art.tex`、TeX、生成PDF、読者ZIP、第7・8章のByte/File・IO.now/IO.sleep本文は不変更。PR外CI成功後にのみ正本PRへ反映する。
