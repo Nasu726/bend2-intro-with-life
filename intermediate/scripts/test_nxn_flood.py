@@ -101,12 +101,14 @@ def source(checks):
         "import Base", "import ./nxn_mine_words.bend as Words",
         "import ./nxn_step.bend as Step",
         "import ./nxn_flood.bend as Flood", "",
-        "def one_if_equal(+a: U32, +b: U32) -> U32:",
-        "  match U32.is_eq(a, b):",
+        "def one_if_bool(equal: Bool) -> U32:",
+        "  match equal:",
         "    case True{}:",
         "      1",
         "    case False{}:",
         "      0", "",
+        "def one_if_equal(+a: U32, +b: U32) -> U32:",
+        "  one_if_bool(U32.is_eq(a, b))", "",
     ]
     for k, (n, mines, operations, probe) in enumerate(checks):
         lines.append(f"def case_{k}() -> U32:")
@@ -140,7 +142,7 @@ def source(checks):
 
 def main():
     checks = cases()
-    assert len(checks) == 52, len(checks)
+    assert len(checks) == 53, len(checks)
     assert expected(4, (15,), (("click", 0),), 14) == 11
     assert expected(10, (9,), (("click", 10),), 99) == 10
     with tempfile.TemporaryDirectory() as tmp:
