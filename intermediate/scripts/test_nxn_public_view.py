@@ -80,7 +80,7 @@ def program(cases):
         "    case Public.Flag{index}:",
         "      (200001 + index : U32)",
         "",
-        "def fold(items: List<Public.Seen>, +acc: U32) -> U32:",
+        "def fold(items: List<&2, Public.Seen>, +acc: U32) -> U32:",
         "  match items:",
         "    case Nil{}:",
         "      acc",

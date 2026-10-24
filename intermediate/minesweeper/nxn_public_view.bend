@@ -15,12 +15,12 @@ type Seen is Data:
 # Status 3=Fresh, 0=Playing, 1=Won, 2=Lost.
 # Flags express player claims, not confirmed mines.
 type Observation is Data:
-  Observation{n: U32, status: U32, seen: List<Seen>}
+  Observation{n: U32, status: U32, seen: List<&2, Seen>}
 
 type Gather is Type:
-  Gather{cells: Array<Cell.Square>, seen: List<Seen>}
+  Gather{cells: Array<Cell.Square>, seen: List<&2, Seen>}
 
-def add(+index: U32, square: Cell.Square, rest: List<Seen>) -> List<Seen>:
+def add(+index: U32, square: Cell.Square, rest: List<&2, Seen>) -> List<&2, Seen>:
   match square:
     case Cell.Hidden{}:
       rest
@@ -29,7 +29,7 @@ def add(+index: U32, square: Cell.Square, rest: List<Seen>) -> List<Seen>:
     case Cell.Open{clue}:
       Open{index, clue} <> rest
 
-def after_read(+index: U32, rest: List<Seen>,
+def after_read(+index: U32, rest: List<&2, Seen>,
                read: Array<Cell.Square> & Cell.Square) -> Gather:
   (cells, square) = read
   Gather{cells, add(index, square, rest)}
@@ -83,7 +83,7 @@ def observe(game: Full.Game) -> Observation:
     case Full.Active{state}:
       active(state)
 
-def count_seen(items: List<Seen>) -> U32:
+def count_seen(items: List<&2, Seen>) -> U32:
   match items:
     case Nil{}:
       0

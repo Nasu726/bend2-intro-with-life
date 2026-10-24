@@ -47,6 +47,8 @@ jobs:
           "$HOME/.elan/bin/lean" --version
       - name: Check Bend compiler version
         run: bend version
+      - name: Verify N x N public-only observation boundary
+        run: python3 intermediate/scripts/test_nxn_public_view.py
       - name: Verify N x N active click and flag transitions
         run: python3 intermediate/scripts/test_nxn_step.py
       - name: Verify N x N active-session victory predicate
@@ -59,8 +61,6 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_flood.py
       - name: Verify N x N full first-click, flood and terminal transitions
         run: python3 intermediate/scripts/test_nxn_full_game.py
-      - name: Verify N x N public-only observation boundary
-        run: python3 intermediate/scripts/test_nxn_public_view.py
       - name: Verify N x N first-click relocation
         run: python3 intermediate/scripts/test_nxn_relocate.py
       - name: Verify N x N non-wrapping ordered neighbor frontier
