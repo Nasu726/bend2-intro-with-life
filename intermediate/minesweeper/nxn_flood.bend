@@ -25,11 +25,17 @@ def enqueue(zero: Bool, +n: U32, +index: U32, rest: List<U32>) -> List<U32>:
     case True{}:
       append(Neighbors.neighbors(n, index), rest)
 
+# The clue is used for both Open{clue} and the zero test.
+# Marking the parameter +clue makes that reuse explicit to Bend.
+def place(+clue: U32, +n: U32, +index: U32, rest: List<U32>,
+          board: Words.MineWords, cells: Array<Game.Square>) -> Task:
+  Task{board, Array.set(Game.Square, cells, index, Game.Open{clue}),
+       enqueue(U32.is_eq(clue, 0), n, index, rest)}
+
 def opened(+n: U32, +index: U32, rest: List<U32>,
            cells: Array<Game.Square>, pair: Words.MineWords & U32) -> Task:
   (board, clue) = pair
-  Task{board, Array.set(Game.Square, cells, index, Game.Open{clue}),
-       enqueue(U32.is_eq(clue, 0), n, index, rest)}
+  place(clue, n, index, rest, board, cells)
 
 # A zero's neighbors cannot be mines; check again for defense in depth.
 def if_mined(mined: Bool, +n: U32, +index: U32, rest: List<U32>,
