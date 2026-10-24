@@ -534,3 +534,10 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - `manuscript/13_14_21_NxN_単一クリックと旗.md` に必要性→Bendコード→実行結果→仕組み→演習を整理。
 - **未完成**：初手安全移動、0連鎖、勝利判定、N×N公開情報ソルバー・生成器、10×10 GUI実機、全称証明。これらを今回の単一クリック実装の成功から外挿しない。
 - TeX本編・PDF・読者ZIP・採用済み表紙`cover_art.tex`は変更しない。第7・8章のByte/File・IO.now/IO.sleep本文統合を保持。
+
+## 2026-10-24：N×N初手安全の地雷移動（検証ブランチ）
+
+- `minesweeper/nxn_relocate.bend` は2〜100の盤面で、初手の地雷を最小の空き添字へ移す独立部品。初手が安全なら不変更、盤外・全地雷は `FirstClickRejected` として扱う。
+- `scripts/test_nxn_relocate.py` はBendの型検査・実行と独立Python集合オラクルを照合する。第13〜14・21章の読者向け補稿を追加。
+- **統合範囲に注意**：この段階では `nxn_step.bend` の状態遷移にまだ接続していない。0連鎖・勝利・GUI・一般サイズの運ゲー無し生成器も未完成。検証ブランチのCI成功を確認してからDraft PR #4へ一括反映する。
+- TeX・PDF・読者ZIP・採用済み表紙 `intermediate/cover_art.tex` は不変更。第7・8章のByte/File・IO.now/IO.sleepの統合済み教材も維持する。
