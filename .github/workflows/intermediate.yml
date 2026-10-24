@@ -59,6 +59,8 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_flood.py
       - name: Verify N=10 two-region playthrough against independent BFS
         run: python3 intermediate/scripts/test_nxn_playthrough.py
+      - name: Verify fixed N=10 CLI replay with independent BFS
+        run: python3 intermediate/scripts/test_nxn_cli_replay.py
       - name: Verify N x N full first-click, flood and terminal transitions
         run: python3 intermediate/scripts/test_nxn_full_game.py
       - name: Verify N x N first-click relocation

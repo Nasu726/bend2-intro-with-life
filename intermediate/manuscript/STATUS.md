@@ -606,3 +606,10 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - `manuscript/13_14_21_NxN_初手から0連鎖と勝利へ.md`に、各操作と期待する状態コード、Bend型検査・実行の方法、演習を追記。**TeX本編・PDF・読者ZIPには未統合**。
 - PR外の検証CIでBend型検査・実行、既存回帰、XeLaTeX、PDF/ZIP一致を確認してから本Draft PRへ反映する。採用表紙`cover_art.tex`、TeX・PDF・ZIP、第7・8章のByte/FileとIO.now/IO.sleep本文は変更しない。
 - 100×100全面連鎖の性能、N×N GUI実機、Bend版一般N×N公開ソルバー・運ゲー無し生成器、全23章の最終校閲は未完成。
+
+## 2026-10-25：N=10のCLI操作列を実際のN×Nゲームへ接続（検証対象）
+
+- `minesweeper/nxn_cli_replay.bend`を追加。固定10×10盤面に対して`cN`クリック、`fN`旗切替、`r`初期化を`IO.args()`から受け付け、指定した1マスの**公開状態コードのみ**を表示する。盤面の真の地雷配置は出力しない。
+- `scripts/test_nxn_cli_replay.py`は独立Python集合/BFSオラクルと19操作列を比較。Bendの型検査・実行、初手、旗、勝敗後凍結、リセット、盤外・不正番号を検証する。CIへ登録。
+- 第21章補稿に必要性→Bendコード→実行結果→仕組み→演習を追加。**TeX本文・PDF・読者ZIPへは未統合**。これは固定盤面の非対話式CLIであり、対話式ゲーム・GUI実機・一般N×N運ゲー無し生成・形式的証明は未完成。
+- 第7・8章のByte/File・IO.now/IO.sleep統合済み本文、採用済み表紙`cover_art.tex`、TeX・PDF・読者ZIPは変更しない。PR外の検証CI成功後にのみPR #4へ反映する。
