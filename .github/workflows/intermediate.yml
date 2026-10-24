@@ -49,6 +49,8 @@ jobs:
         run: bend version
       - name: Verify N x N active click and flag transitions
         run: python3 intermediate/scripts/test_nxn_step.py
+      - name: Verify N x N zero flood against independent Python BFS
+        run: python3 intermediate/scripts/test_nxn_flood.py
       - name: Verify N x N active-session victory predicate
         run: python3 intermediate/scripts/test_nxn_victory.py
       - name: Verify N x N first-click relocation
