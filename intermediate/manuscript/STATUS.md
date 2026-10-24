@@ -519,3 +519,10 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - Pythonの構造回帰で510件とCIの分離を確認する。**PRへの反映はPR外の検証CIでBend・組版・PDF/ZIP一致が成功した後に限る。** 第7・8章の本文統合、TeX/PDF/ZIP、採用済み表紙は不変更。
 
 - PR外の検証ブランチ `verify/intermediate-clue-timeout-20261024` の [CI #40058758452](https://github.com/Nasu726/bend2-intro-with-life/actions/runs/40058758452) で、Python構造回帰・Bend型検査・実行・証明・510件の数字照合・N×N座標・C/JSターゲットとXeLaTeX組版・PDF/読者ZIP一致の2ジョブが成功した。PR本体のCIは反映後に別途確認する。
+
+## 2026-10-24：N=10・100のゲーム状態遷移の受け入れ契約を固定
+
+- `tests/test_nxn_large_game_contract.py` にPython参照モデルの**有限5テスト**を追加。N=10の初手地雷移動（0→1）、旗保護・解除後の敗北、配列余剰添字100〜127の拒否、N=100の初手・盤外、N=10/17/100の地雷0個での0連鎖・勝利・終局後入力無効、非トーラスの行境界を検査。
+- ローカルPython 3の新規5テスト成功（0.053秒）。第13〜14・21章向け補稿 `manuscript/13_14_21_NxN_ゲーム遷移の受け入れ契約.md` に、既存Bend数字計算のコード・出力、Python参照遷移の結果、仕組み、演習を追加。**補稿はTeX/PDF未統合**。
+- 今回はBendゲーム本体を実装・型検査したものではない。次工程は`nxn_mine_words.bend`・`nxn_clues.bend`をクリック・旗・0連鎖・勝敗のBend状態機械へ接続し、これらの期待値と独立照合する。
+- 第7・8章のFile/バイト・IO.now/IO.sleepの本文統合を維持。TeX・生成PDF・読者ZIP・採用済み`cover_art.tex`（blob `ba9b5c4c...`）は不変更。直前コミット `fb71097e` のPR CI4ワークフロー成功を確認。
