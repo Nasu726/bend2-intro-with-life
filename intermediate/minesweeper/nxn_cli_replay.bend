@@ -24,7 +24,7 @@ def flag_number(game: Game.Game, number: Maybe<&2, U32>) -> Game.Game:
     case None{}:
       game
 
-def choose_flag(game: Game.Game, command: String, flag: Bool) -> Game.Game:
+def choose_flag(game: Game.Game, +command: String, flag: Bool) -> Game.Game:
   match flag:
     case True{}:
       flag_number(game, U32.read(String.drop(command, 1n)))
@@ -38,7 +38,7 @@ def choose_click(game: Game.Game, +command: String, click: Bool) -> Game.Game:
     case False{}:
       choose_flag(game, command, String.starts_with(command, "f"))
 
-def reset_or_action(game: Game.Game, command: String, reset: Bool) -> Game.Game:
+def reset_or_action(game: Game.Game, +command: String, reset: Bool) -> Game.Game:
   match reset:
     case True{}:
       initial()
