@@ -122,8 +122,7 @@ def inspect_valid(valid: Bool, n: U32, mines: Words.MineWords,
 
 # A mined first click is handled by Step.click; only safe zeroes expand.
 # The caller is responsible for first-click relocation and Won transition.
-def click(session: Step.Session, +index: U32) -> Step.Session:
-  after = Step.click(session, index)
+def after_click(after: Step.Session, +index: U32) -> Step.Session:
   match after:
     case Step.Session{+n, mines, cells, phase}:
       match phase:
@@ -135,3 +134,7 @@ def click(session: Step.Session, +index: U32) -> Step.Session:
 def main() -> U32:
   board = Words.set_checked(Words.new(4), 15, True{})
   Step.snapshot(click(Step.new(board), 0), 14)
+
+# Keep the result of Step.click as a parameter scrutinee, not a local binder.
+def click(session: Step.Session, +index: U32) -> Step.Session:
+  after_click(Step.click(session, index), index)
