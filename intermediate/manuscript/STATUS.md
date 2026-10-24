@@ -569,3 +569,10 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - `nxn_terminal.bend`で単一マスのクリック後に`nxn_victory.inspect`を呼び、`Playing`/`Won`/`Lost`の三状態を区別。勝利・敗北後はクリックと旗操作を無効にする。
 - `test_nxn_terminal.py`の**103ケース**についてBend 2.0.39の型検査と独立Python集合・座標オラクルとの実行照合が成功。**0連鎖と初手安全移動は未接続**。本稿はTeX/PDF未統合。
 - 検証用PR #23のCI（Intermediate textbook run #40090660306、Tests #40090660258、Reader download bundles #40090660259）はすべて成功。XeLaTeX組版、PDFと読者ZIPの一致検査も成功。採用表紙・TeX・生成済みPDF・読者ZIPは変更していない。
+
+## 2026-10-24：N×Nの0連鎖をBendの独立部品として実装（検証対象）
+
+- `minesweeper/nxn_flood.bend` に配置済み盤面の0連鎖を実装。旗・地雷・公開済みマスを保護し、非トーラス近傍の数字境界まで公開。仕事リストは最大 `1+8*N*N` 件、Nat燃料で停止を制限する。
+- `scripts/test_nxn_flood.py` はPython独立座標BFSとBendの型検査・有限実行照合を行う。第13〜14・21章補稿に必要性・コード・実行結果・仕組み・演習を追加。
+- **未接続**：初手安全・勝利状態との一体化、10×10 GUI実機、公開情報N×Nソルバー・運ゲー無し生成器、全称証明、TeX本編への統合。採用表紙 `cover_art.tex`、第7・8章の統合済み本文、TeX・PDF・読者ZIPは変更しない。
+- PR外の検証CI成功後にのみPR #4へ反映する。
