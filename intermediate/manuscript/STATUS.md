@@ -592,3 +592,10 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - 第13〜14・21章向け補稿を「必要性→Bendコード→実行結果→仕組み→演習」で追加。**TeX本文・PDFには未統合**。
 - 検証用PRのBend型検査・独立実行照合・XeLaTeX・PDF/ZIP一致を通過するまで、Draft PR #4へは反映しない。表紙`intermediate/cover_art.tex`とTeX/PDF/読者ZIPは変更しない。
 - N×N GUI、公開情報ソルバー、一般サイズの運ゲー無し生成器、全23章の最終校閲は引き続き未完成。
+
+## 2026-10-25：N×Nゲームから公開情報だけを取り出すBend境界（検証対象）
+
+- `minesweeper/nxn_public_view.bend` に `Observation{n,status,seen}` と `Seen.Open` / `Seen.Flag` を追加。`nxn_full_game.bend` の内部 `MineWords` を外部に返さず、可視マスだけを添字順に列挙する。旗は確定地雷ではなくプレイヤーの印として保持。
+- `scripts/test_nxn_public_view.py` に独立Python集合・BFS参照モデルと公開マスの順序・数字・旗・状態を比較する49ケースを追加。検証用PRでBend型検査・実行・組版・PDF/ZIP一致を確認してから正本へ反映する。
+- `manuscript/21_22_NxN_公開情報の境界.md` に必要性→Bendコード→実行結果→仕組み→演習を記述。**TeX/PDFへ未統合**。Bend版N×Nソルバー・一般サイズ運ゲー無し生成器・GUI実機は未完成。
+- 第7・8章のByte/File・IO.now/IO.sleep統合済み本文と、採用済み表紙`cover_art.tex`（blob `ba9b5c4c...`）、TeX・PDF・読者ZIPは不変更。
