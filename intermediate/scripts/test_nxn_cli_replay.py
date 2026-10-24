@@ -76,11 +76,13 @@ def invoke(*arguments):
     return process.stdout.strip().splitlines()[-1]
 
 def main():
-    subprocess.run(
+    check = subprocess.run(
         ("bend", str(CLI), "--check-only"), cwd=ROOT,
-        capture_output=True, text=True, check=True, timeout=360,
+        capture_output=True, text=True, timeout=360,
         env=dict(os.environ, BEND_NO_TELEMETRY="1"),
     )
+    if check.returncode:
+        raise AssertionError(f"CLI typecheck failed: {check.stdout}\\n{check.stderr}")
     for tokens in CASES:
         actual = invoke(*tokens)
         wanted = str(oracle(tokens))
