@@ -99,13 +99,16 @@ def square_code(square: Game.Square) -> U32:
     case Game.Open{clue}:
       (10 + clue : U32)
 
+def code_from_read(read: Array<Game.Square> & Game.Square) -> U32:
+  (cells, square) = read
+  square_code(square)
+
 def visible_code(valid: Bool, cells: Array<Game.Square>, index: U32) -> U32:
   match valid:
     case False{}:
       99
     case True{}:
-      (cells, square) = Array.get(Game.Square, cells, index)
-      square_code(square)
+      code_from_read(Array.get(Game.Square, cells, index))
 
 def snapshot(session: Session, +index: U32) -> U32:
   match session:
