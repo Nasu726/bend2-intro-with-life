@@ -79,6 +79,16 @@ def finish(+n: U32, task: Task) -> Step.Session:
     case Task{board, cells, pending}:
       Step.Session{n, board, cells, Step.Playing{}}
 
+# Bend matches parameters, not computed Bool expressions.
+def seed_zero(zero: Bool, +n: U32, +index: U32,
+              board: Words.MineWords, cells: Array<Game.Square>) -> Step.Session:
+  match zero:
+    case False{}:
+      Step.Session{n, board, cells, Step.Playing{}}
+    case True{}:
+      finish(n, explore(U32.to_nat((1 + 8 * n * n : U32)), n,
+        Task{board, cells, Neighbors.neighbors(n, index)}))
+
 def from_seed(+n: U32, +index: U32, board: Words.MineWords,
               read: Array<Game.Square> & Game.Square) -> Step.Session:
   (cells, square) = read
@@ -88,12 +98,7 @@ def from_seed(+n: U32, +index: U32, board: Words.MineWords,
     case Game.Flag{}:
       Step.Session{n, board, cells, Step.Playing{}}
     case Game.Open{clue}:
-      match U32.is_eq(clue, 0):
-        case False{}:
-          Step.Session{n, board, cells, Step.Playing{}}
-        case True{}:
-          finish(n, explore(U32.to_nat((1 + 8 * n * n : U32)), n,
-            Task{board, cells, Neighbors.neighbors(n, index)}))
+      seed_zero(U32.is_eq(clue, 0), n, index, board, cells)
 
 def seed_if_valid(valid: Bool, +n: U32, +index: U32,
                   board: Words.MineWords, cells: Array<Game.Square>) -> Step.Session:
