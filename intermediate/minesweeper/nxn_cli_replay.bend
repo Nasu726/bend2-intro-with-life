@@ -38,12 +38,15 @@ def choose_click(game: Game.Game, command: String, click: Bool) -> Game.Game:
     case False{}:
       choose_flag(game, command, String.starts_with(command, "f"))
 
-def choose_action(game: Game.Game, command: String) -> Game.Game:
-  match String.eq(command, "r"):
+def reset_or_action(game: Game.Game, command: String, reset: Bool) -> Game.Game:
+  match reset:
     case True{}:
       initial()
     case False{}:
       choose_click(game, command, String.starts_with(command, "c"))
+
+def choose_action(game: Game.Game, command: String) -> Game.Game:
+  reset_or_action(game, command, String.eq(command, "r"))
 
 # The decreasing list comes first: the game state is a linear resource.
 def replay(commands: List<String>, game: Game.Game) -> Game.Game:
@@ -53,16 +56,19 @@ def replay(commands: List<String>, game: Game.Game) -> Game.Game:
     case command <> rest:
       replay(rest, choose_action(game, command))
 
+def read_probe(number: Maybe<&2, U32>, commands: List<String>) -> U32:
+  match number:
+    case None{}:
+      999
+    case Some{index}:
+      Game.snapshot(replay(commands, initial()), index)
+
 def run_args(args: List<String>) -> U32:
   match args:
     case Nil{}:
       999
     case probe <> commands:
-      match U32.read(probe):
-        case None{}:
-          999
-        case Some{index}:
-          Game.snapshot(replay(commands, initial()), index)
+      read_probe(U32.read(probe), commands)
 
 def without_program(args: List<String>) -> List<String>:
   match args:
