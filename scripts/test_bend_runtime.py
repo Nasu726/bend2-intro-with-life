@@ -141,6 +141,22 @@ def test_monad_bind_equivalence() -> None:
                 )
     print("PASS: do and explicit bind agree on success and failure")
 
+def test_xy_index_mapping() -> None:
+    """Execute the helper in real Bend, including row boundary cases."""
+    original = (SOURCE / "05_glider.bend").read_text(encoding="utf8")
+    head, marker, unused_main = original.partition("def main() -> U32:")
+    assert marker
+    coords = [(0, 0), (7, 0), (0, 1), (3, 2), (7, 7)]
+    program = head + "\ndef main() -> IO(Unit):\n  do IO<Unit>:\n"
+    for x,y in coords:
+        program += f'    IO.print(U32.show(index({x}, {y})))\n'
+    with tempfile.TemporaryDirectory(prefix="bend-xy-index-") as td:
+        temp=Path(td)/"coordinates.bend"
+        temp.write_text(program,encoding="utf8")
+        actual=run(["bend",str(temp)]).strip().splitlines()
+    assert actual == ["0","7","8","19","63"], actual
+    print("PASS 8x8 index(x,y) = 0,7,8,19,63")
+
 def test_parallel_and_proofs() -> None:
     expected_results = (("09_parallel_tree.bend", "4096"),
                         ("10_gpu_tree.bend", "4096"),
@@ -165,7 +181,7 @@ def main() -> int:
         print("ERROR: Bend is not installed; tests must not silently skip", file=sys.stderr)
         return 2
     print("Installed Bend:", run(["bend", "version"]).strip(), flush=True)
-    tests = [test_rule_table, test_life_transcript, test_higher_order_result, test_monad_bind_equivalence, test_parallel_and_proofs]
+    tests = [test_rule_table, test_xy_index_mapping, test_life_transcript, test_higher_order_result, test_monad_bind_equivalence, test_parallel_and_proofs]
     if not args.no_typecheck:
         tests[:0] = [test_all_sources, test_expected_failure]
     errors = []
