@@ -606,3 +606,10 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - `manuscript/13_14_21_NxN_初手から0連鎖と勝利へ.md`に、各操作と期待する状態コード、Bend型検査・実行の方法、演習を追記。**TeX本編・PDF・読者ZIPには未統合**。
 - PR外の検証CIでBend型検査・実行、既存回帰、XeLaTeX、PDF/ZIP一致を確認してから本Draft PRへ反映する。採用表紙`cover_art.tex`、TeX・PDF・ZIP、第7・8章のByte/FileとIO.now/IO.sleep本文は変更しない。
 - 100×100全面連鎖の性能、N×N GUI実機、Bend版一般N×N公開ソルバー・運ゲー無し生成器、全23章の最終校閲は未完成。
+
+## 2026-10-25：N×Nの64pxマウス座標を純粋ゲームへ接続（検証対象）
+
+- `minesweeper/nxn_pointer.bend`に64×64pxの画面座標→論理セル変換と、左クリック/右クリック/未知ボタンの入力分岐を追加。盤面サイズは同一の`MineWords`から取得し、10×10で`(639,639)`→99、`(640,0)`→盤外を扱う。
+- `scripts/test_nxn_pointer.py`は**19座標ケース＋28操作列**を独立Python座標/集合/BFSモデルとBend型検査・実行で照合する。CIへ恒久登録し、検証用PRの全ジョブ成功後にのみ本Draft PRへ反映する。
+- 第13〜14・21章補稿に必要性→Bendコード→出力→仕組み→演習を追加。**TeX/PDF未統合**。GUIの`App.run`、描画、実機マウス操作、保存、N×N公開情報ソルバー・運ゲー無し生成器は未完成。
+- 第7・8章のByte/File・IO.now/IO.sleep統合済み本文、採用表紙（blob `ba9b5c4c...`）、TeX・PDF・読者ZIPは不変更。
