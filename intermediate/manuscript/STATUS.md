@@ -563,3 +563,9 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - `manuscript/13_14_21_NxN_勝利判定の独立部品.md` に必要性→Bendコード→出力→仕組み→演習を追加。**TeX/PDF/読者ZIPには未統合**。
 - **未完成**：この判定器を `Step` の `Won` 遷移へ接続すること、0連鎖、N×N GUI実機、公開情報ソルバー・一般サイズ運ゲー無し生成器、全称証明。これらを独立判定器の成功から外挿しない。
 - `cover_art.tex`、TeX本編、生成PDF、読者ZIP、第7・8章のByte/File・IO.now/IO.sleep統合済み本文は不変更。
+
+## 2026-10-24：N×N終局状態の接続（検証済み）
+
+- `nxn_terminal.bend`で単一マスのクリック後に`nxn_victory.inspect`を呼び、`Playing`/`Won`/`Lost`の三状態を区別。勝利・敗北後はクリックと旗操作を無効にする。
+- `test_nxn_terminal.py`の**103ケース**についてBend 2.0.39の型検査と独立Python集合・座標オラクルとの実行照合が成功。**0連鎖と初手安全移動は未接続**。本稿はTeX/PDF未統合。
+- 検証用PR #23のCI（Intermediate textbook run #40090660306、Tests #40090660258、Reader download bundles #40090660259）はすべて成功。XeLaTeX組版、PDFと読者ZIPの一致検査も成功。採用表紙・TeX・生成済みPDF・読者ZIPは変更していない。
