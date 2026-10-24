@@ -85,12 +85,14 @@ def source(checks):
     lines = [
         "import Base", "import ./nxn_mine_words.bend as Words",
         "import ./nxn_terminal.bend as Terminal", "",
-        "def one_if_equal(a: U32, b: U32) -> U32:",
-        "  match U32.is_eq(a, b):",
+        "def one_if_bool(equal: Bool) -> U32:",
+        "  match equal:",
         "    case True{}:",
         "      1",
         "    case False{}:",
         "      0", "",
+        "def one_if_equal(a: U32, b: U32) -> U32:",
+        "  one_if_bool(U32.is_eq(a, b))", "",
     ]
     for k, (n, mines, operations, probe) in enumerate(checks):
         lines.append(f"def case_{k}() -> U32:")
