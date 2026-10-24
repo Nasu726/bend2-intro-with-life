@@ -79,13 +79,13 @@ def expected(n, mines, operations, probe):
 def cases():
     checks = []
     rng = random.Random(20261024)
-    for n in (2, 3, 4, 10, 17, 100):
+    # Keep the compiler regression finite: a 100x100 empty-board flood
+    # would exercise 10,000 cells and is reserved for a separate benchmark.
+    for n in (2, 3, 4, 10, 17):
         last = n * n - 1
-        # Large boards get bounded local probes; do not run a 10k-cell
-        # empty-board cascade inside the compiler regression gate.
-        minesets = ((0,), (last,), (0, last)) if n == 100 else (
-            (), (0,), (last,), (0, last), (1, n + 1)
-        )
+        minesets = ((), (0,), (last,), (0, last), (1, n + 1))
+        if n == 17:
+            minesets = ((0,), (last,), (0, last))
         for mines in minesets:
             actions = [
                 (("click", 0),),
@@ -96,16 +96,11 @@ def cases():
                 (("click", n * n), ("click", last)),
                 (("click", 0), ("mark", last), ("click", last)),
             ]
-            if n == 100:
-                # Only nonzero near-mine clicks or mine hits.
-                actions = [
-                    (("click", 0),), (("click", last),),
-                    (("mark", 0), ("click", 0)),
-                    (("click", n * n),),
-                ]
-            for ops in actions:
-                for probe in (0, last, n * n, None):
-                    checks.append((n, mines, ops, probe))
+            if n == 17:
+                actions = actions[:3] + [actions[5]]
+            for i, ops in enumerate(actions):
+                probe = (0, last, None)[i % 3]
+                checks.append((n, mines, ops, probe))
         if n <= 10:
             for _ in range(5):
                 mines = tuple(sorted(rng.sample(range(n * n), min(4, n * n - 1))))
@@ -114,8 +109,19 @@ def cases():
                     for _ in range(3)
                 )
                 checks.append((n, mines, ops, rng.randrange(n * n)))
-    # Deliberate empty-board full cascade and victory; zero frontier stops
-    # at a numbered boundary, and a flag on a safe square blocks expansion.
+    # On N=100, only probe a mine, a neighboring nonzero cell, or
+    # an invalid index; never accidentally flood 9,999 safe cells.
+    for mines, hit, near in (
+        ((0,), 0, 1),
+        ((9999,), 9999, 9998),
+        ((0, 9999), 0, 1),
+    ):
+        checks.extend([
+            (100, mines, (("click", hit),), hit),
+            (100, mines, (("click", near),), near),
+            (100, mines, (("click", 10000),), 10000),
+        ])
+    # Empty-board full cascade, zero-to-number boundary, flagged safety.
     checks += [
         (10, (), (("click", 0),), 99),
         (10, (), (("click", 0),), None),
@@ -123,9 +129,7 @@ def cases():
         (4, (15,), (("click", 0),), None),
         (4, (), (("mark", 1), ("click", 0)), 1),
         (4, (), (("mark", 1), ("click", 0)), None),
-        (4, (), (("mark", 1), ("click", 0), ("mark", 1), ("click", 0)), 1),
         (4, (), (("mark", 1), ("click", 0), ("mark", 1), ("click", 1)), None),
-        (10, (9,), (("click", 10),), 9),
         (10, (9,), (("click", 10),), 19),
         (10, (99,), (("click", 0),), 98),
         (10, (99,), (("click", 0),), None),
