@@ -24,7 +24,7 @@ def square_ok(square: Game.Square, mined: Bool) -> Bool:
 
 # In Bend 2, destructure a pair in a function parameter, not a computed
 # value. This also keeps Array and mine words threaded linearly.
-def from_cell(board: Words.MineWords, mined: Bool, correct: Bool,
+def from_cell(board: Words.MineWords, +mined: Bool, correct: Bool,
               saw_safe: Bool, read: Array<Game.Square> & Game.Square) -> Scan:
   (cells, square) = read
   Scan{board, cells,
