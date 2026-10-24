@@ -59,6 +59,8 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_flood.py
       - name: Verify N x N full first-click, flood and terminal transitions
         run: python3 intermediate/scripts/test_nxn_full_game.py
+      - name: Verify N x N 10x10 CLI public-board replay
+        run: python3 intermediate/scripts/test_nxn_cli_replay.py
       - name: Verify N x N first-click relocation
         run: python3 intermediate/scripts/test_nxn_relocate.py
       - name: Verify N x N non-wrapping ordered neighbor frontier
