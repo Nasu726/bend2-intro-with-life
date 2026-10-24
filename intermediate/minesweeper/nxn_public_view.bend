@@ -46,11 +46,17 @@ def collect(fuel: Nat, +index: U32, gathered: Gather) -> Gather:
           collect(k, (index - 1 : U32),
                   after_read(index, seen, Array.get(Cell.Square, cells, index)))
 
-def build(+n: U32, +status: U32, cells: Array<Cell.Square>) -> Observation:
-  match collect(U32.to_nat((n * n : U32)), (n * n - 1 : U32),
-                Gather{cells, Nil{}}):
+# Bend matches a parameter, not a computed expression. Keep the result
+# in a separate helper so the linear Array can be consumed exactly once.
+def from_gather(+n: U32, +status: U32, gathered: Gather) -> Observation:
+  match gathered:
     case Gather{cells, seen}:
       Observation{n, status, seen}
+
+def build(+n: U32, +status: U32, cells: Array<Cell.Square>) -> Observation:
+  from_gather(n, status,
+              collect(U32.to_nat((n * n : U32)), (n * n - 1 : U32),
+                      Gather{cells, Nil{}}))
 
 # The internal mine words and Step phase are deliberately discarded.
 def from_session(session: Step.Session, +status: U32) -> Observation:

@@ -92,12 +92,15 @@ def program(cases):
         "    case Public.Observation{n, status, seen}:",
         "      fold(seen, (n * 1000 + status : U32))",
         "",
-        "def equal(a: U32, b: U32) -> U32:",
-        "  match U32.is_eq(a, b):",
+        "def bool_code(equal: Bool) -> U32:",
+        "  match equal:",
         "    case True{}:",
         "      1",
         "    case False{}:",
         "      0",
+        "",
+        "def equal(a: U32, b: U32) -> U32:",
+        "  bool_code(U32.is_eq(a, b))",
         "",
     ]
     for k, (n, mines, operations) in enumerate(cases):
