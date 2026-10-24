@@ -606,3 +606,10 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - `manuscript/13_14_21_NxN_初手から0連鎖と勝利へ.md`に、各操作と期待する状態コード、Bend型検査・実行の方法、演習を追記。**TeX本編・PDF・読者ZIPには未統合**。
 - PR外の検証CIでBend型検査・実行、既存回帰、XeLaTeX、PDF/ZIP一致を確認してから本Draft PRへ反映する。採用表紙`cover_art.tex`、TeX・PDF・ZIP、第7・8章のByte/FileとIO.now/IO.sleep本文は変更しない。
 - 100×100全面連鎖の性能、N×N GUI実機、Bend版一般N×N公開ソルバー・運ゲー無し生成器、全23章の最終校閲は未完成。
+
+## 2026-10-25：N×N公開情報ソルバーの0規則（検証ブランチ）
+
+- `minesweeper/nxn_public_zero.bend` は公開済み数字0の添字だけを受け取り、非トーラス近傍の安全マスを観測順に連結して返す（重複あり）。**真の地雷配列は参照しない**。入力の0観測の真正性と公開済み・旗マスの除外は呼び出し側の責任。
+- `scripts/test_nxn_public_zero.py` はN=2/3/4/10/17/100を含む56有限ケースで独立Python座標モデルと比較。Python側のみが地雷集合を使い、真の0観測の安全性を検査する。Bendの型検査・実行照合は検証CIで確認する。
+- `manuscript/14_21_NxN_公開情報の0規則.md` に必要性→Bendコード→出力→仕組み→演習を追加。**TeX/PDFには未統合**。完全な公開情報ソルバー、一般サイズ運ゲー無し生成器、GUI実機、100×100全面連鎖性能、全称証明は未完成。
+- 採用表紙`intermediate/cover_art.tex`、TeX、生成済みPDF、読者ZIP、第7・8章のByte/FileとIO.now/IO.sleep本文は変更しない。検証CIで既存組版と配布物の一致を確認する。

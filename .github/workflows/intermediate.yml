@@ -59,6 +59,8 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_flood.py
       - name: Verify N=10 two-region playthrough against independent BFS
         run: python3 intermediate/scripts/test_nxn_playthrough.py
+      - name: Verify public zero-clue deductions without mine-truth access
+        run: python3 intermediate/scripts/test_nxn_public_zero.py
       - name: Verify N x N full first-click, flood and terminal transitions
         run: python3 intermediate/scripts/test_nxn_full_game.py
       - name: Verify N x N first-click relocation
