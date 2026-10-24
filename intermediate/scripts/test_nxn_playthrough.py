@@ -7,8 +7,9 @@ This verifies a 90-safe-cell cascade and terminal victory, not a GUI,
 import os
 from pathlib import Path
 import subprocess
+import tempfile
 
-from test_nxn_full_game import expected
+from test_nxn_full_game import expected, source, FILES, GAME
 
 ROOT = Path(__file__).resolve().parents[1]
 DEMO = ROOT / "minesweeper" / "nxn_playthrough.bend"
@@ -25,8 +26,53 @@ def check_oracle():
     assert expected(10, wall, first + (("mark", 99), ("click", 99)), 99) == 1
 
 
+
+def check_bend_boundaries():
+    """Exercise the actual Bend engine at intermediate and terminal states.
+
+    The original demonstration checks only the final 110. These cases also
+    compare flags, mine loss, first-click relocation and frozen terminal input.
+    Each expected value comes from the independent Python set/BFS model.
+    """
+    wall = tuple(range(50, 60))
+    cases = (
+        (10, wall, (("click", 0),), 49, 12),
+        (10, wall, (("click", 0), ("mark", 99), ("click", 99)), 99, 1),
+        (10, wall, (("click", 0), ("mark", 99), ("click", 99),
+                    ("mark", 99), ("click", 99)), 99, 110),
+        (10, wall, (("click", 0), ("click", 50), ("click", 99)), 99, 200),
+        (10, wall, (("click", 50),), 50, 11),
+        (10, wall, (("click", 99), ("click", 0)), 0, 110),
+        (10, wall, (("click", 0), ("click", 99), ("click", 50)), 50, 100),
+    )
+    for n, mines, operations, probe, value in cases:
+        assert expected(n, mines, operations, probe) == value
+    checks = tuple((n, mines, operations, probe)
+                   for n, mines, operations, probe, _ in cases)
+    with tempfile.TemporaryDirectory() as tmp:
+        directory = Path(tmp)
+        for name in FILES:
+            (directory / name).write_bytes((GAME / name).read_bytes())
+        program = directory / "check_playthrough_boundaries.bend"
+        program.write_text(source(checks), encoding="utf-8")
+        for args in (("bend", str(program), "--check-only"),
+                     ("bend", str(program))):
+            result = subprocess.run(
+                args, cwd=directory, capture_output=True, text=True,
+                timeout=360, env=dict(os.environ, BEND_NO_TELEMETRY="1"),
+            )
+            if result.returncode:
+                raise AssertionError(f"{args}: {result.stdout}\\n{result.stderr}")
+            if len(args) == 2 and result.stdout.strip().splitlines()[-1] != str(len(checks)):
+                raise AssertionError(
+                    f"Expected {len(checks)} Bend/Python matches: {result.stdout}"
+                )
+    print(f"PASS {len(checks)} N=10 Bend/Python boundary traces")
+
+
 def main():
     check_oracle()
+    check_bend_boundaries()
     for args in (("bend", str(DEMO), "--check-only"), ("bend", str(DEMO))):
         result = subprocess.run(args, cwd=ROOT, capture_output=True, text=True,
                                 timeout=360,
