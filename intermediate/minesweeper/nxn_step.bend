@@ -18,8 +18,8 @@ type Session is Type:
 # A visible Array is sized by the logical CELL count, not word count.
 def new(mines: Words.MineWords) -> Session:
   match mines:
-    case Words.MineWords{n, words}:
-      size = (n * n : U32)
+    case Words.MineWords{+n, words}:
+      +size = (n * n : U32)
       depth = Words.depth_loop(15n, U32.is_lt(1, size), 1, 0n, size)
       Session{n, Words.MineWords{n, words}, Array.new(Game.Square, depth, Game.Hidden{}), Playing{}}
 
@@ -27,7 +27,7 @@ def mark_read(n: U32, mines: Words.MineWords, index: U32, read: Array<Game.Squar
   (cells, square) = read
   Session{n, mines, Array.set(Game.Square, cells, index, Game.toggle_flag(square)), Playing{}}
 
-def mark_valid(valid: Bool, n: U32, mines: Words.MineWords, cells: Array<Game.Square>, index: U32) -> Session:
+def mark_valid(valid: Bool, n: U32, mines: Words.MineWords, cells: Array<Game.Square>, +index: U32) -> Session:
   match valid:
     case False{}:
       Session{n, mines, cells, Playing{}}
@@ -36,7 +36,7 @@ def mark_valid(valid: Bool, n: U32, mines: Words.MineWords, cells: Array<Game.Sq
 
 def mark(session: Session, +index: U32) -> Session:
   match session:
-    case Session{n, mines, cells, phase}:
+    case Session{+n, mines, cells, phase}:
       match phase:
         case Lost{}:
           Session{n, mines, cells, Lost{}}
@@ -47,7 +47,7 @@ def open_with_count(n: U32, index: U32, cells: Array<Game.Square>, pair: Words.M
   (mines, clue) = pair
   Session{n, mines, Array.set(Game.Square, cells, index, Game.Open{clue}), Playing{}}
 
-def click_mine_result(n: U32, index: U32, cells: Array<Game.Square>, pair: Words.MineWords & Bool) -> Session:
+def click_mine_result(+n: U32, +index: U32, cells: Array<Game.Square>, pair: Words.MineWords & Bool) -> Session:
   (mines, mined) = pair
   match mined:
     case True{}:
@@ -55,7 +55,7 @@ def click_mine_result(n: U32, index: U32, cells: Array<Game.Square>, pair: Words
     case False{}:
       open_with_count(n, index, cells, Clues.count_inside(n, mines, index))
 
-def click_read(n: U32, mines: Words.MineWords, index: U32, read: Array<Game.Square> & Game.Square) -> Session:
+def click_read(n: U32, mines: Words.MineWords, +index: U32, read: Array<Game.Square> & Game.Square) -> Session:
   (cells, square) = read
   match square:
     case Game.Hidden{}:
@@ -65,7 +65,7 @@ def click_read(n: U32, mines: Words.MineWords, index: U32, read: Array<Game.Squa
     case Game.Open{clue}:
       Session{n, mines, cells, Playing{}}
 
-def click_valid(valid: Bool, n: U32, mines: Words.MineWords, cells: Array<Game.Square>, index: U32) -> Session:
+def click_valid(valid: Bool, n: U32, mines: Words.MineWords, cells: Array<Game.Square>, +index: U32) -> Session:
   match valid:
     case False{}:
       Session{n, mines, cells, Playing{}}
@@ -74,7 +74,7 @@ def click_valid(valid: Bool, n: U32, mines: Words.MineWords, cells: Array<Game.S
 
 def click(session: Session, +index: U32) -> Session:
   match session:
-    case Session{n, mines, cells, phase}:
+    case Session{+n, mines, cells, phase}:
       match phase:
         case Lost{}:
           Session{n, mines, cells, Lost{}}
