@@ -28,12 +28,18 @@ def next_pending(zero: Bool, +n: U32, +index: U32, rest: List<U32>) -> List<U32>
     case False{}:
       rest
 
-def open_count(+n: U32, +index: U32, cells: Array<Game.Square>,
-               rest: List<U32>, pair: Words.MineWords & U32) -> Queue:
-  (mines, clue) = pair
+# Clue is used both in the visible square and in the zero predicate.
+# The + parameter explicitly permits this duplication of a U32 value.
+def with_clue(+n: U32, +index: U32, cells: Array<Game.Square>,
+              rest: List<U32>, mines: Words.MineWords, +clue: U32) -> Queue:
   updated = Array.set(Game.Square, cells, index, Game.Open{clue})
   Queue{Step.Session{n, mines, updated, Step.Playing{}},
         next_pending(U32.is_eq(clue, 0), n, index, rest)}
+
+def open_count(+n: U32, +index: U32, cells: Array<Game.Square>,
+               rest: List<U32>, pair: Words.MineWords & U32) -> Queue:
+  (mines, clue) = pair
+  with_clue(n, index, cells, rest, mines, clue)
 
 # Defensive mine check: even a malformed queue must never reveal a mine.
 def open_if_safe(+n: U32, +index: U32, cells: Array<Game.Square>,
