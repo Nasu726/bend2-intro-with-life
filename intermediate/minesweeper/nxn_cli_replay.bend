@@ -51,7 +51,7 @@ def choose_click(stage: Engine.Game, +command: String, is_click: Bool) -> Engine
     case False{}:
       choose_flag(stage, command, String.starts_with(command, "f"))
 
-def reset_or_action(stage: Engine.Game, command: String, reset: Bool) -> Engine.Game:
+def reset_or_action(stage: Engine.Game, +command: String, reset: Bool) -> Engine.Game:
   match reset:
     case True{}:
       Engine.new(initial_board())
