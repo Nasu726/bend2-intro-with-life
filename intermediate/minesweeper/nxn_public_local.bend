@@ -22,18 +22,31 @@ def contains(+items: List<&2, U32>, +target: U32) -> Bool:
     case first <> rest:
       Bool.or(U32.is_eq(first, target), contains(rest, target))
 
-def include(+index: U32, mine: Bool, safe: Bool, state: Scan) -> Scan:
+# Match an earlier parameter before inspecting a later resource binder.
+# Bend 2 does not permit matching 'mine' after destructuring 'state'.
+def add_mine(safe: Bool, state: Scan) -> Scan:
   match state:
     case Scan{known, unknown_count, unknown, conflict}:
-      match mine:
-        case True{}:
-          Scan{(known + 1 : U32), unknown_count, unknown, Bool.or(conflict, safe)}
-        case False{}:
-          match safe:
-            case True{}:
-              Scan{known, unknown_count, unknown, conflict}
-            case False{}:
-              Scan{known, (unknown_count + 1 : U32), index <> unknown, conflict}
+      Scan{(known + 1 : U32), unknown_count, unknown, Bool.or(conflict, safe)}
+
+def add_unknown(+index: U32, state: Scan) -> Scan:
+  match state:
+    case Scan{known, unknown_count, unknown, conflict}:
+      Scan{known, (unknown_count + 1 : U32), index <> unknown, conflict}
+
+def include_safe(+index: U32, safe: Bool, state: Scan) -> Scan:
+  match safe:
+    case True{}:
+      state
+    case False{}:
+      add_unknown(index, state)
+
+def include(+index: U32, mine: Bool, safe: Bool, state: Scan) -> Scan:
+  match mine:
+    case True{}:
+      add_mine(safe, state)
+    case False{}:
+      include_safe(index, safe, state)
 
 # Neighbors are ordered; recursion on the tail preserves that order.
 def scan(items: List<U32>, +mines: List<&2, U32>, +safe: List<&2, U32>) -> Scan:
