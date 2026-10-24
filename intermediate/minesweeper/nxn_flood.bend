@@ -137,10 +137,10 @@ def after_click(after: Step.Session, +index: U32) -> Step.Session:
         case Step.Playing{}:
           inspect_valid(Geo.valid_index(n, index), n, mines, cells, index)
 
-def main() -> U32:
-  board = Words.set_checked(Words.new(4), 15, True{})
-  Step.snapshot(click(Step.new(board), 0), 14)
-
 # Keep the result of Step.click as a parameter scrutinee, not a local binder.
 def click(session: Step.Session, +index: U32) -> Step.Session:
   after_click(Step.click(session, index), index)
+
+def main() -> U32:
+  board = Words.set_checked(Words.new(4), 15, True{})
+  Step.snapshot(click(Step.new(board), 0), 14)
