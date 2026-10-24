@@ -51,6 +51,8 @@ jobs:
         run: python3 intermediate/scripts/test_examples.py
       - name: Verify N x N Bend clues against independent coordinates
         run: python3 intermediate/scripts/test_nxn_clues.py
+      - name: Verify N x N one-cell actions against independent public state
+        run: python3 intermediate/scripts/test_nxn_actions.py
       - name: Verify N x N Bend geometry against independent coordinates
         run: python3 intermediate/scripts/test_nxn_geometry.py
       - name: Compile native C and execute JavaScript target
