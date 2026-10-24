@@ -82,20 +82,28 @@ def check_bend_boundaries():
         directory = Path(tmp)
         for name in FILES:
             (directory / name).write_bytes((GAME / name).read_bytes())
-        program = directory / "check_playthrough_boundaries.bend"
-        program.write_text(source(checks), encoding="utf-8")
-        for args in (("bend", str(program), "--check-only"),
-                     ("bend", str(program))):
-            result = subprocess.run(
-                args, cwd=directory, capture_output=True, text=True,
-                timeout=360, env=dict(os.environ, BEND_NO_TELEMETRY="1"),
-            )
-            if result.returncode:
-                raise AssertionError(f"{args}: {result.stdout}\\n{result.stderr}")
-            if len(args) == 2 and result.stdout.strip().splitlines()[-1] != str(len(checks)):
-                raise AssertionError(
-                    f"Expected {len(checks)} Bend/Python matches: {result.stdout}"
+        # Avoid compiling all full-game traces into one large Bend term.
+        # Keep each independent batch small; aggregate the match count below.
+        batch_size = 8
+        for offset in range(0, len(checks), batch_size):
+            batch = checks[offset:offset + batch_size]
+            program = directory / f"check_playthrough_{offset}.bend"
+            program.write_text(source(batch), encoding="utf-8")
+            for args in (("bend", str(program), "--check-only"),
+                         ("bend", str(program))):
+                result = subprocess.run(
+                    args, cwd=directory, capture_output=True, text=True,
+                    timeout=360, env=dict(os.environ, BEND_NO_TELEMETRY="1"),
                 )
+                if result.returncode:
+                    raise AssertionError(
+                        f"Batch {offset}: {args}: {result.stdout}\\n{result.stderr}"
+                    )
+                if len(args) == 2 and result.stdout.strip().splitlines()[-1] != str(len(batch)):
+                    raise AssertionError(
+                        f"Batch {offset}: expected {len(batch)} Bend/Python matches: "
+                        f"{result.stdout}"
+                    )
     print(f"PASS {len(checks)} N=10 Bend/Python boundary traces")
 
 
