@@ -129,3 +129,28 @@ jobs:
       - name: Verify committed PDF and learner ZIP match the sources
         if: github.event_name == 'pull_request'
         run: python3 intermediate/scripts/check_bundle_consistency.py
+
+  public-inference:
+    name: N x N public-information inference (Bend)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      BEND_NO_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Bend 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://bend-lang.com/install.sh -o /tmp/install-bend.sh
+          sh /tmp/install-bend.sh
+          echo "$HOME/.bend/bin" >> "$GITHUB_PATH"
+      - name: Check Bend compiler version
+        run: bend version
+      - name: Verify zero-clue public safe neighbors
+        run: python3 intermediate/scripts/test_nxn_zero_inference.py
+      - name: Verify certified single-clue public deductions
+        run: python3 intermediate/scripts/test_nxn_public_local.py
