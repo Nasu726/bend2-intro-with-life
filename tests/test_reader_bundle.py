@@ -36,6 +36,22 @@ class TestReaderBundle(unittest.TestCase):
                     self.assertFalse(name.endswith(".tex"))
                     self.assertFalse(name.endswith(".py"))
 
+    def test_nxn_public_zero_modules_are_learnable(self):
+        """The reader example keeps the two relative imports available."""
+        modules = {"nxn_geometry.bend", "nxn_neighbors.bend", "nxn_zero_inference.bend"}
+        self.assertTrue(modules.issubset(set(INTERMEDIATE_GAME_FILES)))
+        root = ROOT / "intermediate" / "minesweeper"
+        for name in modules:
+            content = (root / name).read_text(encoding="utf-8")
+            import re
+            for dependency in re.findall(r"import \\./(\\w+\\.bend) as", content):
+                self.assertIn(dependency, INTERMEDIATE_GAME_FILES)
+        with zipfile.ZipFile(ROOT / "reader-packages/bend2-intermediate-reader-preview.zip") as z:
+            for name in modules:
+                self.assertEqual(
+                    z.read("bend2-intermediate-reader/examples/minesweeper/" + name),
+                    (root / name).read_bytes())
+
     def test_poll_example_is_learner_material(self):
         self.assertIn("53_chan_poll.bend", INTERMEDIATE_EXAMPLES)
         with zipfile.ZipFile(ROOT / "reader-packages/bend2-intermediate-reader-preview.zip") as z:
