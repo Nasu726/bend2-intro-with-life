@@ -624,3 +624,9 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - `scripts/test_nxn_zero_inference.py` と `scripts/test_nxn_public_local.py` に独立したPython座標・集合オラクルを用意。Bend 2.0.39での型検査・実行照合は**検証CI待ち**。Bendのリスト要素を複数回参照する箇所は`case +index <> rest`として複製可能性を明示した。
 - CIは既存の重いゲーム照合とは別のジョブで検証し、全チェック成功後にのみDraft PR #4へ**1コミット**で統合する。第22章向け補稿は2本追加したが**TeX本文・PDFには未統合**。
 - **未完成**：複数数字の連立制約、一般N×NのBend版運ゲー無し生成、10×10 GUI実機検収、全称証明、23章最終校閲。採用済み表紙`cover_art.tex`、TeX、PDF、読者ZIP、第7・8章のByte/File・IO.now/IO.sleep本文は不変更。
+
+## 2026-10-25：検証PR #43のCI時間上限を是正（再検証待ち）
+
+- 検証CI #40147576548 では、新しい公開情報推論ジョブが成功（数字0の268ケース、単一数字の163ケース）。XeLaTeX・読者ZIPの一致検査、Tests、Reader download bundlesも成功。
+- 一方、従来の重い `Intermediate Bend examples` は、Bend/Lean導入・既存N×N照合・43法則・第7/8章のFile/Byte/IO.now/IO.sleep回帰まで成功した後、**25分のジョブ上限に達してcancelled**。期待値不一致を示すログはないが、後続の検査は未実行なので全成功とは扱わない。
+- 検証ブランチのCI上限を55分へ引き上げ、既存検査を削らず再実行する。**全ジョブ成功までは正本PR #4へ統合しない**。表紙、TeX本文、生成PDF、読者ZIP、解答の配布境界は変更しない。

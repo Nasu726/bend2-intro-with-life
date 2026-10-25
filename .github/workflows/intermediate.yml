@@ -20,7 +20,9 @@ jobs:
   bend-examples:
     name: Intermediate Bend examples
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    # The full legacy Bend/proof/oracle gate exceeded 25 minutes on GitHub Actions.
+    # Keep every check; allow the full finite regression suite to finish.
+    timeout-minutes: 55
     env:
       BEND_NO_TELEMETRY: '1'
     steps:
