@@ -16,6 +16,14 @@ GAME = ROOT / 'minesweeper'
 FILES = ('nxn_public_subset.bend', 'nxn_public_overlap.bend')
 
 
+def check_match_scrutinees():
+    """Bend 2.0.39 only accepts a bound name as a match scrutinee."""
+    code = (GAME / 'nxn_public_overlap.bend').read_text(encoding='utf-8')
+    for line in code.splitlines():
+        statement = line.strip()
+        if statement.startswith('match ') and '(' in statement.partition(':')[0]:
+            raise AssertionError(f'Computed match scrutinee: {statement}')
+
 def oracle(a, b, ra, rb):
     a, b = set(a), set(b)
     union = sorted(a | b)
@@ -115,6 +123,7 @@ def source(checks):
 
 
 def main():
+    check_match_scrutinees()
     checks = cases()
     assert len(checks) == 125
     assert {oracle(*case)[0] for case in checks} == {1, 4}

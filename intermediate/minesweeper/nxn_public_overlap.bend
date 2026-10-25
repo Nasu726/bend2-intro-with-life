@@ -27,21 +27,24 @@ def intersection_size(items: List<&2, U32>, +other: List<&2, U32>) -> U32:
       plus_if(Subset.contains(other, value), intersection_size(rest, other))
 
 def minimum(+a: U32, +b: U32) -> U32:
-  match U32.is_lt(a, b):
+  less_than = U32.is_lt(a, b)
+  match less_than:
     case True{}:
       a
     case False{}:
       b
 
 def maximum(+a: U32, +b: U32) -> U32:
-  match U32.is_lt(a, b):
+  less_than = U32.is_lt(a, b)
+  match less_than:
     case True{}:
       b
     case False{}:
       a
 
 def nonnegative_difference(+a: U32, +b: U32) -> U32:
-  match U32.is_lt(a, b):
+  less_than = U32.is_lt(a, b)
+  match less_than:
     case True{}:
       0
     case False{}:
@@ -61,11 +64,13 @@ def add_mine(+index: U32, state: Scan) -> Scan:
 # All cells are mines if its minimum equals the region size.
 def classify(+index: U32, +minimum_mines: U32, +maximum_mines: U32,
              +count: U32, state: Scan) -> Scan:
-  match U32.is_eq(maximum_mines, 0):
+  safe_region = U32.is_eq(maximum_mines, 0)
+  match safe_region:
     case True{}:
       add_safe(index, state)
     case False{}:
-      match U32.is_eq(minimum_mines, count):
+      mine_region = U32.is_eq(minimum_mines, count)
+      match mine_region:
         case True{}:
           add_mine(index, state)
         case False{}:
@@ -78,7 +83,8 @@ def scan_b(items: List<&2, U32>, +a: List<&2, U32>,
     case Nil{}:
       state
     case +index <> rest:
-      match Subset.contains(a, index):
+      belongs_to_a = Subset.contains(a, index)
+      match belongs_to_a:
         case True{}:
           scan_b(rest, a, y_min, y_max, y_count, state)
         case False{}:
@@ -92,7 +98,8 @@ def scan_a(items: List<&2, U32>, +b: List<&2, U32>,
     case Nil{}:
       state
     case +index <> rest:
-      match Subset.contains(b, index):
+      belongs_to_b = Subset.contains(b, index)
+      match belongs_to_b:
         case True{}:
           classify(index, i_min, i_max, i_count,
                    scan_a(rest, b, x_min, x_max, x_count,
@@ -116,7 +123,8 @@ def bounds(+a: List<&2, U32>, +b: List<&2, U32>,
   +lower = maximum(nonnegative_difference(ra, x_count),
                    nonnegative_difference(rb, y_count))
   +upper = minimum(i_count, minimum(ra, rb))
-  match U32.is_lt(upper, lower):
+  contradiction = U32.is_lt(upper, lower)
+  match contradiction:
     case True{}:
       Inconsistent{}
     case False{}:
