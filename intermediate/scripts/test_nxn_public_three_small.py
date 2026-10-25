@@ -140,7 +140,7 @@ def run_bend(path, expected):
         if check_only:
             args.append("--check-only")
         result = subprocess.run(args, cwd=path.parent, capture_output=True,
-                                text=True, timeout=360,
+                                text=True, timeout=120,
                                 env=dict(os.environ, BEND_NO_TELEMETRY="1"))
         if result.returncode:
             raise AssertionError(f"{args}: {result.stdout}\n{result.stderr}")
@@ -159,11 +159,18 @@ def main():
         copied.write_bytes(MODULE.read_bytes())
         print("CHECK six-cell three-clue module / --check-only and run", flush=True)
         run_bend(copied, 341)
-        program = folder / "check_nxn_public_three_small.bend"
-        program.write_text(source(checks), encoding="utf-8")
-        print(f"CHECK {len(checks)} bounded three-clue cases / --check-only and run",
-              flush=True)
-        run_bend(program, len(checks))
+        # Combining all cases in one Bend main caused a 360s interpreter
+        # timeout, despite successful typechecking and the 341 smoke result.
+        # Independent four-case programs retain EVERY oracle comparison while
+        # bounding Bend normalization cost and making failures attributable.
+        batch_size = 4
+        for start in range(0, len(checks), batch_size):
+            batch = checks[start:start + batch_size]
+            program = folder / f"check_nxn_public_three_{start}.bend"
+            program.write_text(source(batch), encoding="utf-8")
+            print(f"CHECK bounded three-clue cases {start + 1}-"
+                  f"{start + len(batch)}/{len(checks)}", flush=True)
+            run_bend(program, len(batch))
     print(f"PASS {len(checks)} bounded Bend/Python three-clue deductions")
 
 
