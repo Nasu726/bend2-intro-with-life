@@ -162,3 +162,5 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_public_overlap.py
       - name: Verify bounded three-clue public deductions
         run: python3 intermediate/scripts/test_nxn_public_three_small.py
+      - name: Verify N x N public-only unknown-neighbor extraction
+        run: python3 intermediate/scripts/test_nxn_public_neighbors.py

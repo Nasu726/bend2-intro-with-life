@@ -87,3 +87,30 @@ print(combine_public_decisions(zip(requests, decisions)))
 3. `python3 -m unittest discover -s intermediate/tests -p 'test_nxn_three_clue_adapter.py' -v` を実行し、3×3の三公開マスの配置と地雷割当について、独立した盤面全列挙との一致を確認してみましょう。
 
 **検証の境界：** Python変換器の有限検査は、公開数字からBend入力を作る規則の検査です。Bend六変数カーネル自体の型検査・実行は既存の独立CIで確認します。公開盤面からBendが直接制約を抽出する機能、六変数以外の連立、一般N×Nの運ゲー無し生成、GUI実機、全称証明は未完成です。TeX本文・PDF・読者ZIPにも未統合です。
+
+## 公開済みのマスから未知の近傍をBendで取り出す（検証用追補）
+
+六ビットの推論器へ値を渡す前に、「公開済みの数字の周囲で、まだ開いていないのはどこか」を求める必要があります。地雷の正解を参照して集合を作ってしまうと、運ゲー無しという主張を検査できません。
+
+`minesweeper/nxn_public_neighbors.bend` は、既存の `nxn_neighbors.bend` で盤面内の隣接マスを列挙し、`nxn_public_subset.bend` の `contains` で公開済みのマスを除きます。既存の近傍列挙・集合判定を再利用するため、座標計算を重複実装しません。
+
+```bend
+def unknown_neighbors(+n: U32, +index: U32,
+                      +revealed: List<&2, U32>) -> List<U32>:
+  if_revealed(Sets.contains(revealed, index), n, index, revealed)
+
+def main() -> U32:
+  Neighbors.count(unknown_neighbors(3, 7, [0, 2, 7]))
+```
+
+```sh
+bend intermediate/minesweeper/nxn_public_neighbors.bend --check-only
+bend intermediate/minesweeper/nxn_public_neighbors.bend
+# 5
+```
+
+3×3の公開マスが0・2・7なら、7番に隣接する未知マスは3・4・5・6・8の五つです。ここで返すのは**マス番号のリスト**であり、六ビットのマスクではありません。後段で未知マスを六つに並べ、各番号をビット位置に対応付けてから三数字の推論器へ渡します。公開されていない位置を「公開数字」として指定した場合は空リストを返します。これは確定安全という意味ではありません。
+
+**演習：** 公開マスを `[0, 1, 2, 4]` に変え、4×4盤面の0番・1番・2番・4番それぞれについて、未知の隣接マスを予想してから確かめてみましょう。さらに、公開されていない3番を指定した場合の空リストと、すべての隣接マスを開いた場合の空リストが、同じ意味ではないことを説明してみましょう。
+
+**検証の境界：** `scripts/test_nxn_public_neighbors.py` は2×2〜100×100の有限34ケースについて、Bendの型検査・実行結果を独立した座標オラクルと比較するためのものです。CIが成功するまではBendの実行成功を主張しません。入力の公開マス一覧は重複なし・範囲内・昇順であることを前提とし、公開数字の値そのものや複数制約の組み立て、一般N×Nの完全ソルバー、GUI実機を検証するものではありません。TeX・PDF・読者ZIPへの統合も別工程です。
