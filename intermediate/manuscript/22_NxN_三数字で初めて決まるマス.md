@@ -31,7 +31,30 @@ def main() -> U32:
   tag(infer([1, 3, 4], [1, 4, 5], 1, 1))
 ```
 
-この入力を既存の `main` と入れ替えて試す場合は、元のコードを別に保存してから実行してみましょう。実行ファイルの型検査は `bend intermediate/minesweeper/nxn_public_overlap.bend --check-only` です。**この補稿の三数字連立をBendで実装・検証したわけではありません。** 現行のBend二数字推論器には、三つの制約を同時に受け取る入口がまだありません。
+この入力を既存の `main` と入れ替えて試す場合は、元のコードを別に保存してから実行してみましょう。実行ファイルの型検査は `bend intermediate/minesweeper/nxn_public_overlap.bend --check-only` です。既存の二数字推論器は、三つの制約を同時には受け取りません。次節では、3×3に限定して全配置を調べる別のBend実装を使います。
+
+## 3×3に限定したBendの三数字全列挙
+
+二数字の規則を何度適用しても、三つの制約を同時に満たす候補がどう変わるかは一般には分かりません。そこで、まず小さな盤面だけで**候補をすべて調べるBendプログラム**を作りました。リポジトリの `intermediate/minesweeper/nxn_public_exact3.bend` です（読者ZIPには含めない発展例です）。
+
+```bend
+def main() -> U32:
+  encode(infer([Number{0, 1}, Number{2, 1}, Number{7, 1}], 2))
+```
+
+`infer` に渡すのは公開数字の `Number{index, clue}` と、公開情報である地雷総数だけです。真の地雷配置は引数にありません。3×3の9マスに対する512通りの地雷マスクを検査し、**公開数字に一致する候補がゼロなら `Inconsistent`**、残れば `Deduced{safe, mines, models}` を返します。安全マスは候補の地雷位置の和集合の外側、確定地雷は全候補の共通部分です。公開済みのマスはどちらの出力にも含めません。
+
+```sh
+bend intermediate/minesweeper/nxn_public_exact3.bend --check-only
+bend intermediate/minesweeper/nxn_public_exact3.bend
+# 525368
+```
+
+出力の `525368` は見やすいように三つの値を詰めた数です。下位9ビットが安全マスク `56=2^3+2^4+2^5`、次の9ビットが確定地雷マスク `2=2^1`、上位が候補数 `2` です。通常の推論では整数を解読する必要はなく、`Deduced` の三つのフィールドをそのまま利用します。
+
+`python3 intermediate/scripts/test_nxn_public_exact3.py` は、Bendの型検査・実行結果を、Bendの計算手順を使わず `itertools.combinations` で列挙したPythonの期待値と比較します。三数字の例、総地雷数の違い、矛盾、重複した公開数字、不正な添字、数字0など**13ケース**を対象にします。これは3×3の有限検査であり、一般N×Nソルバーや全称証明ではありません。
+
+**試してみましょう：** `main` の地雷総数を `2` から `1` に変更し、出力が変わる理由を説明してみましょう。候補は `{4}` の1通りになり、1番は安全、4番は地雷になります。最後に、総数を `0` にすると `Inconsistent` になる理由を考えてみましょう。
 
 ## 実行結果を独立した全列挙で確かめる
 
@@ -84,4 +107,4 @@ print(deductions(3, None, CLUES))
 4. 地雷総数を伏せると `{4}` が候補に戻る理由を説明し、`deductions(3, None, CLUES)` の出力と比較してみましょう。
 5. `python3 -m unittest discover -s intermediate/tests -p 'test_nxn_three_clue_gap.py' -v` を実行し、地雷総数を加えたとき候補が増えないことを256条件で確かめてみましょう。
 
-**検証の境界：** この補稿の列挙は3×3の有限な一局面を示すものです。Python参照ソルバーとの照合テストはありますが、Bendの三数字ソルバー、一般N×N運ゲー無し生成器、GUIでの実機操作、任意の局面に対する全称証明は未完成です。TeX本編・生成PDF・読者ZIPへはまだ統合していません。
+**検証の境界：** Bendでの3×3・全512候補の有限列挙とPython参照照合は、一般N×Nの連立推論器ではありません。一般N×N運ゲー無し生成器、GUIでの実機操作、任意局面に対する全称証明は未完成です。TeX本編・生成PDF・読者ZIPへはまだ統合していません。

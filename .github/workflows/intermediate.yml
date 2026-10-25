@@ -160,3 +160,5 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_public_subset.py
       - name: Verify arbitrary-overlap two-clue public deductions
         run: python3 intermediate/scripts/test_nxn_public_overlap.py
+      - name: Verify bounded 3x3 exact public deductions in Bend
+        run: python3 intermediate/scripts/test_nxn_public_exact3.py
