@@ -159,6 +159,6 @@ BendのN×NエンジンやGUI・運ゲー無し一般化を検証したもので
 | N×N盤面・通常ゲーム | `nxn_mine_words.bend`、`nxn_clues.bend`、`nxn_full_game.bend`、`nxn_playthrough.bend`。固定N=10の0→99二手勝利をBend実行照合 | 第13・14・21章への本編統合、10×10 GUI実機と状態保存、N=100全面連鎖の性能検収 |
 | Bendの公開情報推論 | `nxn_zero_inference.bend`（268ケース）、`nxn_public_local.bend`（163）、`nxn_public_subset.bend`（121）、`nxn_public_overlap.bend`（125）の有限照合 | 公開盤面からの一般制約抽出、三数字以上の連立推論、全frontier探索と第22章への本編統合 |
 | Python参照の一般N×N生成・再生 | `nxn_public_inference.py`、`nxn_candidate_generator.py`、`nxn_public_replay_bridge.py`。固定10×10は0→99で勝利、最小添字優先は探索上限18で`limit` | Bend版一般ソルバー・生成器と自動接続、GUI統合、全称証明。Pythonの有限照合をBendの保証と混同しない |
-| 配布済み教材 | 6 Part・23章、TeXの53サンプルと47演習、ZIPは通常53本＋ゲーム12本＋PDF/README/LICENSEの68エントリ | 第21・22章の補稿をTeX/PDF/ZIPへ統合。N×N部品は現状リポジトリ側のみ |
+| 配布済み教材 | 6 Part・23章、TeXの53サンプルと49演習、ZIPは通常53本＋ゲーム15本（N×Nの局所推論用3本を含む）＋PDF/README/LICENSEの71エントリ | 第21・22章のN×N固定ゲーム・数字0推論を一部本編化。一般N×Nゲーム本体・強い連立推論はリポジトリ側に保持 |
 
 第7章File/Byteと第8章`IO.now`/`IO.sleep`は本編統合済み。正本先端`c0c56cb7`のCI4件は成功し、PDF全ページ画像・本文・ZIP内PDFの一致検査も成功。採用済み表紙は不変更。GUI実機・GPU/FFI・一般N×N生成の完成を意味しません。

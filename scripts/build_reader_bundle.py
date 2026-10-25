@@ -65,6 +65,8 @@ INTERMEDIATE_GAME_FILES = (
     "session.bend", "start.bend", "cli_replay.bend", "gui.bend",
     "public_solver.bend", "public_two_corners.bend",
     "noguess_generator.bend", "cli_save.bend",
+    # Three small, import-closed N x N public-information learning modules.
+    "nxn_geometry.bend", "nxn_neighbors.bend", "nxn_zero_inference.bend",
 )
 
 def readme(track: str) -> str:
@@ -109,7 +111,7 @@ GUIの状態全体を保存する機能ではありません。
 公開済みの数字だけで確実にクリアできる候補を生成（4×4・地雷2個・左上開始限定）:
 bend examples/minesweeper/noguess_generator.bend
 期待結果: mines=40960;moves=0,12,14
-生成器は真の地雷配置を持ちますが、推論器へは公開数字しか渡しません。
+\nN×Nの公開数字0から安全候補を探す（2〜100、左上0番の実習）:\nbend examples/minesweeper/nxn_neighbors.bend\nbend examples/minesweeper/nxn_zero_inference.bend\nどちらも期待結果は3。近傍列挙と確定安全候補の個数を区別します。\nこれは一般の連立ソルバーや運ゲー無し生成器ではありません。\n生成器は真の地雷配置を持ちますが、推論器へは公開数字しか渡しません。
 
 4×4マインスイーパーのGUIをネイティブビルドして起動:
 bend examples/minesweeper/gui.bend -o minesweeper

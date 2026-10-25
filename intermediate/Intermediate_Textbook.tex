@@ -2207,6 +2207,54 @@ BEND2-SAVE-1|c0|f1|END
 
 \exercise{まず\code{save c0 f1 f1}で保存し、\code{load}すると旗がどこにも残らないことを確かめてみましょう。次に\code{minesweeper_save.txt}の最後の\code{END}を削除し、読み込みが失敗することを確認してみましょう。保存の失敗時にもファイルハンドルを閉じる必要がある理由を説明してみましょう。}
 
+\section{10×10でも同じゲームの規則を使う}
+ここまでの4×4は、法則や入力処理を小さく確かめるための盤面でした。
+しかし、完成を目指すゲームでは、盤面の大きさを変えるたびに
+クリックや0の連鎖公開を書き直したくありません。
+そこで、\textbf{盤面の大きさを受け取るN×N版}を別の実装として用意しました。
+以下は完成したGUIではなく、ゲーム本体を直接実行する実習です。
+
+まず10×10の6行目（行番号5）に地雷を10個、番号50〜59へ置きます。
+地雷の列が上下を隔てるため、左上0番から広がる0の連鎖だけでは
+下側の安全な40マスが開きません。右下99番も開くとどうなるでしょうか。
+
+\begin{lstlisting}[caption={固定した10×10盤面の二手を再生するBendコード}]
+def main() -> U32:
+  game = Game.new(mine_wall(Words.new(10)))
+  game = Game.click(game, 0)
+  game = Game.click(game, 99)
+  Game.snapshot(game, 99)
+\end{lstlisting}
+
+これはリポジトリ内の\code{intermediate/minesweeper/nxn_playthrough.bend}
+から抜き出した実際の\code{main}です。
+\code{mine_wall}と\code{Game}は同じフォルダーの補助モジュールを使います。
+\textbf{このN×Nゲーム本体はまだ読者ZIPには収録していない}ので、
+次のコマンドはリポジトリのファイルを取得した環境で実行してください。
+
+\begin{lstlisting}[language={},caption={N=10の二手リプレイと実行結果}]
+bend intermediate/minesweeper/nxn_playthrough.bend
+110
+\end{lstlisting}
+
+最初のクリックでは上側の50マス、次のクリックでは下側の40マスが開きます。
+地雷10個を除く90マスがすべて公開され、状態は\code{Won}です。
+\code{110}はマス番号ではなく、勝利を表す100と、
+99番が公開済みの数字0であることを表す10を合わせた検査用の値です。
+一手目の直後はまだ勝利ではありません。
+\code{nxn_full_game.bend}は初手安全、0の連鎖、勝敗をつなぎ、
+\code{nxn_playthrough.bend}はそのうちの固定した一局面を再生します。
+
+独立したPythonの幅優先探索とBendの実行を、
+\code{intermediate/scripts/test_nxn_playthrough.py}で照合しています。
+検査対象は固定10×10の操作列であり、任意の地雷配置の全称証明、
+10×10 GUIの操作、100×100の全面連鎖性能まで保証したものではありません。
+
+\exercise{番号0だけを開いた時点で、下側の40マスが隠れたままになる理由を説明してみましょう。
+次に99番へ旗を立ててからクリックした場合を予想し、リポジトリの
+\code{nxn_playthrough.bend}を参考に操作列を変えて確かめてみましょう。
+最後に「旗の数」ではなく「安全マスの公開数」で勝利を決める理由を考えてみましょう。}
+
 \section{部品から完成へ進むための検査順}
 ここまでの参考実装には、旗・クリック・敗北・勝利と初手安全の純粋な処理、4×4の近傍判定があります。0の連鎖公開を実装しましたが、CLIの操作再生・固定盤面の保存、およびGUIのコードは追加しましたが、GUI上での保存操作・環境依存の実機検証は残っています。実装の進捗と、読者が遊べる完成品を混同しないでください。
 
@@ -2341,6 +2389,59 @@ r=c-f
 \item \href{https://github.com/AlexBuz/mindsweeper}{Mindsweeper}：公開されている別の無推測盤面生成の実装。
 \end{itemize}
 \exercise{公開状態と真の地雷配置を別の型で定義してみましょう。また、局所推論しか使わないソルバーが行き詰まるが、集合の差分を使えば先に進める例を考えてみましょう。}
+
+\section{10×10の数字0から確実な一手を探す}
+4×4で作った候補全列挙を、そのまま10×10へ広げると候補が急増します。
+しかし\textbf{数字0の周囲は地雷がない}という局所的な規則なら、
+盤面全体を列挙する必要はありません。
+10×10の左上0番が公開され、そこに数字0が表示されたとします。
+周囲の番号は1、10、11です。これらはどれも安全だと分かります。
+
+配布ZIPには、この手順を三つのBendファイルで用意しました。
+\code{nxn_geometry.bend}が座標と盤外の判定を担当し、
+\code{nxn_neighbors.bend}がトーラス状につながらない隣接マスを列挙します。
+\code{nxn_zero_inference.bend}は、\textbf{公開済みの数字0}だけから
+未公開で旗のない安全候補を取り出します。
+三つは同じ\code{examples/minesweeper/}に置いたまま実行してください。
+
+\begin{lstlisting}[language={},caption={N=10の近傍と数字0の確定手を数える}]
+bend examples/minesweeper/nxn_neighbors.bend
+bend examples/minesweeper/nxn_zero_inference.bend
+\end{lstlisting}
+\begin{lstlisting}[language={},caption={順に表示される結果}]
+3
+3
+\end{lstlisting}
+
+どちらも3ですが、意味は違います。最初は\textbf{左上0番の近傍数}、
+二番目は\textbf{数字0から安全だと確定した未公開の候補数}です。
+二番目のプログラムの中心は次の部分です。
+
+\begin{lstlisting}[caption={公開された数字0かを確認する実際のBendコード}]
+def safe_from_clue(+n: U32, +index: U32, +clue: U32,
+                   +opened: List<&2, U32>, flags: List<&2, U32>) -> List<U32>:
+  valid = Bool.and(U32.is_eq(clue, 0),
+    Bool.and(Geo.valid_index(n, index), contains(opened, index)))
+  if_zero(valid, n, index, opened, flags)
+\end{lstlisting}
+
+\code{opened}に0番が含まれ、\code{clue}が0で、添字が盤面内であることを
+確かめてから近傍を調べます。\code{flags}はクリック候補から除くために使い、
+\textbf{旗があるだけで地雷と確定したとは扱いません}。
+数字が0以外なら、この規則だけでは安全なマスを返しません。
+この関数は実際の表示数字が正しい公開状態を前提とします。
+矛盾した入力の一般検出や、二数字・三数字の連立推論までは行いません。
+
+\code{intermediate/scripts/test_nxn_zero_inference.py}では、
+Bendの型検査と実行結果を独立した座標計算と照合しています。
+ただし、これは有限個の入力の検査です。
+N×N全体の運ゲー無し生成やGUIでの実機操作を証明したものではありません。
+
+\exercise{まず10×10の右下99番の近傍を紙に書き、何個になるか予想してみましょう。
+次に\code{nxn_zero_inference.bend}の\code{main}で数字を1に変えたとき、
+なぜ安全候補が空になるか説明してみましょう。
+最後に1番へ旗を置いた場合、数字0の周囲の安全性と
+実際にクリック候補として返すマスを区別して確かめてみましょう。}
 
 \section{公開情報だけで確定手を数え上げる}
 これまでの推論では、二つの数字の制約を差し引きました。さらに一歩進むと、\textbf{公開された数字と矛盾しないすべての地雷配置}を調べる方法があります。今回は4×4盤面に地雷がちょうど2個ある場合に限定して考えましょう。
