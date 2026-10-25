@@ -46,6 +46,22 @@ def difference(items: List<&2, U32>, +remove: List<&2, U32>) -> List<U32>:
     case +index <> rest:
       keep(Bool.not(contains(remove, index)), index, difference(rest, remove))
 
+# Count directly from the borrowed input. A newly constructed difference
+# list has affine elements and cannot be borrowed again as List<&2, U32>.
+def plus_if(yes: Bool, rest: U32) -> U32:
+  match yes:
+    case True{}:
+      (1 + rest : U32)
+    case False{}:
+      rest
+
+def difference_size(items: List<&2, U32>, +remove: List<&2, U32>) -> U32:
+  match items:
+    case Nil{}:
+      0
+    case value <> rest:
+      plus_if(Bool.not(contains(remove, value)), difference_size(rest, remove))
+
 def all_mines(yes: Bool, indices: List<U32>) -> Decision:
   match yes:
     case True{}:
@@ -79,7 +95,7 @@ def feasible(ok: Bool, +delta: U32, +count: U32, indices: List<U32>) -> Decision
 def nested(+small_remaining: U32, +large_remaining: U32,
            +small: List<&2, U32>, +large: List<&2, U32>) -> Decision:
   indices = difference(large, small)
-  +count = size(indices)
+  +count = difference_size(large, small)
   +delta = (large_remaining - small_remaining : U32)
   ok = Bool.and(Bool.not(U32.is_lt(large_remaining, small_remaining)),
                 Bool.not(U32.is_lt(count, delta)))
