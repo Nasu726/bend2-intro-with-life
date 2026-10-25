@@ -98,6 +98,12 @@ def run_bend(path, expected):
 
 
 def main():
+    # Bend 2.0.39 does not resolve helpers defined after their call site.
+    source = (ROOT / "minesweeper" / "nxn_public_six_mask.bend").read_text(encoding="utf-8")
+    for callee, caller in (("choose_bit", "bit_of"),
+                           ("encoded_with_bit", "encode"),
+                           ("finish_if", "finish")):
+        assert source.index(f"def {callee}(") < source.index(f"def {caller}(")
     checks = cases()
     if "--oracle-only" in sys.argv:
         assert all(0 <= oracle(*case) <= 64 for case in checks)

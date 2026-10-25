@@ -31,6 +31,13 @@ def bit_of(+target: U32, universe: List<&2, U32>, +power: U32) -> U32:
       choose_bit(U32.is_eq(cell, target), power,
                  bit_of(target, rest, (power * 2 : U32)))
 
+# Match the computed tail only after passing it as a function parameter.
+def encoded_with_bit(+bit: U32, tail: Encoded) -> Encoded:
+  match tail:
+    case Encoded{bits, valid}:
+      Encoded{U32.or(bit, bits),
+              Bool.and(valid, Bool.not(U32.is_eq(bit, 0)))}
+
 # Consume each unknown neighbor once. The universe is borrowed for lookup.
 def encode(items: List<U32>, +universe: List<&2, U32>) -> Encoded:
   match items:
@@ -39,13 +46,6 @@ def encode(items: List<U32>, +universe: List<&2, U32>) -> Encoded:
     case +index <> rest:
       +bit = bit_of(index, universe, 1)
       encoded_with_bit(bit, encode(rest, universe))
-
-# Match the computed tail only after passing it as a function parameter.
-def encoded_with_bit(+bit: U32, tail: Encoded) -> Encoded:
-  match tail:
-    case Encoded{bits, valid}:
-      Encoded{U32.or(bit, bits),
-              Bool.and(valid, Bool.not(U32.is_eq(bit, 0)))}
 
 # Reject non-canonical universes: duplicate, revealed or out-of-board cells.
 def ordered_hidden(+n: U32, cells: List<&2, U32>,

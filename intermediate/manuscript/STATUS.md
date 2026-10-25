@@ -724,3 +724,5 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - 初回CI #40238895136 は Tests・Reader download bundles・既存Bend総合回帰・XeLaTeXとPDF/ZIP一致が成功。一方、公開情報専用ジョブで新規 `nxn_public_six_mask.bend` の `--check-only` が失敗した。最初の診断は `match found` が局所束縛を対象にしていたこと。これはBend 2.0.39のscrutinee制約であり、推論結果の不一致ではない。
 - 同じ問題を持つ `match tail` と `match Bool.and(...)` も含め、`choose_bit`・`encoded_with_bit`・`finish_if` の引数に渡してから分岐する構成へ整理。六ビットの計算規則は維持。独立Pythonオラクルの有限ケースに有効な全ビット `63` と空マスク `0` を追加し、34→36ケースとした。
 - **修正後のBend型検査・実行・全CIは未確認**。全成功までは正本PR #4へ統合しない。採用表紙・TeX本編・PDF・読者ZIP・第7/8章のByte/FileとIO.now/IO.sleepは変更しない。第21/22章の本編統合・一般N×N推論・GUI実機は未完成。
+
+- **再検証CI #40241299362の追加診断**：局所`match`は解消したが、`encode`が後方に定義された`encoded_with_bit`を呼び、Bend 2.0.39が未定義のlawとして拒否。呼び出し順に`encoded_with_bit`を前方へ移動し、Python回帰にヘルパー定義順の静的ガードを追加。新CIで型検査・実行が成功するまで正本統合は保留。
