@@ -1,6 +1,6 @@
 # Finite exact public-information solver for a 3x3 board (9 cells).
 # Accepts visible clues and the public total mine count, NEVER a true board.
-# Enumerates all 512 candidate masks; this is an educational finite kernel,
+# Enumerates all 512 candidate masks; duplicable scalar binders use +.\n# This is an educational finite kernel,
 # not an efficient N x N solver or a no-guess board generator.
 import Base
 import ./nxn_neighbors.bend as Neighbors
@@ -42,7 +42,7 @@ def valid_clues(items: List<&2, Number>, +seen: U32) -> Bool:
   match items:
     case Nil{}:
       True{}
-    case Number{index, clue} <> rest:
+    case Number{+index, clue} <> rest:
       Bool.and(U32.is_lt(index, 9),
         Bool.and(U32.is_lt(clue, 9),
           Bool.and(Bool.not(contains_bit(seen, index)),
@@ -52,7 +52,7 @@ def matches(items: List<&2, Number>, +mask: U32) -> Bool:
   match items:
     case Nil{}:
       True{}
-    case Number{index, clue} <> rest:
+    case Number{+index, clue} <> rest:
       Bool.and(Bool.not(contains_bit(mask, index)),
         Bool.and(U32.is_eq(mine_count(Neighbors.neighbors(3, index), mask), clue),
                  matches(rest, mask)))
@@ -61,7 +61,7 @@ def opened_bits(items: List<&2, Number>) -> U32:
   match items:
     case Nil{}:
       0
-    case Number{index, clue} <> rest:
+    case Number{+index, clue} <> rest:
       U32.or(bit_for(index), opened_bits(rest))
 
 def add_if(ok: Bool, summary: Summary, +mask: U32) -> Summary:
@@ -70,7 +70,7 @@ def add_if(ok: Bool, summary: Summary, +mask: U32) -> Summary:
       summary
     case True{}:
       match summary:
-        case Summary{count, union, intersection}:
+        case Summary{+count, union, intersection}:
           Summary{(count + 1 : U32), U32.or(union, mask),
                   U32.and(intersection, mask)}
 
@@ -95,7 +95,7 @@ def finish(zero: Bool, +opened: U32, +count: U32,
 
 def summarize(summary: Summary, +opened: U32) -> Decision:
   match summary:
-    case Summary{count, union, intersection}:
+    case Summary{+count, union, intersection}:
       finish(U32.is_eq(count, 0), opened, count, union, intersection)
 
 def check_input(valid: Bool, +clues: List<&2, Number>, +total: U32) -> Decision:
