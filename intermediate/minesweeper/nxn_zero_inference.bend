@@ -25,7 +25,8 @@ def candidates(items: List<U32>, +opened: List<&2, U32>,
   match items:
     case Nil{}:
       Nil{}
-    case index <> tail:
+    # Index is inspected in multiple independent tests; mark it duplicable.
+    case +index <> tail:
       eligible = Bool.and(
         Bool.not(contains(opened, index)),
         Bool.not(contains(flags, index)))
