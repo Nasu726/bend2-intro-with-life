@@ -31,7 +31,7 @@ def main() -> U32:
   tag(infer([1, 3, 4], [1, 4, 5], 1, 1))
 ```
 
-この入力を既存の `main` と入れ替えて試す場合は、元のコードを別に保存してから実行してみましょう。実行ファイルの型検査は `bend intermediate/minesweeper/nxn_public_overlap.bend --check-only` です。**この補稿の三数字連立をBendで実装・検証したわけではありません。** 現行のBend二数字推論器には、三つの制約を同時に受け取る入口がまだありません。
+この入力を既存の `main` と入れ替えて試す場合は、元のコードを別に保存してから実行してみましょう。実行ファイルの型検査は `bend intermediate/minesweeper/nxn_public_overlap.bend --check-only` です。この節の既存二数字推論器は三つの制約を同時には扱いません。六つの未知マスに限定した三数字Bend全列挙は、別補稿 `22_NxN_三数字のBend全候補列挙.md` と `nxn_public_three_small.bend` で実習します。一般N×Nの三数字推論器ではありません。
 
 ## 実行結果を独立した全列挙で確かめる
 
@@ -84,4 +84,4 @@ print(deductions(3, None, CLUES))
 4. 地雷総数を伏せると `{4}` が候補に戻る理由を説明し、`deductions(3, None, CLUES)` の出力と比較してみましょう。
 5. `python3 -m unittest discover -s intermediate/tests -p 'test_nxn_three_clue_gap.py' -v` を実行し、地雷総数を加えたとき候補が増えないことを256条件で確かめてみましょう。
 
-**検証の境界：** この補稿の列挙は3×3の有限な一局面を示すものです。Python参照ソルバーとの照合テストはありますが、Bendの三数字ソルバー、一般N×N運ゲー無し生成器、GUIでの実機操作、任意の局面に対する全称証明は未完成です。TeX本編・生成PDF・読者ZIPへはまだ統合していません。
+**検証の境界：** この補稿の列挙は3×3の有限な一局面を示すものです。別補稿のBend六変数三数字列挙は固定上限の実習であり、一般N×Nの三数字ソルバー、運ゲー無し生成器、GUI実機、任意局面の全称証明は未完成です。TeX本編・生成PDF・読者ZIPへはまだ統合していません。
