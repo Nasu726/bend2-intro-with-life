@@ -156,3 +156,5 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_zero_inference.py
       - name: Verify certified single-clue public deductions
         run: python3 intermediate/scripts/test_nxn_public_local.py
+      - name: Verify two-clue public subset deductions
+        run: python3 intermediate/scripts/test_nxn_public_subset.py
