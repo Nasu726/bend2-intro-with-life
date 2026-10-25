@@ -45,6 +45,9 @@ def cases():
         (4, 2, (0, 1, 2, 4), (3, 5, 6, 7, 8, 9)),
         (4, 4, (0, 1, 2, 4), (3, 5, 6, 7, 8, 9)),
         (4, 3, (0, 1, 2, 4), (3, 5, 6, 7, 8, 9)),
+        # Valid full and empty masks must not be confused with Invalid (64).
+        (3, 4, (4, 7, 8), (0, 1, 2, 3, 5, 6)),
+        (4, 0, (0, 1, 4, 5), (2, 3, 6, 7, 8, 9)),
         (3, 0, (0, 2, 7), (1, 3, 4, 5, 6)),
         (3, 7, (0, 2, 7), (1, 3, 4, 5, 6, 7)),
         (2, 0, (0,), (1, 2, 3)),
@@ -63,6 +66,7 @@ def cases():
             universe = tuple(sorted(rng.sample(range(n * n), 6)))
             base.append((n, clue, tuple(sorted(opened)), universe))
     assert [oracle(*case) for case in base[:7]] == [7, 13, 62, 2, 6, 15, 50]
+    assert [oracle(*case) for case in base[8:10]] == [63, 0]
     return base
 
 

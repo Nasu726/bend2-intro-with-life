@@ -15,17 +15,21 @@ type Encoded is Data:
   Encoded{bits: U32, valid: Bool}
 
 # A missing cell maps to zero; it is rejected by encode, not ignored.
+# The Bool scrutinee is a parameter of this helper, as Bend requires.
+def choose_bit(found: Bool, +power: U32, +otherwise: U32) -> U32:
+  match found:
+    case True{}:
+      power
+    case False{}:
+      otherwise
+
 def bit_of(+target: U32, universe: List<&2, U32>, +power: U32) -> U32:
   match universe:
     case Nil{}:
       0
     case cell <> rest:
-      found = U32.is_eq(cell, target)
-      match found:
-        case True{}:
-          power
-        case False{}:
-          bit_of(target, rest, (power * 2 : U32))
+      choose_bit(U32.is_eq(cell, target), power,
+                 bit_of(target, rest, (power * 2 : U32)))
 
 # Consume each unknown neighbor once. The universe is borrowed for lookup.
 def encode(items: List<U32>, +universe: List<&2, U32>) -> Encoded:
@@ -34,11 +38,14 @@ def encode(items: List<U32>, +universe: List<&2, U32>) -> Encoded:
       Encoded{0, True{}}
     case +index <> rest:
       +bit = bit_of(index, universe, 1)
-      tail = encode(rest, universe)
-      match tail:
-        case Encoded{bits, valid}:
-          Encoded{U32.or(bit, bits),
-                  Bool.and(valid, Bool.not(U32.is_eq(bit, 0)))}
+      encoded_with_bit(bit, encode(rest, universe))
+
+# Match the computed tail only after passing it as a function parameter.
+def encoded_with_bit(+bit: U32, tail: Encoded) -> Encoded:
+  match tail:
+    case Encoded{bits, valid}:
+      Encoded{U32.or(bit, bits),
+              Bool.and(valid, Bool.not(U32.is_eq(bit, 0)))}
 
 # Reject non-canonical universes: duplicate, revealed or out-of-board cells.
 def ordered_hidden(+n: U32, cells: List<&2, U32>,
@@ -54,14 +61,17 @@ def ordered_hidden(+n: U32, cells: List<&2, U32>,
       Bool.and(good, Bool.and(ascending,
         ordered_hidden(n, rest, revealed, cell, False{})))
 
+def finish_if(valid: Bool, +bits: U32) -> Mask:
+  match valid:
+    case True{}:
+      Valid{bits}
+    case False{}:
+      Invalid{}
+
 def finish(ok: Bool, encoded: Encoded) -> Mask:
   match encoded:
     case Encoded{bits, valid}:
-      match Bool.and(ok, valid):
-        case True{}:
-          Valid{bits}
-        case False{}:
-          Invalid{}
+      finish_if(Bool.and(ok, valid), bits)
 
 # Precondition: revealed is a sorted, unique, in-range list.
 # A clue must be revealed; every unknown neighbor must occur in universe.

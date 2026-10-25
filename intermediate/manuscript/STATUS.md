@@ -718,3 +718,9 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - `minesweeper/nxn_public_six_mask.bend` は公開済みマス一覧と六つの未知マスから、一つの公開数字の未知近傍を六ビットへ写す。`nxn_public_neighbors.bend` を再利用し、六セル不足、非昇順・重複・盤外・公開済みセル、対応しない近傍を `Invalid` とする。真の地雷配置や未検証旗は参照しない。
 - `scripts/test_nxn_public_six_mask.py` の独立Python幾何オラクル34ケースをローカルで予備検査（構文検査成功）。Bend型検査・実行照合はPR外の検証CIで実施し、成功するまで正本へ統合しない。
 - 第22章の補稿とCIを一体更新。**TeX本編・生成PDF・読者ZIP・採用表紙は不変更**。三数字への自動接続、一般N×N運ゲー無し生成、10×10 GUI実機、23章最終校閲は未完成。
+
+## 2026-10-26：検証PR #51のBend型検査エラーを修正（再検証待ち）
+
+- 初回CI #40238895136 は Tests・Reader download bundles・既存Bend総合回帰・XeLaTeXとPDF/ZIP一致が成功。一方、公開情報専用ジョブで新規 `nxn_public_six_mask.bend` の `--check-only` が失敗した。最初の診断は `match found` が局所束縛を対象にしていたこと。これはBend 2.0.39のscrutinee制約であり、推論結果の不一致ではない。
+- 同じ問題を持つ `match tail` と `match Bool.and(...)` も含め、`choose_bit`・`encoded_with_bit`・`finish_if` の引数に渡してから分岐する構成へ整理。六ビットの計算規則は維持。独立Pythonオラクルの有限ケースに有効な全ビット `63` と空マスク `0` を追加し、34→36ケースとした。
+- **修正後のBend型検査・実行・全CIは未確認**。全成功までは正本PR #4へ統合しない。採用表紙・TeX本編・PDF・読者ZIP・第7/8章のByte/FileとIO.now/IO.sleepは変更しない。第21/22章の本編統合・一般N×N推論・GUI実機は未完成。
