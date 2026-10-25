@@ -56,6 +56,9 @@ def cases():
         (3, 0, (0, 2, 7), (1, 3, 4, 5, 6, 9)),
         (0, 0, (0,), (1, 2, 3, 4, 5, 6)),
         (3, 0, (0, 1, 2, 3, 4, 5, 6, 7, 8), (1, 3, 4, 5, 6, 8)),
+        # Largest supported board: edge geometry and upper index bound.
+        (100, 9999, (9999,), (9798, 9799, 9898, 9899, 9997, 9998)),
+        (100, 10000, (10000,), (9798, 9799, 9898, 9899, 9997, 9998)),
     ]
     rng = random.Random(20261026)
     for n in (3, 4, 10):
@@ -67,6 +70,7 @@ def cases():
             base.append((n, clue, tuple(sorted(opened)), universe))
     assert [oracle(*case) for case in base[:7]] == [7, 13, 62, 2, 6, 15, 50]
     assert [oracle(*case) for case in base[8:10]] == [63, 0]
+    assert [oracle(*case) for case in base[18:20]] == [44, 64]
     return base
 
 

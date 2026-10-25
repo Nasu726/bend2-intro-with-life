@@ -54,7 +54,7 @@ def ordered_hidden(+n: U32, cells: List<&2, U32>,
   match cells:
     case Nil{}:
       True{}
-    case cell <> rest:
+    case +cell <> rest:
       +good = Bool.and(Geo.valid_index(n, cell),
                        Bool.not(Sets.contains(revealed, cell)))
       +ascending = Bool.or(first, U32.is_lt(previous, cell))
