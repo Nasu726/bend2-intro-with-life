@@ -88,7 +88,9 @@ def checked(invalid: Bool, +remaining: U32, +count: U32, unknown: List<U32>) -> 
 
 def from_scan(+clue: U32, state: Scan) -> Decision:
   match state:
-    case Scan{known, unknown_count, unknown, conflict}:
+    # Both counts feed the consistency checks and the decision boundary.
+    # Bend's affine pattern binders must be marked duplicable here.
+    case Scan{+known, +unknown_count, unknown, conflict}:
       +remaining = (clue - known : U32)
       checked(Bool.or(conflict, Bool.or(U32.is_lt(clue, known),
               U32.is_lt(unknown_count, remaining))),
