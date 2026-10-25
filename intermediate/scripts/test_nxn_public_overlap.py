@@ -16,13 +16,49 @@ GAME = ROOT / 'minesweeper'
 FILES = ('nxn_public_subset.bend', 'nxn_public_overlap.bend')
 
 
-def check_match_scrutinees():
-    """Bend 2.0.39 only accepts a bound name as a match scrutinee."""
-    code = (GAME / 'nxn_public_overlap.bend').read_text(encoding='utf-8')
-    for line in code.splitlines():
+def check_match_scrutinees_in(code):
+    """Reject computed and local-binder matches before invoking Bend 2.0.39.
+
+    A plain local name is NOT sufficient: the match scrutinee must be a
+    parameter of the current definition. Multi-line signatures are supported.
+    This is an early syntax guard, not a substitute for Bend --check-only.
+    """
+    import re
+    parameters = set()
+    signature = ''
+    in_signature = False
+    for lineno, line in enumerate(code.splitlines(), 1):
         statement = line.strip()
-        if statement.startswith('match ') and '(' in statement.partition(':')[0]:
-            raise AssertionError(f'Computed match scrutinee: {statement}')
+        if statement.startswith('def '):
+            signature = statement
+            in_signature = True
+            parameters = set()
+        elif in_signature:
+            signature += ' ' + statement
+        if in_signature and ') ->' in signature:
+            args = signature.split('(', 1)[1].split(') ->', 1)[0]
+            parameters = set(re.findall(r'\+?([a-z_]\w*)\s*:', args))
+            in_signature = False
+        if statement.startswith('match '):
+            matched = re.fullmatch(r'match ([a-z_]\w*):', statement)
+            if not matched or matched.group(1) not in parameters:
+                raise AssertionError(
+                    f'Invalid Bend match scrutinee on line {lineno}: {statement}'
+                )
+
+
+def check_match_scrutinees():
+    code = (GAME / 'nxn_public_overlap.bend').read_text(encoding='utf-8')
+    check_match_scrutinees_in(code)
+    for invalid in (
+        'def bad(x: Bool) -> U32:\\n  match Bool.not(x):\\n    case True{}:\\n      1',
+        'def bad(x: Bool) -> U32:\\n  local = x\\n  match local:\\n    case True{}:\\n      1',
+    ):
+        try:
+            check_match_scrutinees_in(invalid.replace('\\n', '\n'))
+        except AssertionError:
+            continue
+        raise AssertionError('Scrutinee guard failed to reject invalid Bend')
 
 def oracle(a, b, ra, rb):
     a, b = set(a), set(b)
