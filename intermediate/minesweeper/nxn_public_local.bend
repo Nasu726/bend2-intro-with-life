@@ -53,7 +53,8 @@ def scan(items: List<U32>, +mines: List<&2, U32>, +safe: List<&2, U32>) -> Scan:
   match items:
     case Nil{}:
       Scan{0, 0, Nil{}, False{}}
-    case index <> rest:
+    # Index is inspected in multiple independent tests; mark it duplicable.
+    case +index <> rest:
       include(index, contains(mines, index), contains(safe, index),
               scan(rest, mines, safe))
 
