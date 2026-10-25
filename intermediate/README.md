@@ -57,15 +57,20 @@ PDFと読者ZIPのゲーム実習は、**4×4・地雷2個を中心とする限�
 bend intermediate/minesweeper/nxn_playthrough.bend
 # 110
 python3 intermediate/solutions/nxn_public_replay_bridge.py
+python3 intermediate/scripts/verify_nxn_frontier_certificate.py
 ```
 
 ```text
 highest: Replay(status='won', clicks=(0, 99), opened_count=90)
 certificate: True
 lowest: Replay(status='limit', clicks=(0, 60, 61, 62, 63, 64, 65, 66), opened_count=57)
+Audit(status='valid', checked_clicks=2, opened_count=90, reason='')
+Audit(status='limit', checked_clicks=1, opened_count=50, reason='frontier budget')
 ```
 
 Bendの例は地雷を50〜59番に固定し、0番→99番の二手を**指定して再生**するゲームです。自動で安全な二手目を推論するわけではありません。一方、Pythonの参照実装はゲームの真の地雷配置を推論器へ渡さず、公開数字から確定安全な手を選びます。最大番号99を選ぶと勝利しますが、最小番号から選ぶと探索上限18に達して `limit` になります。これは矛盾でも敗北でもありません。
+
+最後の二行は、ゲームと推論器のPython参照実装を再利用しない**別方式の有限監査**です。境界10マスの全1024割当と、残る40マスの地雷数を調べます。初手が地雷ではない固定配置が前提で、`limit` は検証不能であり勝利の保証ではありません。
 
 Bendによる一般N×N連立推論・運ゲー無し生成、10×10 GUIの実機検収、全称証明は未完成です。参照Pythonコードや演習解答はリポジトリに置き、読者ZIPには入れません。
 
