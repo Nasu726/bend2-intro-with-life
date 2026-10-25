@@ -73,6 +73,10 @@ def literal(clues: tuple[tuple[int, int], ...]) -> str:
 def bend_test_source() -> str:
     lines = [
         "import Base", "import ./nxn_public_exact3.bend as Exact", "",
+        "def one_if(yes: Bool) -> U32:",
+        "  match yes:",
+        "    case True{}:", "      1",
+        "    case False{}:", "      0", "",
         "def equals(actual: Exact.Decision, +safe: U32, +mines: U32,",
         "           +models: U32, +inconsistent: Bool) -> U32:",
         "  match actual:",
@@ -82,10 +86,6 @@ def bend_test_source() -> str:
         "      one_if(Bool.and(Bool.not(inconsistent),",
         "        Bool.and(U32.is_eq(s, safe),",
         "          Bool.and(U32.is_eq(m, mines), U32.is_eq(count, models)))))", "",
-        "def one_if(yes: Bool) -> U32:",
-        "  match yes:",
-        "    case True{}:", "      1",
-        "    case False{}:", "      0", "",
     ]
     for k, (clues, total) in enumerate(CASES):
         expected = oracle(clues, total)
@@ -109,6 +109,7 @@ def main() -> None:
     assert oracle((), 0) == (511, 0, 1)
     assert oracle((), 9) == (0, 511, 1)
     assert len(CASES) == 13
+    assert bend_test_source().index("def one_if") < bend_test_source().index("def equals")
     if args.oracle_only:
         print(f"PASS independent Python oracle: {len(CASES)} cases")
         return
