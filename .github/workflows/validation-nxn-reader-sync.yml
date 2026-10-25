@@ -4,6 +4,7 @@ on:
     branches: ['validation/nxn-reader-20261026']
     paths:
       - 'intermediate/Intermediate_Textbook.tex'
+      - 'intermediate/README.md'
       - '.github/workflows/validation-nxn-reader-sync.yml'
 
 permissions:

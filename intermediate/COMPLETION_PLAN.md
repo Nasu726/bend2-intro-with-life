@@ -14,18 +14,18 @@
 ## 現在地
 
 - TeX原稿は6 Part・23章、読者向けPDFは115ページ（2026-10-25のXeLaTeX CIログで確認した同期版）。
-- PDF・読者ZIPに収録済みのBend教材コードは計65ファイル（通常サンプル53本、ゲーム本体・CLI・GUI・限定版生成と保存12本）。ZIPはPDF・README・LICENSEを含めて68エントリ。通常サンプルのうち1本はimport用モジュール。
+- PDF・読者ZIPに収録済みのBend教材コードは計68ファイル（通常サンプル53本、ゲーム・CLI・GUI・限定版生成と保存・N×N局所推論15本）。ZIPはPDF・README・LICENSEを含めて71エントリ。通常サンプルのうち1本はimport用モジュール。
 - C/B/Gの43法則には実装・証明・CIがあり、ゲーム進行の一部は純粋関数として検証済み。ただし「完成ゲームの全法則を証明した」という意味ではない。
 - GUI本体は実装・型検査・Linuxネイティブビルド・13件の純粋入力テスト済み。4×4・地雷2個・初手0限定の生成器はBendゲームの勝利と独立Pythonリプレイで検証済み。固定盤面CLIの操作履歴保存と破損拒否もBend File APIで検証した。一方、GUI実機操作・GUI保存・任意初手/地雷数の生成、GPU/FFI等の環境依存試験は未完了。
 - 執筆の進捗と実装の進捗は別に記録する。全章に本文があるというだけでは完成とは判定しない。
 
 ## 2026-10-25：配布済み教材とN×N実装の差分を解消する
 
-**配布済み**：6 Part・23章、TeXの `\\sample` 53か所（53種類）、`\\exercise` 47か所。読者ZIPは通常Bend53本＋ゲーム12本＋PDF/README/LICENSEの68エントリ。第7章 `45_binary_file.bend` と第8章 `46_elapsed_clock.bend`（`IO.now`・`IO.sleep`）はTeX本編へ統合済み。
+**配布済み**：6 Part・23章、TeXの `\\sample` 53か所（53種類）、`\\exercise` 49か所。読者ZIPは通常Bend53本＋ゲーム15本＋PDF/README/LICENSEの71エントリ。第7章 `45_binary_file.bend` と第8章 `46_elapsed_clock.bend`（`IO.now`・`IO.sleep`）はTeX本編へ統合済み。
 
 **リポジトリで検証済み・配布未統合**：BendのN×Nゲーム状態遷移、0連鎖、固定10×10の二手勝利、数字0・単一数字・二数字の包含／重なり推論。Python参照側には一般の公開盤面制約、成分分割、候補生成、証明書検査、10×10公開情報リプレイがある。PythonでできることをBendでも実装済みと誤記しない。
 
-**次の本文統合単位**：第21章に `nxn_full_game.bend` と `nxn_playthrough.bend` の実行例・結果・境界・演習を追加。第22章は `nxn_zero_inference.bend` → `nxn_public_local.bend` → `nxn_public_subset.bend` → `nxn_public_overlap.bend` の順で、有限照合済みの確定手を説明する。三数字連立の反例と10×10の自動リプレイはPython参照であることを明示。**補稿だけ増やしても本編完成には数えない。**
+**次の本文統合単位**：第21章の固定10×10二手リプレイと第22章のN×N数字0局所推論はTeX本編に取り込む。続いて第21章に `nxn_full_game.bend` と `nxn_playthrough.bend` の実行例・結果・境界・演習を追加。第22章は `nxn_zero_inference.bend` → `nxn_public_local.bend` → `nxn_public_subset.bend` → `nxn_public_overlap.bend` の順で、有限照合済みの確定手を説明する。三数字連立の反例と10×10の自動リプレイはPython参照であることを明示。**補稿だけ増やしても本編完成には数えない。**
 
 **配布ゲート**：TeX改稿時は採用表紙 `cover_art.tex` のblob `ba9b5c4c...` を保持し、XeLaTeX組版・全ページ画像・Bend出力・PDF/ZIPの同一版検査を済ませてから一括反映する。読者ZIPには解答・内部テストを入れない。GUI実機、GPU/FFI、一般N×N運ゲー無し生成は独立の未達ゲートとする。
 
