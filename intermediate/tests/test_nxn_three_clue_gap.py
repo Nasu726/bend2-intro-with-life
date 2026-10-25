@@ -52,6 +52,45 @@ class ThreeClueGap(unittest.TestCase):
                     self.assertEqual((actual.status, actual.safe, actual.forced_mines),
                                      (status, safe, forced))
 
+    def test_global_mine_total_ablation(self):
+        # Without the global total, {4} is a third possible mine set.
+        # Three clues alone force 3 and 5 safe, but not 1 or 4.
+        self.assertEqual(enumerate_models(3, None, CLUES),
+                         ((4,), (1, 6), (1, 8)))
+        self.assertEqual(deductions(3, None, CLUES),
+                         ("ok", (3, 5), (), 3))
+        self.assertEqual(deductions(3, MINE_COUNT, CLUES),
+                         ("ok", (3, 4, 5), (1,), 2))
+        self.assertEqual(deductions(3, None, ((0, 8),)),
+                         ("contradiction", (), (), 0))
+        with self.assertRaises(ValueError):
+            enumerate_models(3, None, ((0, 1), (0, 1)))
+
+    def test_global_total_only_restricts_models_for_all_64_boards(self):
+        # Compare the model sets, not only the final deduction labels.
+        # This covers all 64 assignments of the six hidden 3x3 cells,
+        # each with all three public clues and all three clue pairs.
+        hidden = (1, 3, 4, 5, 6, 8)
+        checks = 0
+        for mask in range(1 << len(hidden)):
+            mines = {cell for bit, cell in enumerate(hidden)
+                     if mask & (1 << bit)}
+            observations = tuple((cell, len(mines & neighbors(3, cell)))
+                                 for cell, _ in CLUES)
+            for chosen in (observations, *combinations(observations, 2)):
+                with self.subTest(mask=mask, clues=chosen):
+                    unconstrained = set(enumerate_models(3, None, chosen))
+                    constrained = set(enumerate_models(3, len(mines), chosen))
+                    self.assertTrue(constrained)
+                    self.assertLessEqual(constrained, unconstrained)
+                    _, loose_safe, loose_mines, _ = deductions(3, None, chosen)
+                    _, exact_safe, exact_mines, _ = deductions(
+                        3, len(mines), chosen)
+                    self.assertLessEqual(set(loose_safe), set(exact_safe))
+                    self.assertLessEqual(set(loose_mines), set(exact_mines))
+                checks += 1
+        self.assertEqual(checks, 256)
+
     def test_flags_are_not_evidence_and_limits_are_distinct(self):
         flagged_safe = infer(3, MINE_COUNT, CLUES, flags=(3,))
         self.assertEqual((flagged_safe.safe, flagged_safe.forced_mines),

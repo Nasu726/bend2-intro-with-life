@@ -3,6 +3,7 @@
 This intentionally does not import the frontier/component solver. The
 board is 3x3, with two mines and publicly revealed clues 0, 2, and 7.
 It is a reference example, not a Bend N x N solver or generator.
+A None mine_count removes the global-total constraint for an ablation check.
 """
 from itertools import combinations
 
@@ -23,8 +24,12 @@ def enumerate_models(n, mine_count, clues):
     if len(opened) != len(clues):
         raise ValueError("duplicate public clue")
     hidden = sorted(set(range(n * n)) - opened.keys())
+    # None means the global mine total is NOT public information.
+    # Keep the same public clues and enumerate every feasible mine count.
+    counts = range(len(hidden) + 1) if mine_count is None else (mine_count,)
     return tuple(tuple(placement)
-                 for placement in combinations(hidden, mine_count)
+                 for count in counts
+                 for placement in combinations(hidden, count)
                  if all(len(set(placement) & neighbors(n, index)) == number
                         for index, number in clues))
 
@@ -45,6 +50,8 @@ def main():
         print(f"two {tuple(i for i, _ in pair)}: {deductions(3, MINE_COUNT, pair)}")
     print(f"three: {deductions(3, MINE_COUNT, CLUES)}")
     print(f"models: {enumerate_models(3, MINE_COUNT, CLUES)}")
+    print(f"without total: {deductions(3, None, CLUES)}")
+    print(f"models without total: {enumerate_models(3, None, CLUES)}")
 
 
 if __name__ == "__main__":
