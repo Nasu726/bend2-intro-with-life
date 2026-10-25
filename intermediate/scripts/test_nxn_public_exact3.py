@@ -125,6 +125,11 @@ def main() -> None:
                 raise AssertionError(f"{cmd}: {result.stdout}\n{result.stderr}")
             if len(cmd) == 2 and result.stdout.strip().splitlines()[-1] != str(len(CASES)):
                 raise AssertionError(f"Expected {len(CASES)}; got {result.stdout}")
+        demo = subprocess.run(("bend", str(dest / "nxn_public_exact3.bend")),
+                              cwd=dest, capture_output=True, text=True,
+                              timeout=360, env=dict(os.environ, BEND_NO_TELEMETRY="1"))
+        if demo.returncode or demo.stdout.strip().splitlines()[-1] != "525368":
+            raise AssertionError(f"3x3 demo expected 525368: {demo.stdout}\\n{demo.stderr}")
     print(f"PASS {len(CASES)} independent 3x3 public exact Bend deductions")
 
 

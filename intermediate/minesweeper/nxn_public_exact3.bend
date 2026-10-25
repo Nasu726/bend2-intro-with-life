@@ -1,6 +1,7 @@
 # Finite exact public-information solver for a 3x3 board (9 cells).
 # Accepts visible clues and the public total mine count, NEVER a true board.
-# Enumerates all 512 candidate masks; duplicable scalar binders use +.\n# This is an educational finite kernel,
+# Enumerates all 512 candidate masks; duplicable scalar binders use +.
+# This is an educational finite kernel,
 # not an efficient N x N solver or a no-guess board generator.
 import Base
 import ./nxn_neighbors.bend as Neighbors
@@ -74,7 +75,7 @@ def add_if(ok: Bool, summary: Summary, +mask: U32) -> Summary:
           Summary{(count + 1 : U32), U32.or(union, mask),
                   U32.and(intersection, mask)}
 
-def scan(fuel: Nat, +clues: List<&2, Number>, +total: U32,
+def scan(+fuel: Nat, +clues: List<&2, Number>, +total: U32,
          summary: Summary) -> Summary:
   match fuel:
     case 0n:
