@@ -6,6 +6,7 @@ The Bend kernel always enumerates six bits, so a frontier of any other size
 must not be silently padded or truncated.
 """
 from dataclasses import dataclass
+from itertools import combinations
 
 
 @dataclass(frozen=True)
@@ -70,3 +71,79 @@ def from_public_clues(n, opened, mine_count=None):
     use_total = mine_count is not None and len(hidden) == 6
     return ThreeClueInput(cells, masks, tuple(number for _, number in clues),
                           mine_count if use_total else 0, use_total)
+
+def from_public_board(n, opened, mine_count=None):
+    """Enumerate supported three-clue Bend requests from a public board.
+
+    All revealed cells are excluded from unknown bits, even when a particular
+    request selects only three of the revealed clues. No hidden mines or
+    player flags enter the adapter. A bounded number of clues avoids an
+    unbounded cubic enumeration; unsupported triples are skipped explicitly.
+    """
+    if type(n) is not int or not 2 <= n <= 100:
+        raise ValueError("board size")
+    try:
+        clues = tuple(opened)
+    except TypeError as exc:
+        raise ValueError("opened clues") from exc
+    if not 3 <= len(clues) <= 24:
+        raise ValueError("three to 24 public clues required")
+    shown = set()
+    for item in clues:
+        if (not isinstance(item, (tuple, list)) or len(item) != 2 or
+                type(item[0]) is not int or not 0 <= item[0] < n * n or
+                type(item[1]) is not int or not 0 <= item[1] <= 8 or
+                item[0] in shown):
+            raise ValueError("invalid or duplicate public clue")
+        shown.add(item[0])
+    if (mine_count is not None and
+            (type(mine_count) is not int or
+             not 0 <= mine_count <= n * n - len(shown))):
+        raise ValueError("global mine count")
+
+    hidden = set(range(n * n)) - shown
+    use_total = mine_count is not None and len(hidden) == 6
+    requests = []
+    for triple in combinations(clues, 3):
+        around = tuple(_neighbors(n, cell) & hidden for cell, _ in triple)
+        cells = tuple(sorted(set().union(*around)))
+        if len(cells) != 6:
+            continue
+        bit_of = {cell: 1 << bit for bit, cell in enumerate(cells)}
+        masks = tuple(sum(bit_of[cell] for cell in neighbors)
+                      for neighbors in around)
+        requests.append(ThreeClueInput(
+            cells, masks, tuple(number for _, number in triple),
+            mine_count if use_total else 0, use_total))
+    return tuple(requests)
+
+
+def combine_public_decisions(pairs):
+    """Union sound forced cells from separately evaluated Bend requests.
+
+    A decision is None for Inconsistent, otherwise (safe, mines, models) from
+    Forced. A conflict/inconsistent triple returns None, but absence of a
+    conflict does NOT prove the full public board globally consistent.
+    Candidate counts across overlapping triples must never be added.
+    """
+    safe, mines = set(), set()
+    for request, decision in pairs:
+        if not isinstance(request, ThreeClueInput):
+            raise ValueError("invalid kernel request")
+        if decision is None:
+            return None
+        if (not isinstance(decision, (tuple, list)) or len(decision) != 3 or
+                any(type(value) is not int for value in decision)):
+            raise ValueError("invalid kernel decision")
+        safe_bits, mine_bits, models = decision
+        if (not 0 <= safe_bits <= 63 or not 0 <= mine_bits <= 63 or
+                models <= 0 or safe_bits & mine_bits):
+            raise ValueError("invalid forced masks or model count")
+        for bit, cell in enumerate(request.cells):
+            if safe_bits & (1 << bit):
+                safe.add(cell)
+            if mine_bits & (1 << bit):
+                mines.add(cell)
+    if safe & mines:
+        return None
+    return tuple(sorted(safe)), tuple(sorted(mines))

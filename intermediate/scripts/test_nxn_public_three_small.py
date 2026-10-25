@@ -54,6 +54,9 @@ def public_cases():
         (64, 13, 62, 1, 1, 1, 2, True),
         (7, 65, 62, 1, 1, 1, 2, True),
         (7, 13, 128, 1, 1, 1, 2, True),
+        # Four revealed 4x4 clues: each triple excludes ALL revealed cells.
+        (2, 15, 50, 0, 1, 1, 0, False),
+        (6, 15, 50, 0, 1, 1, 0, False),
     ))
     rng = random.Random(20261026)
     for _ in range(16):
