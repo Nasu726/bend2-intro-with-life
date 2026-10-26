@@ -3,6 +3,8 @@
 This produces *inputs*, not a proof or a general N x N solver. It never
 accepts the true mine layout or treats a player's flag as known evidence.
 Only separately certified mines may be supplied to subtract from clues.
+Separately certified safe cells may be excluded from the frontier without
+changing any clue's residual count. Neither kind of evidence is a player flag.
 The Bend kernel always enumerates six bits; other frontier sizes are skipped.
 """
 from dataclasses import dataclass
@@ -31,12 +33,14 @@ def _neighbors(n, index):
             if yy * n + xx != index}
 
 
-def from_public_clues(n, opened, mine_count=None, certified_mines=()):
+def from_public_clues(n, opened, mine_count=None, certified_mines=(),
+                      certified_safe=()):
     """Build one six-cell request from exactly three public clues, if possible.
 
-    ``certified_mines`` must contain independently *proved* mines, not
-    unverified player flags. A global mine total is used only when the six
-    unknown cells exhaust the remaining board after those mines are removed.
+    ``certified_mines`` and ``certified_safe`` must be independently proved,
+    not inferred from unverified player flags. A global mine total is used
+    only when the six unknown cells exhaust the remaining board after both
+    kinds of certified evidence are removed.
     """
     try:
         clues = tuple(opened)
@@ -45,15 +49,17 @@ def from_public_clues(n, opened, mine_count=None, certified_mines=()):
     if len(clues) != 3:
         raise ValueError("exactly three public clues required")
     return next(iter(from_public_board(n, clues, mine_count,
-                                       certified_mines=certified_mines)), None)
+                                       certified_mines=certified_mines,
+                                       certified_safe=certified_safe)), None)
 
 
-def from_public_board(n, opened, mine_count=None, certified_mines=()):
+def from_public_board(n, opened, mine_count=None, certified_mines=(),
+                      certified_safe=()):
     """Enumerate supported three-clue Bend requests from a public board.
 
-    All opened cells and separately certified mines are excluded from the
-    six unknown bits. Each clue's count is reduced by its neighboring
-    certified mines. Player flags must NOT be supplied as certified mines.
+    Opened cells, certified mines and certified safe cells are excluded from
+    the six unknown bits. Each clue's count is reduced only by neighboring
+    certified mines. Player flags are not certified evidence.
     If the six cells are only a subset of remaining unknown cells, a global
     mine total cannot be used in the local Bend kernel.
     """
@@ -62,8 +68,9 @@ def from_public_board(n, opened, mine_count=None, certified_mines=()):
     try:
         clues = tuple(opened)
         certified = tuple(certified_mines)
+        safe = tuple(certified_safe)
     except TypeError as exc:
-        raise ValueError("opened clues or certified mines") from exc
+        raise ValueError("opened clues or certified evidence") from exc
     if not 3 <= len(clues) <= 24:
         raise ValueError("three to 24 public clues required")
     shown = set()
@@ -78,7 +85,11 @@ def from_public_board(n, opened, mine_count=None, certified_mines=()):
             for cell in certified) or len(set(certified)) != len(certified)):
         raise ValueError("invalid or duplicate certified mine")
     known = set(certified)
-    unknown = set(range(n*n)) - shown - known
+    if (any(type(cell) is not int or not 0 <= cell < n*n or
+            cell in shown or cell in known for cell in safe) or
+            len(set(safe)) != len(safe)):
+        raise ValueError("invalid or duplicate certified safe cell")
+    unknown = set(range(n*n)) - shown - known - set(safe)
     if (mine_count is not None and
             (type(mine_count) is not int or
              not len(known) <= mine_count <= len(unknown) + len(known))):
