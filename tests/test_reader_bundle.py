@@ -36,6 +36,21 @@ class TestReaderBundle(unittest.TestCase):
                     self.assertFalse(name.endswith(".tex"))
                     self.assertFalse(name.endswith(".py"))
 
+    def test_nxn_lesson_imports_are_in_reader_bundle(self):
+        """Every relative Bend import in a shipped game must also be shipped."""
+        import re
+        included = set(INTERMEDIATE_GAME_FILES)
+        self.assertIn("nxn_playthrough.bend", included)
+        self.assertIn("nxn_public_three_bridge.bend", included)
+        for name in sorted(included):
+            source = (ROOT / "intermediate/minesweeper" / name).read_text(
+                encoding="utf-8")
+            imports = set(re.findall(
+                r"(?m)^import \./([A-Za-z0-9_]+\.bend)\s+as\b", source))
+            self.assertFalse(imports - included,
+                             f"{name} imports omitted learner files: "
+                             f"{sorted(imports - included)}")
+
     def test_poll_example_is_learner_material(self):
         self.assertIn("53_chan_poll.bend", INTERMEDIATE_EXAMPLES)
         with zipfile.ZipFile(ROOT / "reader-packages/bend2-intermediate-reader-preview.zip") as z:

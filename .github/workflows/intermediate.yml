@@ -80,6 +80,8 @@ jobs:
 
   intermediate-pdf:
     name: Intermediate XeLaTeX PDF
+    permissions:
+      contents: write
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -123,6 +125,18 @@ jobs:
           path: |
             intermediate/Bend2を使いこなす_プレビュー.pdf
             reader-packages/bend2-intermediate-reader-preview.zip
+      - name: Synchronize generated materials on isolated verification branch
+        if: github.event_name == 'pull_request' && github.head_ref == 'verify/intermediate-ch21-ch22-reader-20261026-12'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 'intermediate/Bend2を使いこなす_プレビュー.pdf' reader-packages/bend2-intermediate-reader-preview.zip
+          if ! git diff --cached --quiet; then
+            git commit -m 'Regenerate validated intermediate PDF and learner ZIP'
+            git push origin HEAD:verify/intermediate-ch21-ch22-reader-20261026-12
+          fi
       - name: Install PDF text comparison utility
         if: github.event_name == 'pull_request'
         run: |
