@@ -135,7 +135,7 @@ jobs:
   public-inference:
     name: N x N public-information inference (Bend)
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       BEND_NO_TELEMETRY: '1'
     steps:
@@ -166,3 +166,5 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_public_neighbors.py
       - name: Verify public unknown neighbors mapped to six-bit masks
         run: python3 intermediate/scripts/test_nxn_public_six_mask.py
+      - name: Verify public three-clue masks and bounded Bend inference together
+        run: python3 intermediate/scripts/test_nxn_public_three_bridge.py

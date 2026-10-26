@@ -726,3 +726,11 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - **修正後のBend型検査・実行・全CIは未確認**。全成功までは正本PR #4へ統合しない。採用表紙・TeX本編・PDF・読者ZIP・第7/8章のByte/FileとIO.now/IO.sleepは変更しない。第21/22章の本編統合・一般N×N推論・GUI実機は未完成。
 
 - **再検証CI #40241299362の追加診断**：局所`match`は解消したが、`encode`が後方に定義された`encoded_with_bit`を呼び、Bend 2.0.39が未定義のlawとして拒否。呼び出し順に`encoded_with_bit`を前方へ移動し、Python回帰にヘルパー定義順の静的ガードを追加。新CIで型検査・実行が成功するまで正本統合は保留。
+
+## 2026-10-26：公開三数字をBendの六変数推論へ直接接続（検証ブランチ）
+
+- `nxn_public_three_bridge.bend` を追加。三つの公開数字から `nxn_public_six_mask.bend` を3回呼び、三マスクが有効なときだけ `nxn_public_three_small.bend` の64候補列挙へ渡す。真の地雷配置・未検証旗は入力に含めない。
+- 盤面の未公開マスが6個より多いのに `use_total=True` で総地雷数を局所6セルへ誤適用する危険を拒否する。`Inconsistent` は入力拒否と矛盾の両方を含むので、全盤面矛盾の証明とはしない。
+- `scripts/test_nxn_public_three_bridge.py` に独立Pythonの座標・集合オラクル、896条件の照合、Bend型検査・12有限ケースの実行比較を追加。ローカルPython構文・独立照合は成功。Bend実機と全CIは検証PR待ち。
+- 第22章の必要性→Bendコード→出力→仕組み→演習を補稿へ記述。**TeX本文・PDF・読者ZIPには未統合**。第7/8章と採用表紙 `cover_art.tex` は不変更。
+- 一般N×N多制約、運ゲー無し生成、10×10 GUI実機、23章校閲、補稿の本編統合は未完成。全CI成功前に正本PR #4へ統合しない。
