@@ -748,3 +748,5 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - 読者ZIPの明示的allowlistへ両サンプルと相対import依存16本を追加し、相対import閉包をPythonテストで検査する。解答・テスト・内部資料はZIPへ含めない。
 - 本文・Bendコードは既存の有限実行検証に基づく。10×10 GUI実機、一般N×N運ゲー無し生成、全称証明、全23章校閲は未完成。
 - 検証ブランチでXeLaTeX、Bend回帰、ZIP allowlist、生成PDF/ZIP一致を確認後、正本へ意味単位1コミットで統合する。採用済み表紙blob ba9b5c4c...、第7/8章のFile/ByteとIO.now/IO.sleepは変更しない。
+
+- **検証経過（2026-10-26）**：検証PR #54の初回構造テストは、読者ZIPのゲーム実習数を12本と記した intermediate/README.md と新allowlistの28本が不一致で失敗した。Bendの出力不一致ではない。READMEの配布範囲・起動例・実習数をまとめて改訂し、CIを再実行する。XeLaTeXは117ページ、レイアウト警告なし、PDF/ZIP一致と採用表紙の画素一致を確認済み。

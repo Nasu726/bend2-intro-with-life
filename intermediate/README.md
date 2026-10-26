@@ -37,6 +37,8 @@ bend examples/minesweeper/gui.bend -o minesweeper
 ./minesweeper
 bend examples/minesweeper/public_solver.bend
 bend examples/minesweeper/noguess_generator.bend
+bend examples/minesweeper/nxn_playthrough.bend
+bend examples/minesweeper/nxn_public_three_bridge.bend
 bend examples/minesweeper/cli_save.bend save c0 f1
 bend examples/minesweeper/cli_save.bend load
 ```
@@ -47,15 +49,15 @@ bend examples/minesweeper/cli_save.bend load
 
 現在は**執筆途中のプレビュー版**です。マインスイーパーGUIの実装、Bend型検査、ネイティブコンパイル、座標・状態・未知のマウスボタンの13件の純粋テストは用意しました。画面上での実機操作確認とGUI本体の保存・復元、任意の大きさの運ゲー無し盤面生成はまだ完了していません。一方、固定4×4 CLIの操作履歴保存・復元と、4×4・地雷2個・左上開始に限定したBend製の運ゲー無し生成器は動作検証済みです。演習の参考実装や追加の技術資料は、必要に応じて[リポジトリ内の参考コード](solutions/)から参照できます。
 
-## リポジトリで試す10×10の実験（読者ZIPとは別）
+## 10×10のBend実習とリポジトリ内の追加検証
 
-PDFと読者ZIPのゲーム実習は、**4×4・地雷2個を中心とする限定版**です。リポジトリには別途、N=2〜100の座標・地雷格納・初手安全・0連鎖・勝敗を扱うBendのN×N部品と、固定10×10盤面の実行例があります。**これらのN×N部品は読者ZIPには含めていません。**
+PDFと読者ZIPには4×4・地雷2個の限定版に加え、**固定10×10の二手勝利**と**三公開数字・六未知マスの連立推論**を収録しました。両方ともBendで実行でき、必要な相対importモジュールもZIPに同梱しています。一般N×Nのゲーム・推論器が完成したという意味ではありません。リポジトリにはさらにN=2〜100の座標・地雷格納・初手安全・0連鎖・勝敗を扱うBendの部品と、Python参照モデル・独立検査があります。
 
-リポジトリのルートで次を実行してみましょう。
+まずZIP展開後のフォルダーで `bend examples/minesweeper/nxn_playthrough.bend` を実行し、結果110を確かめてみましょう。続いて `bend examples/minesweeper/nxn_public_three_bridge.bend` を実行すると、三数字の推論結果341が得られます。341は候補数2、安全ビット14、地雷ビット1をまとめた符号です。公開情報からの六マス局所推論に、盤面全体の地雷数を無条件に適用してはいけません。
+
+リポジトリ内のPython参考検査は、ルートで次を実行してみましょう。
 
 ```sh
-bend intermediate/minesweeper/nxn_playthrough.bend
-# 110
 python3 intermediate/solutions/nxn_public_replay_bridge.py
 python3 intermediate/scripts/verify_nxn_frontier_certificate.py
 ```
@@ -88,7 +90,7 @@ bend examples/46_elapsed_clock.bend
 
 最初の出力は`4`、次は`00 0a 0d ff`、最後は経過時間を表す整数です。時計の値は環境によって変わり、常に`20`になるとは限りません。ファイルの個数だけでは内容の正しさを保証できないため、4バイトの値と順序を別に確かめます。書き込み先に同名のディレクトリがある場合など、`File.open`が失敗するときは読み込みへ進まず終了します。
 
-現行プレビューの読者ZIPには、通常サンプル53本（import用補助モジュール1本を含む）とゲーム実習12本、PDF・README・LICENSEを収録しています。演習解答、内部の証明・テスト、編集用資料は同梱しません。
+現行プレビューの読者ZIPには、通常サンプル53本（import用補助モジュール1本を含む）とゲーム実習28本（10×10と三数字推論の相対import依存を含む）、PDF・README・LICENSEを収録しています。演習解答、内部の証明・テスト、編集用資料は同梱しません。
 
 ## 制作の進捗と方針
 
