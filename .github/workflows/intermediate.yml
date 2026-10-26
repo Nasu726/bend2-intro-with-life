@@ -156,6 +156,8 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_zero_inference.py
       - name: Verify certified single-clue public deductions
         run: python3 intermediate/scripts/test_nxn_public_local.py
+      - name: Verify Python certificate steps with Bend local inference
+        run: python3 intermediate/scripts/test_nxn_single_clue_witness_bridge.py
       - name: Verify two-clue public subset deductions
         run: python3 intermediate/scripts/test_nxn_public_subset.py
       - name: Verify arbitrary-overlap two-clue public deductions
