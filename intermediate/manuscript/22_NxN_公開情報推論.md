@@ -6,6 +6,34 @@
 公開情報から確定手を探せます。ここではBendへ移植する前に、独立した
 Python参照実装 `intermediate/solutions/nxn_public_inference.py` で契約を確認します。
 
+## 4×4の全候補列挙をBendで確かめましょう
+
+まずは大きな盤面に進む前に、4×4・地雷2個の小さな盤面を考えます。地雷の置き方は `16` マスから2マスを選ぶ120通りなので、候補をすべて調べられます。公開された数字と矛盾しない候補だけを残せば、**どの候補でも地雷にならないマス**を確定安全と判断できます。
+
+`intermediate/minesweeper/public_solver.bend` の `main` は、左上0番が数字0だと公開された場面を調べます。
+
+```bend
+def main() -> U32:
+  value_or_zero(provably_safe(Public{[Number{0, 0}]}))
+```
+
+```sh
+bend intermediate/minesweeper/public_solver.bend --check-only
+bend intermediate/minesweeper/public_solver.bend
+# 50
+```
+
+結果の `50` は安全なマスの個数ではなく、**安全マスを表すビット集合**です。`50 = 2 + 16 + 32` なので、1・4・5番が確定安全と分かります。数字0の周囲には地雷を置けないためです。地雷の真の位置は入力していません。
+
+```sh
+python3 intermediate/scripts/test_public_solver.py
+# PASS 49 independent public solver cases, including inconsistent views
+```
+
+この検証は、Bendが返す安全ビット集合を、別実装のPythonによる全120候補の列挙と49ケースで比較します。Bendの計算が大きくなりすぎないよう、**4ケース以下ずつ別々のプログラムで実行**します。49ケースを間引いているわけではありません。ただし、49ケースの一致は任意の入力についての全称証明ではありません。公開数字が矛盾する場合は `None` を返し、無理に安全マスを選びません。
+
+**演習：** 左上0番の公開数字を1に変えて実行してみましょう。出力が変わる理由を、120候補のうち残る候補という観点から考えてみましょう。次に公開数字が矛盾する例を作り、確定安全と「候補なし」を区別してみましょう。
+
 ## 0の数字を見たとき、どこまで安全でしょうか
 
 10×10の左上0番を開き、表示された数字が0、地雷総数が10個だとします。

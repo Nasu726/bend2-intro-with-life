@@ -88,7 +88,7 @@ def program(items):
             f"def check_{k}() -> U32:",
             f"  bit(U32.is_eq(code(Solver.provably_safe(Solver.Public{{[{data}]}})), {target}))",
         ])
-    # 49 independent checks cannot be encoded as U32 bit positions.
+    # Sum the checks in each bounded batch; no U32 bit-position encoding.
     groups = []
     for start in range(0, len(items), 8):
         name = f"group_{start // 8}"
@@ -99,25 +99,47 @@ def program(items):
     return "\n".join(defs) + "\n"
 
 
+def batches(items, size=4):
+    """Partition every finite oracle case without discarding any checks."""
+    if size < 1:
+        raise ValueError("batch size must be positive")
+    for start in range(0, len(items), size):
+        yield start, items[start:start + size]
+
+
 def main():
     items = cases()
     with tempfile.TemporaryDirectory() as tmp:
         folder = Path(tmp)
         for name in ("public_solver.bend", "board4.bend", "board.bend", "game.bend"):
             shutil.copyfile(GAME / name, folder / name)
-        caller = folder / "independent_public_oracle.bend"
-        caller.write_text(program(items), encoding="utf-8")
         env = dict(os.environ, BEND_NO_TELEMETRY="1")
-        proc = subprocess.run(["bend", str(caller)], cwd=ROOT.parent,
-                              env=env, capture_output=True, text=True,
-                              timeout=360)
-        if proc.returncode:
-            raise AssertionError(f"Exact public solver failed:\n{proc.stdout}\n{proc.stderr}")
-        observed = proc.stdout.strip().splitlines()[-1]
-        if observed != str(len(items)):
-            raise AssertionError(f"Independent public oracle passed {observed}/{len(items)} checks")
-        print(f"PASS {len(items)} independent public solver cases, including inconsistent views")
-
+        checked = 0
+        # A single Bend main with 49 independent exact solver calls can
+        # normalize for longer than the CI harness timeout. Keep all 49
+        # oracle comparisons, but execute at most four per Bend program.
+        for start, batch in batches(items):
+            caller = folder / f"independent_public_oracle_{start:02d}.bend"
+            caller.write_text(program(batch), encoding="utf-8")
+            print(f"CHECK exact public solver {start + 1}-"
+                  f"{start + len(batch)}/{len(items)}", flush=True)
+            proc = subprocess.run(["bend", str(caller)], cwd=ROOT.parent,
+                                  env=env, capture_output=True, text=True,
+                                  timeout=120)
+            if proc.returncode:
+                raise AssertionError(
+                    f"Exact public solver cases {start + 1}-"
+                    f"{start + len(batch)} failed:\n{proc.stdout}\n{proc.stderr}")
+            lines = proc.stdout.strip().splitlines()
+            observed = lines[-1] if lines else "<no output>"
+            if observed != str(len(batch)):
+                raise AssertionError(
+                    f"Independent public oracle cases {start + 1}-"
+                    f"{start + len(batch)} passed {observed}/{len(batch)} checks")
+            checked += len(batch)
+        if checked != len(items):
+            raise AssertionError(f"Only checked {checked}/{len(items)} cases")
+        print(f"PASS {checked} independent public solver cases, including inconsistent views")
 
 if __name__ == "__main__":
     main()

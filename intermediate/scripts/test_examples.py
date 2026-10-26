@@ -48,8 +48,8 @@ EXPECTED = {
     "50_set_from_list.bend": "2n",
 }
 
-def run(*args):
-    p = subprocess.run(args, text=True, capture_output=True, timeout=180,
+def run(*args, timeout=180):
+    p = subprocess.run(args, text=True, capture_output=True, timeout=timeout,
                        cwd=ROOT.parent,
                        env=dict(os.environ, BEND_NO_TELEMETRY="1"))
     if p.returncode != 0:
@@ -553,7 +553,8 @@ def main():
     public_mask = run("bend", str(game / "public_solver.bend")).splitlines()[-1]
     if public_mask != "50":
         raise AssertionError(f"Public two-mine deduction expected 50, got {public_mask!r}")
-    independent = run(sys.executable, str(ROOT / "scripts" / "test_public_solver.py"))
+    independent = run(sys.executable, str(ROOT / "scripts" / "test_public_solver.py"),
+                      timeout=1800)
     if "PASS 49 independent public solver cases" not in independent:
         raise AssertionError(f"Public solver independent oracle missing: {independent!r}")
     two = game / "public_two_corners.bend"

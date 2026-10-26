@@ -734,3 +734,10 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - `scripts/test_nxn_public_three_bridge.py` に独立Pythonの座標・集合オラクル、896条件の照合、Bend型検査・12有限ケースの実行比較を追加。ローカルPython構文・独立照合は成功。Bend実機と全CIは検証PR待ち。
 - 第22章の必要性→Bendコード→出力→仕組み→演習を補稿へ記述。**TeX本文・PDF・読者ZIPには未統合**。第7/8章と採用表紙 `cover_art.tex` は不変更。
 - 一般N×N多制約、運ゲー無し生成、10×10 GUI実機、23章校閲、補稿の本編統合は未完成。全CI成功前に正本PR #4へ統合しない。
+
+## 2026-10-26：4×4公開情報Bend回帰の実行時間を安定化（検証ブランチ）
+
+- 正本 `f18a521d` のReader download bundles、Tests、PDF layoutは成功したが、統合後Intermediate textbook CI #40255302020のBend examplesジョブが失敗。失敗箇所は既存 `test_examples.py` から呼ぶ `test_public_solver.py` の**親プロセス180秒タイムアウト**で、Bendの出力不一致や型エラーとはまだ判定できない。前段のByte/File、`IO.now`/`IO.sleep`、TCP/UDP、GUI純粋テストは成功。
+- 4×4・地雷2個の独立Python全列挙49条件は削らず、Bendへの入力を最大4ケースずつ分割して個別に実行する。外側の実行時間上限は1800秒に設定し、各Bend呼び出しは120秒で停止する。バッチ境界と全49件の実行回数を、Bend不要のPython単体テストでも監査する。
+- 第22章補稿に、Bend `public_solver.bend` の出力50（安全ビット1・4・5）と、49条件の有限照合の意味・限界・演習を追加。**TeX本文・生成PDF・読者ZIPには未統合**。採用済み表紙 `intermediate/cover_art.tex`、第7・8章、既存Bend実装は変更しない。
+- **新しい検証PRのCI成功前に正本へ統合しない**。一般N×N推論・運ゲー無し生成器、10×10 GUI実機、23章最終校閲は引き続き未完了。
