@@ -1,5 +1,14 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+**2026-10-27検証候補（JSON証明書の独立検査境界を分離）**：
+`nxn_single_clue_checker.py`へ公開数字の局所規則・証明書リプレイを分離し、
+JSON検査CLIから証明書生成器と参照反復ソルバーをimportしない構成へ変更。
+既存の`nxn_single_clue_certificate.py`は`certify`と互換の`Deduction`/`replay`公開名を維持。
+別プロセスでのimport隔離回帰を追加し、第22章補稿へ保証境界を明記。
+**Bend側の反復推論・JSON生成、TeX/PDF/読者ZIP統合、一般N×N生成は未完成**。
+表紙、第7・8章、TeX/PDF/ZIPは不変更。検証用PRのCIで既存成果物の一致を確認する。
+
+
 **2026-10-26検証候補（公開数字の単独制約を固定点まで伝播）**：
 既存のBend一数字推論 `nxn_public_local.bend` のルールを、Python参照
 `solutions/nxn_single_clue_propagation.py` で複数の公開数字へ反復適用。

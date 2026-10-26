@@ -27,6 +27,18 @@ def witness():
 
 
 class WitnessTests(unittest.TestCase):
+    def test_verifier_does_not_import_generator_or_propagator(self):
+        # A separate process must load only the checker, not the producer or
+        # the reference fixed-point solver it uses to cross-check itself.
+        code = ("import sys; "
+                f"sys.path.insert(0, {str(ROOT / 'scripts')!r}); "
+                "import audit_single_clue_witness; "
+                "assert 'nxn_single_clue_certificate' not in sys.modules; "
+                "assert 'nxn_single_clue_propagation' not in sys.modules")
+        process = subprocess.run([sys.executable, "-c", code],
+                                 capture_output=True, text=True, timeout=15)
+        self.assertEqual(process.returncode, 0, process.stderr)
+
     def run_cli(self, data):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "proof.json"

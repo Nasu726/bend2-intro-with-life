@@ -11,7 +11,7 @@ import sys
 
 SOLUTIONS = Path(__file__).resolve().parents[1] / "solutions"
 sys.path.insert(0, str(SOLUTIONS))
-from nxn_single_clue_certificate import Deduction, replay
+from nxn_single_clue_checker import Deduction, replay
 
 MAX_BYTES = 65536
 FIELDS = {"version", "size", "opened", "certified_mines", "certified_safe", "steps"}
