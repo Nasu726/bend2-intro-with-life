@@ -44,6 +44,7 @@ def oracle(a, b, ra, rb):
 
 def cases():
     cases = [
+        ((0, 2, 3, 5), (0, 2, 3, 5, 6, 7, 8), 1, 1),  # 3x3 clues 1/4: 6,7,8 safe.
         ((3, 4), (2, 3, 4, 5), 1, 1),  # 3x3 public clues at 0 and 1.
         ((3, 4), (2, 3, 4, 5), 1, 3),  # Difference cells are mines.
         ((3, 4), (2, 3, 4, 5), 1, 0),  # Contradictory nested counts.
@@ -128,7 +129,7 @@ def source(cases):
 
 def main():
     checks = cases()
-    assert len(checks) == 121
+    assert len(checks) == 122
     assert {oracle(*case)[0] for case in checks} == {1, 2, 3, 4}
     with tempfile.TemporaryDirectory() as temp:
         folder = Path(temp)
