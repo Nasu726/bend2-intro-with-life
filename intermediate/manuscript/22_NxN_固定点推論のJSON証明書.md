@@ -39,6 +39,30 @@ python3 intermediate/scripts/audit_single_clue_witness.py witness.json
 {"mines": [5, 7], "safe": [1, 3, 4], "size": 3, "status": "valid", "steps": 3}
 ```
 
+## 公開情報ファイルから証明書を生成してみましょう
+
+上の例ではPythonの短いスクリプトでJSONを組み立てました。生成器と検査器を**別々のコマンド**として使えるように、リポジトリには参照生成CLIも用意します。まず次の5項目だけを `public.json` に保存します。真の地雷配置や未証明の旗は含めません。
+
+```json
+{"version":1,"size":3,"opened":[[0,0],[2,1],[6,1]],
+ "certified_mines":[],"certified_safe":[]}
+```
+
+```sh
+python3 intermediate/scripts/emit_single_clue_witness.py public.json witness.json
+python3 intermediate/scripts/audit_single_clue_witness.py witness.json
+```
+
+生成コマンドは `status: written`、`steps: 3` を返し、独立した検査コマンドは上と同じ地雷 `[5,7]`、安全 `[1,3,4]` を返します。生成器は公開数字から単独数字規則を反復して `steps` を書き出し、検査器は生成器を読み込まずに各手を再計算します。**Bendで反復推論やJSON出力を実装したという意味ではありません。** 先にBendの単独数字の実行例を確かめ、言語をまたぐ受渡し契約をPython参照実装で練習する段階です。
+
+入力は昇順・重複なしの公開セル番号と初期確定集合に限り、余計な項目、`true` を整数とする入力、64KiB超の入力を拒否します。生成する証明書も64KiB以下です。既存の `witness.json` は**上書きしない**ため、もう一度実行するときは別の出力名を指定してください。終了コードは成功0、引数不足2、不正入力や書込み失敗3です。初期確定情報の正しさと、盤面全体の整合性までは検査できません。
+
+### 演習
+
+`public.json` の公開数字を一つ減らして、生成される `steps` と確定集合がどう変わるか試してみましょう。次に `opened` を `[[0,0]]` だけにし、`certified_safe` に `[1,3,4]` を与えて、すでに固定点に達しているときの空の証明書を観察してみましょう。最後に `opened` の順番を入れ替え、入力契約違反が拒否される理由を説明してみましょう。
+
+**検証範囲：** `tests/test_emit_single_clue_witness.py` の7件は生成→別プロセス検査、空の証明書、決定的なJSON、非正規入力・矛盾・重複キー・既存ファイル保護を検査します。有限のPythonテストであり、Bend版の反復生成や一般N×N運ゲー無し生成の保証ではありません。本文TeX・PDF・読者ZIPには未統合です。
+
 ## 何を確かめているのでしょうか
 
 JSONの`opened`は公開済み数字、`certified_mines`と`certified_safe`は**別途証明済みの初期情報**です。`steps`の各要素は`clue`・`mines`・`safe`を持ちます。検査器は、各手で使った公開数字の残数を再計算し、確定できないマスの追加・重複・途中で切れた証明書を拒否します。最後に単一数字規則の固定点を確認します。
