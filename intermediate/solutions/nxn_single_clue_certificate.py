@@ -67,6 +67,11 @@ def _forced(n, public, mines, safe, cell):
 def certify(n, opened, certified_mines=(), certified_safe=()):
     """Return (mines, safe, proof steps) in deterministic clue-index order."""
     public, mines, safe = _input(n, opened, certified_mines, certified_safe)
+    # _input consumes one-shot iterables. Preserve their validated values for
+    # the independent round-based comparison instead of reading them again.
+    initial_clues = tuple(sorted(public.items()))
+    initial_mines = tuple(sorted(mines))
+    initial_safe = tuple(sorted(safe))
     steps = []
     while True:
         changed = False
@@ -81,7 +86,7 @@ def certify(n, opened, certified_mines=(), certified_safe=()):
             break
     # Independent simultaneous-round implementation must reach same closure.
     expected = infer_single_clue_certainties(
-        n, opened, certified_mines, certified_safe)
+        n, initial_clues, initial_mines, initial_safe)
     outcome = tuple(sorted(mines)), tuple(sorted(safe))
     if outcome != expected:
         raise AssertionError("certificate generator and reference disagree")

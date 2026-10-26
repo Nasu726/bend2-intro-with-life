@@ -70,6 +70,26 @@ class CertificateTests(unittest.TestCase):
         self.assertEqual(replay(3, shown, (1,), (), proof), (mines, safe))
         self.assertEqual(replay(3, shown, mines, safe, ()), (mines, safe))
 
+    def test_one_shot_iterables_preserve_independent_check(self):
+        # A generator can be traversed only once. The oracle comparison must
+        # use the validated snapshot, not an already exhausted iterator.
+        opened = ((0, 1),)
+        initial_mines = (1,)
+        initial_safe = (8,)
+        expected = certify(3, opened, initial_mines, initial_safe)
+        actual = certify(3, (item for item in opened),
+                         (item for item in initial_mines),
+                         (item for item in initial_safe))
+        self.assertEqual(actual, expected)
+        self.assertEqual(actual[:2], ((1,), (3, 4, 8)))
+        mines, safe, trace = actual
+        self.assertEqual(
+            replay(3, (item for item in opened),
+                   (item for item in initial_mines),
+                   (item for item in initial_safe),
+                   (item for item in trace)),
+            (mines, safe))
+
     def test_3x3_randomized_soundness_against_all_models(self):
         rng = Random(20261026)
         for trial in range(260):
