@@ -1,9 +1,9 @@
 """Public-clue adapter for the Bend six-bit, three-constraint kernel.
 
-This produces *inputs*, not a proof or a general N x N solver.  It never
+This produces *inputs*, not a proof or a general N x N solver. It never
 accepts the true mine layout or treats a player's flag as known evidence.
-The Bend kernel always enumerates six bits, so a frontier of any other size
-must not be silently padded or truncated.
+Only separately certified mines may be supplied to subtract from clues.
+The Bend kernel always enumerates six bits; other frontier sizes are skipped.
 """
 from dataclasses import dataclass
 from itertools import combinations
@@ -31,61 +31,39 @@ def _neighbors(n, index):
             if yy * n + xx != index}
 
 
-def from_public_clues(n, opened, mine_count=None):
-    """Build an exact six-cell kernel input or return None (unsupported size).
+def from_public_clues(n, opened, mine_count=None, certified_mines=()):
+    """Build one six-cell request from exactly three public clues, if possible.
 
-    Only three (cell, clue) observations are accepted.  A global mine total
-    is used only when *every* hidden cell is represented by the six bits.
-    Otherwise imposing it on the frontier would falsely assert that there
-    are no mines outside the frontier.  In that case the kernel still gives
-    sound local deductions, but may miss deductions requiring the total.
+    ``certified_mines`` must contain independently *proved* mines, not
+    unverified player flags. A global mine total is used only when the six
+    unknown cells exhaust the remaining board after those mines are removed.
     """
-    if type(n) is not int or not 2 <= n <= 100:
-        raise ValueError("board size")
     try:
         clues = tuple(opened)
     except TypeError as exc:
         raise ValueError("opened clues") from exc
     if len(clues) != 3:
         raise ValueError("exactly three public clues required")
-    seen = set()
-    for item in clues:
-        if (not isinstance(item, (tuple, list)) or len(item) != 2 or
-                type(item[0]) is not int or not 0 <= item[0] < n * n or
-                type(item[1]) is not int or not 0 <= item[1] <= 8 or
-                item[0] in seen):
-            raise ValueError("invalid or duplicate public clue")
-        seen.add(item[0])
-    if (mine_count is not None and
-            (type(mine_count) is not int or
-             not 0 <= mine_count <= n * n - len(seen))):
-        raise ValueError("global mine count")
+    return next(iter(from_public_board(n, clues, mine_count,
+                                       certified_mines=certified_mines)), None)
 
-    hidden = set(range(n * n)) - seen
-    around = tuple(_neighbors(n, index) & hidden for index, _ in clues)
-    cells = tuple(sorted(set().union(*around)))
-    if len(cells) != 6:
-        return None
-    bit_of = {cell: 1 << bit for bit, cell in enumerate(cells)}
-    masks = tuple(sum(bit_of[cell] for cell in neighbors) for neighbors in around)
-    use_total = mine_count is not None and len(hidden) == 6
-    return ThreeClueInput(cells, masks, tuple(number for _, number in clues),
-                          mine_count if use_total else 0, use_total)
 
-def from_public_board(n, opened, mine_count=None):
+def from_public_board(n, opened, mine_count=None, certified_mines=()):
     """Enumerate supported three-clue Bend requests from a public board.
 
-    All revealed cells are excluded from unknown bits, even when a particular
-    request selects only three of the revealed clues. No hidden mines or
-    player flags enter the adapter. A bounded number of clues avoids an
-    unbounded cubic enumeration; unsupported triples are skipped explicitly.
+    All opened cells and separately certified mines are excluded from the
+    six unknown bits. Each clue's count is reduced by its neighboring
+    certified mines. Player flags must NOT be supplied as certified mines.
+    If the six cells are only a subset of remaining unknown cells, a global
+    mine total cannot be used in the local Bend kernel.
     """
     if type(n) is not int or not 2 <= n <= 100:
         raise ValueError("board size")
     try:
         clues = tuple(opened)
+        certified = tuple(certified_mines)
     except TypeError as exc:
-        raise ValueError("opened clues") from exc
+        raise ValueError("opened clues or certified mines") from exc
     if not 3 <= len(clues) <= 24:
         raise ValueError("three to 24 public clues required")
     shown = set()
@@ -96,16 +74,28 @@ def from_public_board(n, opened, mine_count=None):
                 item[0] in shown):
             raise ValueError("invalid or duplicate public clue")
         shown.add(item[0])
+    if (any(type(cell) is not int or not 0 <= cell < n*n or cell in shown
+            for cell in certified) or len(set(certified)) != len(certified)):
+        raise ValueError("invalid or duplicate certified mine")
+    known = set(certified)
+    unknown = set(range(n*n)) - shown - known
     if (mine_count is not None and
             (type(mine_count) is not int or
-             not 0 <= mine_count <= n * n - len(shown))):
+             not len(known) <= mine_count <= len(unknown) + len(known))):
         raise ValueError("global mine count")
 
-    hidden = set(range(n * n)) - shown
-    use_total = mine_count is not None and len(hidden) == 6
+    residuals = {}
+    for cell, number in clues:
+        residual = number - len(_neighbors(n, cell) & known)
+        if residual < 0:
+            raise ValueError("certified mines contradict public clue")
+        residuals[cell] = residual
+
+    use_total = mine_count is not None and len(unknown) == 6
+    remaining_total = mine_count - len(known) if use_total else 0
     requests = []
     for triple in combinations(clues, 3):
-        around = tuple(_neighbors(n, cell) & hidden for cell, _ in triple)
+        around = tuple(_neighbors(n, cell) & unknown for cell, _ in triple)
         cells = tuple(sorted(set().union(*around)))
         if len(cells) != 6:
             continue
@@ -113,8 +103,8 @@ def from_public_board(n, opened, mine_count=None):
         masks = tuple(sum(bit_of[cell] for cell in neighbors)
                       for neighbors in around)
         requests.append(ThreeClueInput(
-            cells, masks, tuple(number for _, number in triple),
-            mine_count if use_total else 0, use_total))
+            cells, masks, tuple(residuals[cell] for cell, _ in triple),
+            remaining_total, use_total))
     return tuple(requests)
 
 

@@ -13,6 +13,8 @@ import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "solutions"))
+from nxn_three_clue_adapter import from_public_clues
 DEPENDENCIES = (
     "nxn_geometry.bend", "nxn_neighbors.bend", "nxn_public_subset.bend",
     "nxn_public_neighbors.bend", "nxn_public_six_mask.bend",
@@ -170,7 +172,29 @@ def main():
             file.write_text(program(batch), encoding="utf-8")
             print(f"CHECK three-clue bridge {start+1}-{start+len(batch)}", flush=True)
             run_bend(file, sum(oracle(*case) for case in batch))
-    print(f"PASS {len(checks)} Bend/Python public three-clue bridge cases")
+    # The certified-mine adapter subtracts only independently proved mines.
+    # It produces kernel arguments; the Bend game/solver is not yet connected.
+    certified = from_public_clues(
+        4, ((0, 1), (1, 2), (7, 2)), 3, certified_mines=(2,))
+    assert certified is not None
+    assert certified.cells == (3, 4, 5, 6, 10, 11)
+    assert certified.bend_arguments() == (6, 14, 57, 1, 1, 1, 0, False)
+    a, b, c, ra, rb, rc, total, use_total = certified.bend_arguments()
+    flag = "True{}" if use_total else "False{}"
+    certified_program = (
+        "import Base\nimport ./nxn_public_three_small.bend as Three\n\n"
+        "def main() -> U32:\n"
+        f"  Three.score(Three.infer({a}, {b}, {c}, {ra}, {rb}, {rc}, "
+        f"{total}, {flag}))\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        folder = Path(tmp)
+        shutil.copyfile(ROOT / "minesweeper" / "nxn_public_three_small.bend",
+                        folder / "nxn_public_three_small.bend")
+        file = folder / "certified_residual.bend"
+        file.write_text(certified_program, encoding="utf-8")
+        run_bend(file, 680)
+
+    print(f"PASS {len(checks)} Bend/Python public three-clue bridge cases plus certified residual")
 
 
 if __name__ == "__main__":
