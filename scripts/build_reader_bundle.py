@@ -65,6 +65,23 @@ INTERMEDIATE_GAME_FILES = (
     "session.bend", "start.bend", "cli_replay.bend", "gui.bend",
     "public_solver.bend", "public_two_corners.bend",
     "noguess_generator.bend", "cli_save.bend",
+    # Runnable N x N playthrough and bounded three-clue inference, with imports.
+    "nxn_clues.bend",
+    "nxn_flood.bend",
+    "nxn_full_game.bend",
+    "nxn_geometry.bend",
+    "nxn_mine_words.bend",
+    "nxn_neighbors.bend",
+    "nxn_playthrough.bend",
+    "nxn_public_neighbors.bend",
+    "nxn_public_six_mask.bend",
+    "nxn_public_subset.bend",
+    "nxn_public_three_bridge.bend",
+    "nxn_public_three_small.bend",
+    "nxn_relocate.bend",
+    "nxn_step.bend",
+    "nxn_terminal.bend",
+    "nxn_victory.bend",
 )
 
 def readme(track: str) -> str:
@@ -110,6 +127,16 @@ GUIの状態全体を保存する機能ではありません。
 bend examples/minesweeper/noguess_generator.bend
 期待結果: mines=40960;moves=0,12,14
 生成器は真の地雷配置を持ちますが、推論器へは公開数字しか渡しません。
+
+10×10の二領域をBendでクリック0→99と進めて勝利（GUIではない）:
+bend examples/minesweeper/nxn_playthrough.bend
+期待結果: 110（100番台はWonの検査用符号）
+
+三つの公開数字と六つの未知マスを使う限定Bend推論:
+bend examples/minesweeper/nxn_public_three_bridge.bend
+期待結果: 341（候補数2、安全ビット14、地雷ビット1）
+六マスが盤面の未公開マス全体でないとき、地雷総数を局所推論へ
+誤適用してはいけません。一般N×Nの自動生成器は未完成です。
 
 4×4マインスイーパーのGUIをネイティブビルドして起動:
 bend examples/minesweeper/gui.bend -o minesweeper
