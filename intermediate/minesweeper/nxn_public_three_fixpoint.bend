@@ -35,13 +35,30 @@ def accept(decision: Rule.Decision, mines: List<U32>, safe: List<U32>,
 
 # Lists are affine in Bend 2: explicitly copy each list before passing it to
 # the one-clue kernel while retaining the state for the next deduction.
-def duplicate(items: List<U32>) -> (List<U32>, List<U32>):
+def duplicate_step(+item: U32, copies: List<U32> & List<U32>) -> List<U32> & List<U32>:
+  (left, right) = copies
+  (item <> left, item <> right)
+
+def duplicate(items: List<U32>) -> List<U32> & List<U32>:
   match items:
     case Nil{}:
       (Nil{}, Nil{})
     case +item <> tail:
-      (left, right) = duplicate(tail)
-      (item <> left, item <> right)
+      duplicate_step(item, duplicate(tail))
+
+def apply_with_safe(+n: U32, +cell: U32, +clue: U32,
+                    mines_for_rule: List<U32>, mines_keep: List<U32>,
+                    copies: List<U32> & List<U32>, changed: Bool) -> Propagation:
+  (safe_for_rule, safe_keep) = copies
+  accept(Rule.infer(n, cell, clue, mines_for_rule, safe_for_rule),
+         mines_keep, safe_keep, changed)
+
+def apply_with_mines(+n: U32, +cell: U32, +clue: U32,
+                     copies: List<U32> & List<U32>, safe: List<U32>,
+                     changed: Bool) -> Propagation:
+  (mines_for_rule, mines_keep) = copies
+  apply_with_safe(n, cell, clue, mines_for_rule, mines_keep,
+                  duplicate(safe), changed)
 
 def apply(+n: U32, +cell: U32, +clue: U32, state: Propagation) -> Propagation:
   match state:
@@ -50,10 +67,7 @@ def apply(+n: U32, +cell: U32, +clue: U32, state: Propagation) -> Propagation:
     case Limit{}:
       Limit{}
     case Closure{mines, safe, changed}:
-      (mines_for_rule, mines_keep) = duplicate(mines)
-      (safe_for_rule, safe_keep) = duplicate(safe)
-      accept(Rule.infer(n, cell, clue, mines_for_rule, safe_for_rule),
-             mines_keep, safe_keep, changed)
+      apply_with_mines(n, cell, clue, duplicate(mines), safe, changed)
 
 def one_round(+n: U32, +c0: U32, +v0: U32, +c1: U32, +v1: U32,
               +c2: U32, +v2: U32, state: Propagation) -> Propagation:
@@ -119,10 +133,10 @@ def contains_all(items: List<U32>, +c0: U32, +c1: U32, +c2: U32,
 # Contract: three DISTINCT revealed clues; known_safe includes their cells.
 # Other safe/mine cells are separately certified, sorted/unique/in-range.
 # Invalid clues and contradictory local constraints return Inconsistent.
-def infer_three(+n: U32, +c0: U32, +v0: U32,
+def infer_three_with_safe(+n: U32, +c0: U32, +v0: U32,
                 +c1: U32, +v1: U32, +c2: U32, +v2: U32,
-                mines: List<U32>, safe: List<U32>) -> Propagation:
-  (safe_for_check, safe_keep) = duplicate(safe)
+                mines: List<U32>, copies: List<U32> & List<U32>) -> Propagation:
+  (safe_for_check, safe_keep) = copies
   checked(Bool.and(Geo.valid_index(n, c0),
           Bool.and(Geo.valid_index(n, c1),
           Bool.and(Geo.valid_index(n, c2),
@@ -132,6 +146,12 @@ def infer_three(+n: U32, +c0: U32, +v0: U32,
           contains_all(safe_for_check, c0, c1, c2,
                        False{}, False{}, False{}))))))),
           n, c0, v0, c1, v1, c2, v2, mines, safe_keep)
+
+def infer_three(+n: U32, +c0: U32, +v0: U32,
+                +c1: U32, +v1: U32, +c2: U32, +v2: U32,
+                mines: List<U32>, safe: List<U32>) -> Propagation:
+  infer_three_with_safe(n, c0, v0, c1, v1, c2, v2, mines,
+                        duplicate(safe))
 
 def size(items: List<U32>) -> U32:
   match items:
