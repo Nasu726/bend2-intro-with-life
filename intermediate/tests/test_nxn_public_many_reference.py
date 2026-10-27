@@ -68,6 +68,26 @@ class ManyClueReference(unittest.TestCase):
                         oracle(n, public),
                         (n, shown))
 
+    def test_clue_order_and_sufficient_fuel(self):
+        # A different sweep order may change intermediate states but must
+        # not change the final fixed point. N*N+1 rounds suffice on valid
+        # evidence; this checks finite examples, not the general proof.
+        rng = Random(20261028)
+        for trial in range(64):
+            n = 3
+            truth = set(rng.sample(range(n*n), rng.randrange(5)))
+            safe = sorted(set(range(n*n)) - truth)
+            shown = tuple(sorted(rng.sample(safe, rng.randrange(min(6, len(safe))+1))))
+            public = tuple((i, len(truth & neighbors(n,i))) for i in shown)
+            known_mines = tuple(sorted(rng.sample(sorted(truth),
+                                rng.randrange(len(truth)+1))))
+            result = model(n, public, known_mines, shown, n*n+1)
+            self.assertIsInstance(result, tuple, trial)
+            self.assertEqual(result, model(n, public[::-1], known_mines, shown,
+                                           n*n+1), trial)
+            self.assertEqual(result, model(n, public, known_mines, shown,
+                                           n*n+2), trial)
+
     def test_invalid_evidence_and_fuel(self):
         public = ((1,1),(2,0),(4,1),(5,0))
         safe = (1,2,4,5)

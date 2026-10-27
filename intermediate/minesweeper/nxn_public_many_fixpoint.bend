@@ -7,7 +7,9 @@ import ./nxn_geometry.bend as Geo
 import ./nxn_public_local.bend as Rule
 import ./nxn_public_three_fixpoint.bend as Fix
 
-type Clue is Type:
+# A reusable clue stored in List<&2, Clue> must inhabit Data, not Type.
+# Type-level values cannot be elements of a runtime List.
+type Clue is Data:
   Clue{index: U32, value: U32}
 
 # Reject repeated/out-of-range/unrevealed public digits. Every opened clue
