@@ -162,6 +162,8 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_public_three_fixpoint.py
       - name: Verify four-clue Bend fixed-point propagation
         run: python3 intermediate/scripts/test_nxn_public_four_fixpoint.py
+      - name: Verify variable-number Bend fixed-point propagation
+        run: python3 intermediate/scripts/test_nxn_public_many_fixpoint.py
       - name: Verify two-clue public subset deductions
         run: python3 intermediate/scripts/test_nxn_public_subset.py
       - name: Verify arbitrary-overlap two-clue public deductions
