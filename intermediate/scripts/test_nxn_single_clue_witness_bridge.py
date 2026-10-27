@@ -105,6 +105,15 @@ def bend_source(cases):
 
 
 def main():
+    # The exact runnable example shipped to readers must also typecheck and run.
+    sample = GAME / "nxn_public_three_step.bend"
+    for args in (("bend", str(sample), "--check-only"), ("bend", str(sample))):
+        proc = subprocess.run(args, cwd=GAME, capture_output=True, text=True,
+                              timeout=360, env=dict(os.environ, BEND_NO_TELEMETRY="1"))
+        if proc.returncode:
+            raise AssertionError(f"{args}: {proc.stdout}\\n{proc.stderr}")
+        if len(args) == 2 and proc.stdout.strip().splitlines()[-1] != "5":
+            raise AssertionError(f"expected reader example to output 5: {proc.stdout}")
     cases = tuple(proof_cases())
     assert len(cases) >= 6, "fixtures must exercise actual propagation"
     assert any(n == 3 and cell == 0 and 1 in safe

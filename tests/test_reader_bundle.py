@@ -42,6 +42,8 @@ class TestReaderBundle(unittest.TestCase):
         included = set(INTERMEDIATE_GAME_FILES)
         self.assertIn("nxn_playthrough.bend", included)
         self.assertIn("nxn_public_three_bridge.bend", included)
+        self.assertIn("nxn_public_local.bend", included)
+        self.assertIn("nxn_public_three_step.bend", included)
         for name in sorted(included):
             source = (ROOT / "intermediate/minesweeper" / name).read_text(
                 encoding="utf-8")
@@ -50,6 +52,13 @@ class TestReaderBundle(unittest.TestCase):
             self.assertFalse(imports - included,
                              f"{name} imports omitted learner files: "
                              f"{sorted(imports - included)}")
+
+    def test_public_three_step_is_learner_material(self):
+        with zipfile.ZipFile(ROOT / "reader-packages/bend2-intermediate-reader-preview.zip") as z:
+            for filename in ("nxn_public_local.bend", "nxn_public_three_step.bend"):
+                name = "bend2-intermediate-reader/examples/minesweeper/" + filename
+                self.assertEqual(z.read(name),
+                                 (ROOT / "intermediate/minesweeper" / filename).read_bytes())
 
     def test_poll_example_is_learner_material(self):
         self.assertIn("53_chan_poll.bend", INTERMEDIATE_EXAMPLES)
