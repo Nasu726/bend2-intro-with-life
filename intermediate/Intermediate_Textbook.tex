@@ -2312,6 +2312,106 @@ r=c-f
 
 \exercise{未確定マスが4個、残り地雷数が0、2、4、5の場合に、それぞれ\code{infer}が何を返すべきか調べてみましょう。}
 
+\section{一つの数字の確定情報を、次の数字へ渡す}
+数字を一度調べただけでは、まだ開けないマスが残ります。しかし、ある数字から
+安全だと分かったマスを\textbf{次の数字の「既知の安全マス」}として渡すと、
+新たな地雷が確定することがあります。3×3盤面のマスを、左上から
+0、1、2、次の行を3、4、5、最後の行を6、7、8と番号付けしましょう。
+
+公開されている数字が\code{(0,0)}、\code{(2,1)}、\code{(6,1)}の
+三つだとします。ここで組の左側はマス番号、右側は表示数字です。
+\code{0}番の周囲に地雷はないので、1・3・4番が安全です。
+続いて2番の周囲では1・4番が安全と分かったため、残る5番は地雷です。
+6番の周囲でも3・4番が安全なので、7番が地雷だと分かります。
+
+Bendで確かめるため、同梱の
+\code{examples/minesweeper/nxn_public_three_step.bend}を開いてみましょう。
+このファイルは、既存の\code{nxn_public_local.bend}を読み込み、
+\code{Rule.infer}を三回呼び出します。主要部分は次のとおりです。
+
+\begin{lstlisting}[caption={公開数字から三回の一数字推論を試す}]
+def first() -> U32:
+  Rule.tag(Rule.infer(3, 0, 0, Nil{}, [0, 2, 6]))
+
+def second() -> U32:
+  Rule.tag(Rule.infer(3, 2, 1, Nil{}, [0, 1, 3, 4, 6]))
+
+def third() -> U32:
+  Rule.tag(Rule.infer(3, 6, 1, Nil{}, [0, 1, 3, 4, 6]))
+
+def main() -> U32:
+  (first() + second() + third() : U32)
+\end{lstlisting}
+
+\begin{lstlisting}[language={},caption={三回の局所推論を実行}]
+bend examples/minesweeper/nxn_public_three_step.bend
+\end{lstlisting}
+出力は\textbf{5}です。\code{Safe}のタグ1と
+\code{Mines}のタグ2が二回で、\(1+2+2=5\)となります。
+この数は安全マスや地雷の位置そのものではありません。
+実際の確定結果は安全\code{[1,3,4]}、地雷\code{[5,7]}です。
+リポジトリの\code{test_nxn_single_clue_witness_bridge.py}では、
+タグだけでなく\textbf{確定した番号列まで}BendとPython参照実装を照合します。
+
+ここでは次の呼び出しへ渡す既知安全集合を\textbf{手で記入}しました。
+まだBendが自動で数字を繰り返し調べるプログラムではありません。
+また、\code{[0,2,6]}は実際に開いて確認したマスであり、
+プレイヤーが置いた旗を証拠に変換したものではありません。
+既知地雷数を引いた残りが0なら未知の隣接マスは安全、
+残りが未知マス数に等しければすべて地雷という規則を使っています。
+
+\exercise{\code{second()}の既知安全集合から1番と4番を外し、
+判定がどう変わるか予想してから実行してみましょう。
+次に、最初の公開数字0を1に変えた場合に、
+元の安全情報をそのまま次へ渡してはいけない理由を説明してみましょう。}
+
+\section{推論の証明書を、別の処理で検査する}
+「安全1・3・4番、地雷5・7番」という答えだけでは、
+\textbf{どの公開数字を根拠に確定したか}を確かめられません。
+そこで、一手ごとに使った数字と新たに確定したマスを記録した
+\term{証明書}を作ります。リポジトリ側のPython参照実装では、
+公開数字だけから証明書を生成し、別プロセスの検査器へ渡せます。
+
+リポジトリのルートで次の五項目を\code{public.json}に保存します。
+\code{certified_mines}と\code{certified_safe}は、
+最初から\textbf{別の根拠で確定済み}のマスです。
+この例ではどちらも空です。
+
+\begin{lstlisting}[language={},caption={public.json}]
+{"version":1,"size":3,
+ "opened":[[0,0],[2,1],[6,1]],
+ "certified_mines":[],"certified_safe":[]}
+\end{lstlisting}
+
+\begin{lstlisting}[language={},caption={証明書の生成と独立検査}]
+python3 intermediate/scripts/emit_single_clue_witness.py public.json witness.json
+python3 intermediate/scripts/audit_single_clue_witness.py witness.json
+\end{lstlisting}
+
+最初のコマンドは\code{status: written}と\code{steps: 3}を返します。
+次のコマンドは\code{status: valid}、\code{mines: [5,7]}、
+\code{safe: [1,3,4]}、\code{steps: 3}を返します。
+検査器は生成器をimportせず、各手で残り地雷数を再計算し、
+証拠のない確定や途中で切れた手順を拒否します。
+最後には、一数字規則だけではもう新しい確定手がないことも調べます。
+
+\begin{pointbox}
+\textbf{検証の範囲を区別しましょう。}
+Bendが実行するのは一数字の局所推論であり、
+複数数字の反復とJSON生成は現時点ではPython参照実装です。
+Pythonの検査器も、公開数字と初期確定情報が正しいという
+\textbf{前提の下での局所的な検査}です。
+盤面全体に整合する地雷配置の存在や、一般のN×N運ゲー無し生成、
+10×10 GUIの動作を保証しません。
+Python参照コード・検査器・演習解答はリポジトリで公開し、
+学習用ZIPには完成解答を収録しません。
+\end{pointbox}
+
+\exercise{\code{witness.json}の最後の推論手順を削り、
+独立検査器が受け入れるか試してみましょう。
+次に公開数字を二つだけに減らして証明書を作り直し、
+確定するマスがどう変わるか比べてみましょう。}
+
 \section{複数の数字から推論する}
 未確定のマスを\(x,y,z\)と呼びます。一つ目の公開数字から「\(x,y\)の中には地雷が1個」、二つ目から「\(x,y,z\)の中には地雷が1個」と分かったとしましょう。まず自分で、\(z\)が安全かどうか考えてみてください。
 

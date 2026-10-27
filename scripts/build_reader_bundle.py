@@ -73,6 +73,8 @@ INTERMEDIATE_GAME_FILES = (
     "nxn_mine_words.bend",
     "nxn_neighbors.bend",
     "nxn_playthrough.bend",
+    "nxn_public_local.bend",
+    "nxn_public_three_step.bend",
     "nxn_public_neighbors.bend",
     "nxn_public_six_mask.bend",
     "nxn_public_subset.bend",
@@ -137,6 +139,11 @@ bend examples/minesweeper/nxn_public_three_bridge.bend
 期待結果: 341（候補数2、安全ビット14、地雷ビット1）
 六マスが盤面の未公開マス全体でないとき、地雷総数を局所推論へ
 誤適用してはいけません。一般N×Nの自動生成器は未完成です。
+
+公開数字0/2/6の一数字推論を三回手動でつなぐBend実習:
+bend examples/minesweeper/nxn_public_three_step.bend
+期待結果: 5（Safeタグ1 + Minesタグ2 + Minesタグ2）
+確定安全1/3/4、地雷5/7。自動反復ではなく、既知集合を手で渡します。
 
 4×4マインスイーパーのGUIをネイティブビルドして起動:
 bend examples/minesweeper/gui.bend -o minesweeper

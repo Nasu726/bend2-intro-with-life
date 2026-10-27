@@ -1,5 +1,7 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+**2026-10-27第22章本編統合候補（CI検収待ち）**：公開数字0/2/6の三段階推論と、Python参照のJSON証明書生成・別プロセス検査をTeX本編に統合。Bendの実行可能な`nxn_public_three_step.bend`を追加し、既存`nxn_public_local.bend`とともに読者ZIPへ収録。Bend実行回帰・ZIPの相対import閉包・TeX組版・PDF/ZIPの同版検査を通してから正本PR #4へ1コミットで統合する。反復推論とJSON生成はPython参照実装であり、Bend版の自動反復・一般N×N生成・10×10 GUI実機は未完成。採用表紙のblob `ba9b5c4c...` と第7/8章Byte/File・IO.now/IO.sleepは変更しない。
+
 **2026-10-27検証候補（Bend一数字規則とPython証明書の実手順照合）**：
 `test_nxn_single_clue_witness_bridge.py`で、公開数字から作ったPython証明書の
 各推論手をBendの既存`nxn_public_local.bend`へ再入力し、判定種別だけでなく

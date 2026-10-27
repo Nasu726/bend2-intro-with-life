@@ -39,9 +39,12 @@ bend examples/minesweeper/public_solver.bend
 bend examples/minesweeper/noguess_generator.bend
 bend examples/minesweeper/nxn_playthrough.bend
 bend examples/minesweeper/nxn_public_three_bridge.bend
+bend examples/minesweeper/nxn_public_three_step.bend
 bend examples/minesweeper/cli_save.bend save c0 f1
 bend examples/minesweeper/cli_save.bend load
 ```
+
+三つの公開数字の一数字推論は `nxn_public_three_step.bend` で確認できます。出力5は `Safe` のタグ1と `Mines` のタグ2が二つの合計であり、確定した安全マスは1・3・4番、地雷は5・7番です。既知安全集合を手で次の呼び出しへ渡す実習で、Bend自身の反復推論器が完成したわけではありません。証明書生成・独立検査のPython参照CLIはリポジトリにのみ置き、ZIPへは収録しません。
 
 現在のCIでは主に**Bend 2.0.39**で型検査・実行照合しています。`--verdict`による証明の確認にはLean 4も必要です。GUIの例はデスクトップ環境で動かしてください。LinuxでのネイティブGUIビルドには `libx11-dev` が必要です。
 
@@ -90,7 +93,7 @@ bend examples/46_elapsed_clock.bend
 
 最初の出力は`4`、次は`00 0a 0d ff`、最後は経過時間を表す整数です。時計の値は環境によって変わり、常に`20`になるとは限りません。ファイルの個数だけでは内容の正しさを保証できないため、4バイトの値と順序を別に確かめます。書き込み先に同名のディレクトリがある場合など、`File.open`が失敗するときは読み込みへ進まず終了します。
 
-現行プレビューの読者ZIPには、通常サンプル53本（import用補助モジュール1本を含む）とゲーム実習28本（10×10と三数字推論の相対import依存を含む）、PDF・README・LICENSEを収録しています。演習解答、内部の証明・テスト、編集用資料は同梱しません。
+現行プレビューの読者ZIPには、通常サンプル53本（import用補助モジュール1本を含む）とゲーム実習30本（10×10と三数字推論の相対import依存を含む）、PDF・README・LICENSEを収録しています。演習解答、内部の証明・テスト、編集用資料は同梱しません。
 
 ## 制作の進捗と方針
 
