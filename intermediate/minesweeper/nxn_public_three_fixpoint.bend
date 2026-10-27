@@ -7,7 +7,7 @@ import Base
 import ./nxn_geometry.bend as Geo
 import ./nxn_public_local.bend as Rule
 
-type Result is Type:
+type Propagation is Type:
   Inconsistent{}
   Limit{}
   Closure{mines: List<U32>, safe: List<U32>, changed: Bool}
@@ -22,7 +22,7 @@ def prepend(items: List<U32>, rest: List<U32>) -> List<U32>:
 # Rule.infer returns only cells not already certified, so prepend cannot
 # introduce duplicate decisions if the initial sets are well-formed.
 def accept(decision: Rule.Decision, mines: List<U32>, safe: List<U32>,
-           changed: Bool) -> Result:
+           changed: Bool) -> Propagation:
   match decision:
     case Rule.Inconsistent{}:
       Inconsistent{}
@@ -33,7 +33,7 @@ def accept(decision: Rule.Decision, mines: List<U32>, safe: List<U32>,
     case Rule.Mines{indices}:
       Closure{prepend(indices, mines), safe, True{}}
 
-def apply(+n: U32, +cell: U32, +clue: U32, state: Result) -> Result:
+def apply(+n: U32, +cell: U32, +clue: U32, state: Propagation) -> Propagation:
   match state:
     case Inconsistent{}:
       Inconsistent{}
@@ -43,10 +43,10 @@ def apply(+n: U32, +cell: U32, +clue: U32, state: Result) -> Result:
       accept(Rule.infer(n, cell, clue, mines, safe), mines, safe, changed)
 
 def one_round(+n: U32, +c0: U32, +v0: U32, +c1: U32, +v1: U32,
-              +c2: U32, +v2: U32, state: Result) -> Result:
+              +c2: U32, +v2: U32, state: Propagation) -> Propagation:
   apply(n, c2, v2, apply(n, c1, v1, apply(n, c0, v0, state)))
 
-def exhausted(state: Result) -> Result:
+def exhausted(state: Propagation) -> Propagation:
   match state:
     case Inconsistent{}:
       Inconsistent{}
@@ -62,7 +62,7 @@ def exhausted(state: Result) -> Result:
 # At most three clues, each with at most eight neighbors, can certify at
 # most 24 previously unknown cells. After 25 complete rounds the last round
 # must be unchanged. A Nat fuel guarantees termination even for bad inputs.
-def reset(state: Result) -> Result:
+def reset(state: Propagation) -> Propagation:
   match state:
     case Inconsistent{}:
       Inconsistent{}
@@ -73,7 +73,7 @@ def reset(state: Result) -> Result:
 
 def iterate(fuel: Nat, +n: U32, +c0: U32, +v0: U32,
             +c1: U32, +v1: U32, +c2: U32, +v2: U32,
-            state: Result) -> Result:
+            state: Propagation) -> Propagation:
   match fuel:
     case 0n:
       exhausted(state)
@@ -83,7 +83,7 @@ def iterate(fuel: Nat, +n: U32, +c0: U32, +v0: U32,
 
 def checked(ok: Bool, +n: U32, +c0: U32, +v0: U32,
             +c1: U32, +v1: U32, +c2: U32, +v2: U32,
-            mines: List<U32>, safe: List<U32>) -> Result:
+            mines: List<U32>, safe: List<U32>) -> Propagation:
   match ok:
     case False{}:
       Inconsistent{}
@@ -96,7 +96,7 @@ def checked(ok: Bool, +n: U32, +c0: U32, +v0: U32,
 # Invalid clues and contradictory local constraints return Inconsistent.
 def infer_three(+n: U32, +c0: U32, +v0: U32,
                 +c1: U32, +v1: U32, +c2: U32, +v2: U32,
-                mines: List<U32>, +safe: List<U32>) -> Result:
+                mines: List<U32>, +safe: List<U32>) -> Propagation:
   checked(Bool.and(Geo.valid_index(n, c0),
           Bool.and(Geo.valid_index(n, c1),
           Bool.and(Geo.valid_index(n, c2),
@@ -115,7 +115,7 @@ def size(items: List<U32>) -> U32:
     case item <> rest:
       (1 + size(rest) : U32)
 
-def score(result: Result) -> U32:
+def score(result: Propagation) -> U32:
   match result:
     case Inconsistent{}:
       0
