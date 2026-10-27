@@ -43,16 +43,17 @@ def one_round(+n: U32, clues: List<&2, Clue>,
         case Clue{index, value}:
           Fix.apply(n, index, value, one_round(n, rest, state))
 
-# Keep the recursion within one filled definition. Bend does not allow
-# after_round to refer to a later unfilled iterate definition.
-# Terminate on the first unchanged sweep. Fuel exhaustion means Limit.
+# Bend may scrutinize a parameter, but not the result of a call.
+# 'changed=True' in the initial state requests the first full sweep.
+# After that, an unchanged sweep is a fixed point; out-of-fuel with
+# pending changes is Limit. All matches scrutinize parameters/fields.
 def iterate(fuel: Nat, +n: U32, +clues: List<&2, Clue>,
             state: Fix.Propagation) -> Fix.Propagation:
   match fuel:
     case 0n:
-      Fix.Limit{}
+      Fix.exhausted(state)
     case 1n+k:
-      match one_round(n, clues, Fix.reset(state)):
+      match state:
         case Fix.Inconsistent{}:
           Fix.Inconsistent{}
         case Fix.Limit{}:
@@ -62,7 +63,8 @@ def iterate(fuel: Nat, +n: U32, +clues: List<&2, Clue>,
             case False{}:
               Fix.Closure{mines, safe, False{}}
             case True{}:
-              iterate(k, n, clues, Fix.Closure{mines, safe, True{}})
+              iterate(k, n, clues,
+                      one_round(n, clues, Fix.Closure{mines, safe, False{}}))
 
 def checked(ok: Bool, fuel: Nat, +n: U32,
             +clues: List<&2, Clue>,
@@ -71,7 +73,7 @@ def checked(ok: Bool, fuel: Nat, +n: U32,
     case False{}:
       Fix.Inconsistent{}
     case True{}:
-      iterate(fuel, n, clues, Fix.Closure{mines, safe, False{}})
+      iterate(fuel, n, clues, Fix.Closure{mines, safe, True{}})
 
 # Fuel is the maximum number of complete clue sweeps; n*n+1 suffices when
 # the input evidence is valid (each changing sweep certifies a fresh cell).
