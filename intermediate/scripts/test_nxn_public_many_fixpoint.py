@@ -82,6 +82,10 @@ def fixtures():
         (10, (99,), (0,1,10,11,20,21), (), (), 101),
         (3, (0,), (1,2,4,5), (0,), (), 10),
         (3, (5,7), (0,2,6), (), (), 1),
+        # Fully safe boards exercise 7, 8 and 9 public clue records.
+        (3, (), (0,1,2,3,4,5,6), (), (), 10),
+        (3, (), (0,1,2,3,4,5,6,7), (), (), 10),
+        (3, (), (0,1,2,3,4,5,6,7,8), (), (), 10),
     ]
     result = []
     for n, truth, opened, mines, safe, fuel in data:
@@ -162,10 +166,13 @@ def source(cases):
 
 def main():
     cases = fixtures()
-    assert len(cases) == 16, len(cases)
+    assert len(cases) == 19, len(cases)
     assert model(*cases[0]) == ((), (1,2,4,5,7,8))
     assert model(*cases[1]) == ((5,7), (0,1,2,3,4,6))
     assert model(*cases[9]) == "Limit"
+    assert model(*cases[10]) == ((), tuple(range(9)))
+    assert model(*cases[11]) == ((), tuple(range(9)))
+    assert model(*cases[12]) == ((), tuple(range(9)))
     assert model(*cases[-1]) == "Limit"
     print(f"PASS {len(cases)} Python many-clue fixture expectations", flush=True)
     if sys.argv[1:] == ["--model-only"]:
