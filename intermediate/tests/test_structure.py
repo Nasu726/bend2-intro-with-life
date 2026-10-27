@@ -89,6 +89,24 @@ class BookStructure(unittest.TestCase):
         self.assertIn("00 0a 0d ff", readme)
         self.assertIn("時計の値は環境によって変わり", readme)
 
+    def test_three_clue_fixed_point_scope(self):
+        from build_reader_bundle import INTERMEDIATE_GAME_FILES
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        source = (ROOT / "minesweeper" / "nxn_public_three_fixpoint.bend").read_text(encoding="utf-8")
+        supplement = (ROOT / "manuscript" / "22_NxN_Bend三数字固定点.md").read_text(encoding="utf-8")
+        status = (ROOT / "manuscript" / "STATUS.md").read_text(encoding="utf-8")
+        plan = (ROOT / "COMPLETION_PLAN.md").read_text(encoding="utf-8")
+        self.assertIn("nxn_public_three_fixpoint.bend", readme)
+        self.assertIn("期待出力は`206`", readme)
+        self.assertIn("読者ZIPには未収録", readme)
+        self.assertIn("三公開数字に限定", readme)
+        self.assertIn("def infer_three(", source)
+        self.assertIn("iterate(25n", source)
+        self.assertIn("三つの公開数字による単独制約の反復", supplement)
+        self.assertNotIn("nxn_public_three_fixpoint.bend", INTERMEDIATE_GAME_FILES)
+        self.assertIn("正本統合済み（Bend三数字固定点）", status)
+        self.assertIn(f"ZIPは**{len(INTERMEDIATE_EXAMPLES)+len(INTERMEDIATE_GAME_FILES)+3}エントリ**", plan)
+
     def test_pair_exists_lesson_has_real_source(self):
         text = BOOK.read_text(encoding="utf-8")
         self.assertEqual(text.count(r"\sample{52_pair_exists.bend}"), 1)

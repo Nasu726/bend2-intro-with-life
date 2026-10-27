@@ -44,7 +44,7 @@ bend examples/minesweeper/cli_save.bend save c0 f1
 bend examples/minesweeper/cli_save.bend load
 ```
 
-三つの公開数字の一数字推論は `nxn_public_three_step.bend` で確認できます。出力5は `Safe` のタグ1と `Mines` のタグ2が二つの合計であり、確定した安全マスは1・3・4番、地雷は5・7番です。既知安全集合を手で次の呼び出しへ渡す実習で、Bend自身の反復推論器が完成したわけではありません。証明書生成・独立検査のPython参照CLIはリポジトリにのみ置き、ZIPへは収録しません。
+三つの公開数字の一数字推論は `nxn_public_three_step.bend` で確認できます。出力5は `Safe` のタグ1と `Mines` のタグ2が二つの合計であり、確定した安全マスは1・3・4番、地雷は5・7番です。既知安全集合を手で次の呼び出しへ渡す実習です。別途、三公開数字に限定したBend自身の固定点反復も実装しましたが、一般N×Nの反復・連立推論器ではありません。証明書生成・独立検査のPython参照CLIはリポジトリにのみ置き、ZIPへは収録しません。
 
 現在のCIでは主に**Bend 2.0.39**で型検査・実行照合しています。`--verdict`による証明の確認にはLean 4も必要です。GUIの例はデスクトップ環境で動かしてください。LinuxでのネイティブGUIビルドには `libx11-dev` が必要です。
 
@@ -80,6 +80,21 @@ Bendの例は地雷を50〜59番に固定し、0番→99番の二手を**指定�
 Bendによる一般N×N連立推論・運ゲー無し生成、10×10 GUIの実機検収、全称証明は未完成です。参照Pythonコードや演習解答はリポジトリに置き、読者ZIPには入れません。
 
 [**完成までの執筆・実装予定**](COMPLETION_PLAN.md) に工程・ゲート・暫定スケジュールをまとめました。
+
+## 三公開数字に限定したBend固定点反復（リポジトリのみ）
+
+第22章の配布済み `nxn_public_three_step.bend` は確定集合を手で渡す例です。一方、リポジトリ内の `intermediate/minesweeper/nxn_public_three_fixpoint.bend` は、三つの公開数字の単独制約をBend自身で繰り返し適用します。**読者ZIPには未収録**であり、現行PDFにもこの反復版の解説はまだ統合していません。
+
+```sh
+bend intermediate/minesweeper/nxn_public_three_fixpoint.bend --check-only
+bend intermediate/minesweeper/nxn_public_three_fixpoint.bend
+# 206
+python3 intermediate/scripts/test_nxn_public_three_fixpoint.py
+```
+
+期待出力は`206`です。地雷5・7番と安全1・3・4番を確定し、公開済み0・2・6番を含めた安全6マスと地雷2マスを`100*地雷数+安全数`で表しています。Python参照モデルとの**11件の有限照合**（有効6局面・拒否5件）はCI成功済みです。
+
+入力は互いに異なる三つの公開数字と、別途正しいことが確認された初期確定集合に限定します。旗は証拠ではありません。燃料25回で停止し、矛盾を`Inconsistent`、未収束を`Limit`として区別します。三数字の連立制約による新たな結論、一般N×Nの運ゲー無し生成、10×10 GUI実機動作は保証しません。
 
 ## 第7・8章の実行確認（File・時刻）
 

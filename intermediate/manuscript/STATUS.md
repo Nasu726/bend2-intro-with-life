@@ -1,14 +1,14 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
-**2026-10-27検証候補（三公開数字のBend固定点反復）**：
-既存の一数字推論をBendの`nxn_public_three_fixpoint.bend`から反復呼び出し、
-公開済み数字の位置を既知安全集合に含めた上で、`Safe`/`Mines`を次の数字へ伝播。
-三数字の近傍は最大24マスなので25回のNat燃料で固定点を判定し、
-未収束なら`Limit`として拒否する。独立Python参照との6局面と入力拒否5件を
-`scripts/test_nxn_public_three_fixpoint.py`で型検査・実行照合する。
-**Pythonモデル11件の事前検査は成功。Bend型検査・実行と全CIは検証PR待ち。**
-三数字の単独規則のみであり、一般N×N連立推論・運ゲー無し生成の完成ではない。
-補稿はTeX/PDF/読者ZIP未統合。採用済み表紙、第7・8章、既存PDF/ZIPは不変更。
+**2026-10-27正本統合済み（Bend三数字固定点）**：
+正本PR #4の先端 `fd5b1170` へ、Bend自身による三公開数字の単独制約固定点反復、
+独立Pythonモデル11件（有効6・拒否5）、CI・補稿・進捗台帳を5ファイル・1コミットで統合。
+正本統合後のReader download bundles／PDF layout／Intermediate textbook／Testsはすべて成功。
+公開済み数字の位置を初期安全集合に含め、`Safe`/`Mines`を次の数字へ伝播する。
+三数字の近傍最大24マスに対してNat燃料25回を用い、未収束は`Limit`として拒否。
+**三数字の単独規則のみ**で、一般N×N連立推論・運ゲー無し生成・10×10 GUI実機の完成ではない。
+この反復版の補稿はTeX/PDF/読者ZIP未統合。採用済み表紙 `ba9b5c4c...`、
+第7・8章Byte/File・IO.now/IO.sleep、既存PDF/ZIPは不変更。
 
 **2026-10-27第22章本編統合候補（CI検収待ち）**：公開数字0/2/6の三段階推論と、Python参照のJSON証明書生成・別プロセス検査をTeX本編に統合。Bendの実行可能な`nxn_public_three_step.bend`を追加し、既存`nxn_public_local.bend`とともに読者ZIPへ収録。Bend実行回帰・ZIPの相対import閉包・TeX組版・PDF/ZIPの同版検査を通してから正本PR #4へ1コミットで統合する。反復推論とJSON生成はPython参照実装であり、Bend版の自動反復・一般N×N生成・10×10 GUI実機は未完成。採用表紙のblob `ba9b5c4c...` と第7/8章Byte/File・IO.now/IO.sleepは変更しない。
 
@@ -72,7 +72,7 @@ Python参照アダプター `from_public_clues` / `from_public_board` に
 ## 現時点の数値
 
 - `Intermediate_Textbook.tex`：6 Part・23章。全23章に本文があります（2026-10-25の構造監査）。
-- TeX本文中の `\sample{...}`：53か所（53種類を各1回掲載）。読者ZIPは通常Bend53本・ゲーム12本の計65本、PDF/README/LICENSE込み68エントリ。直近のXeLaTeX CIログではPDF115ページ。`board_index.bend` は `main` のない補助モジュールです。
+- TeX本文中の `\sample{...}`：53か所（53種類を各1回掲載）。読者ZIPは通常Bend53本・ゲーム30本の計83本、PDF/README/LICENSE込み86エントリ。直近のXeLaTeX CIログではPDF119ページ。`board_index.bend` は `main` のない補助モジュールです。
 - TeX本文中の `\exercise{...}`：47か所。ただし全章で独立した検証方法を伴うわけではありません。
 - 旧原稿監査では12章が章開始から次の章まで1,500文字未満（TeX命令を含む）でした。改稿後の章別文字数は再計測が必要です。
 - 形式的検証：マインスイーパーのC・B・G系列で43本の `law` と対応する証明。コードはリポジトリ側にあり、第13・15・17・21章に一部の法則と解説を統合しました。全文の教材化はまだ途中です。
