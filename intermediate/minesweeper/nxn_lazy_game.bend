@@ -34,7 +34,7 @@ def gcd(fuel: Nat, +a: U32, +b: U32, done: Bool) -> U32:
         case True{}:
           a
         case False{}:
-          r = U32.mod(a, b)
+          +r = U32.mod(a, b)
           gcd(k, b, r, U32.is_eq(r, 0))
 
 # A relatively prime step visits all positions in [0,m) without repetition.
@@ -47,7 +47,7 @@ def choose_step(fuel: Nat, +candidate: U32, +m: U32, good: Bool) -> U32:
         case True{}:
           candidate
         case False{}:
-          next = (U32.mod(candidate, (m - 1 : U32)) + 1 : U32)
+          +next = (U32.mod(candidate, (m - 1 : U32)) + 1 : U32)
           choose_step(k, next, m,
                       U32.is_eq(gcd(20n, next, m, False{}), 1))
 
@@ -66,15 +66,15 @@ def scatter(fuel: Nat, +i: U32, +m: U32, +stride: U32,
     case 0n:
       board
     case 1n+k:
-      compressed = U32.mod((offset + i*stride : U32), m)
+      +compressed = U32.mod((offset + i*stride : U32), m)
       cell = skip_clicked(U32.is_lt(compressed, clicked), compressed)
       scatter(k, (i + 1 : U32), m, stride, offset, clicked,
               Words.set_checked(board, cell, True{}))
 
 # Reproducible permutation for teaching, not uniform RNG or no-guess proof.
 def generate(+n: U32, +count: U32, +seed: U32, +clicked: U32) -> Words.MineWords:
-  m = (n*n - 1 : U32)
-  first_step = (1 + U32.mod(U32.xor(seed, 2654435769), (m - 1 : U32)) : U32)
+  +m = (n*n - 1 : U32)
+  +first_step = (1 + U32.mod(U32.xor(seed, 2654435769), (m - 1 : U32)) : U32)
   stride = choose_step(64n, first_step, m,
                        U32.is_eq(gcd(20n, first_step, m, False{}), 1))
   offset = U32.mod(U32.xor(seed, 2246822507), m)

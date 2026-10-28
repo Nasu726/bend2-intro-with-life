@@ -110,8 +110,21 @@ def generate_harness(checks):
               + " : U32)"]
     return "\n".join(lines) + "\n"
 
+def verify_prestart_contract():
+    """Boundary actions do not select a first cell or alter Fresh."""
+    assert len(cases()) == 75
+    n, count, seed = 10, 10, 8765
+    assert expected(n, count, seed, (), 0) == 300
+    assert expected(n, count, seed, (("mark", 0), ("click", 127)), 0) == 300
+    assert expected(n, count, seed, (("click", 100), ("click", 0)), 0) == (
+        expected(n, count, seed, (("click", 0),), 0))
+    assert expected(n, count, seed,
+                    (("mark", 0), ("click", 127), ("click", 5)), 5) == (
+        expected(n, count, seed, (("click", 5),), 5))
+
 def main():
     assert invariant_checks() == 8910
+    verify_prestart_contract()
     checks = cases()
     with tempfile.TemporaryDirectory() as tmp:
         d = Path(tmp)
@@ -132,7 +145,8 @@ if __name__ == "__main__":
     import sys
     if sys.argv[1:] == ["--python-only"]:
         assert invariant_checks() == 8910
-        print("PASS 8910 independent Python placement invariants")
+        verify_prestart_contract()
+        print("PASS 8910 independent Python placement invariants and pre-start contract")
     elif not sys.argv[1:]:
         main()
     else:
