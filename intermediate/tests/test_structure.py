@@ -98,14 +98,31 @@ class BookStructure(unittest.TestCase):
         plan = (ROOT / "COMPLETION_PLAN.md").read_text(encoding="utf-8")
         self.assertIn("nxn_public_three_fixpoint.bend", readme)
         self.assertIn("期待出力は`206`", readme)
-        self.assertIn("読者ZIPには未収録", readme)
+        self.assertIn("読者ZIPに収録", readme)
         self.assertIn("三公開数字に限定", readme)
         self.assertIn("def infer_three(", source)
         self.assertIn("iterate(25n", source)
         self.assertIn("三つの公開数字による単独制約の反復", supplement)
-        self.assertNotIn("nxn_public_three_fixpoint.bend", INTERMEDIATE_GAME_FILES)
+        self.assertIn("nxn_public_three_fixpoint.bend", INTERMEDIATE_GAME_FILES)
+        self.assertIn("nxn_public_many_fixpoint.bend", INTERMEDIATE_GAME_FILES)
+        self.assertIn("nxn_public_pair_gap.bend", INTERMEDIATE_GAME_FILES)
         self.assertIn("正本統合済み（Bend三数字固定点）", status)
         self.assertIn(f"ZIPは**{len(INTERMEDIATE_EXAMPLES)+len(INTERMEDIATE_GAME_FILES)+3}エントリ**", plan)
+
+    def test_chapter22_variable_clues_and_pair_gap_are_in_book(self):
+        from build_reader_bundle import INTERMEDIATE_GAME_FILES
+        book = BOOK.read_text(encoding="utf-8")
+        chapter = re.split(r"\\chapter\{[^}]+\}", book)[22]
+        for name, result in (("nxn_public_many_fixpoint.bend", "6"),
+                             ("nxn_public_pair_gap.bend", "203")):
+            self.assertIn("bend examples/minesweeper/" + name, chapter)
+            self.assertIn(name, INTERMEDIATE_GAME_FILES)
+            self.assertIn(result, chapter)
+        self.assertIn("type Clue is Data:", chapter)
+        self.assertIn("8,631", chapter)
+        self.assertIn("1,672", chapter)
+        self.assertIn("48状態", chapter)
+        self.assertNotIn("まだBendが自動で数字を繰り返し調べるプログラムではありません。", chapter)
 
     def test_pair_exists_lesson_has_real_source(self):
         text = BOOK.read_text(encoding="utf-8")

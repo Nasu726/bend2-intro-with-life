@@ -80,6 +80,10 @@ INTERMEDIATE_GAME_FILES = (
     "nxn_public_subset.bend",
     "nxn_public_three_bridge.bend",
     "nxn_public_three_small.bend",
+    # Chapter 22: variable-count single-clue fixed point and two-clue gap.
+    "nxn_public_three_fixpoint.bend",
+    "nxn_public_many_fixpoint.bend",
+    "nxn_public_pair_gap.bend",
     "nxn_relocate.bend",
     "nxn_step.bend",
     "nxn_terminal.bend",
@@ -143,7 +147,19 @@ bend examples/minesweeper/nxn_public_three_bridge.bend
 公開数字0/2/6の一数字推論を三回手動でつなぐBend実習:
 bend examples/minesweeper/nxn_public_three_step.bend
 期待結果: 5（Safeタグ1 + Minesタグ2 + Minesタグ2）
-確定安全1/3/4、地雷5/7。自動反復ではなく、既知集合を手で渡します。
+確定安全1/3/4、地雷5/7。これは既知集合を手で渡す例です。
+
+公開数字の個数を固定しない単独規則の固定点反復:
+bend examples/minesweeper/nxn_public_many_fixpoint.bend
+期待結果: 6（公開済み1/2/4/5と新たな安全7/8の計6マス）
+三数字だけの固定点反復（比較用）:
+bend examples/minesweeper/nxn_public_three_fixpoint.bend
+期待結果: 206（確定地雷2マス、確定安全6マス）
+
+単独規則で止まる二数字から、部分集合規則で安全を確定:
+bend examples/minesweeper/nxn_public_pair_gap.bend
+期待結果: 203（既知安全2マス、差集合で追加安全3マス）
+これは未知近傍を手で渡す有限教材で、一般N×Nの完全連立推論ではありません。
 
 4×4マインスイーパーのGUIをネイティブビルドして起動:
 bend examples/minesweeper/gui.bend -o minesweeper

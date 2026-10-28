@@ -44,7 +44,7 @@ bend examples/minesweeper/cli_save.bend save c0 f1
 bend examples/minesweeper/cli_save.bend load
 ```
 
-三つの公開数字の一数字推論は `nxn_public_three_step.bend` で確認できます。出力5は `Safe` のタグ1と `Mines` のタグ2が二つの合計であり、確定した安全マスは1・3・4番、地雷は5・7番です。既知安全集合を手で次の呼び出しへ渡す実習です。別途、三公開数字に限定したBend自身の固定点反復も実装しましたが、一般N×Nの反復・連立推論器ではありません。証明書生成・独立検査のPython参照CLIはリポジトリにのみ置き、ZIPへは収録しません。
+三つの公開数字の一数字推論は `nxn_public_three_step.bend` で確認できます。出力5は `Safe` のタグ1と `Mines` のタグ2が二つの合計であり、確定した安全マスは1・3・4番、地雷は5・7番です。既知安全集合を手で次の呼び出しへ渡す実習です。別途、公開数字をリストで受け取るBend自身の単独数字固定点反復と、二数字の差集合推論を追加しました。いずれも一般N×Nの完全連立推論器ではありません。証明書生成・独立検査のPython参照CLIはリポジトリにのみ置き、ZIPへは収録しません。
 
 現在のCIでは主に**Bend 2.0.39**で型検査・実行照合しています。`--verdict`による証明の確認にはLean 4も必要です。GUIの例はデスクトップ環境で動かしてください。LinuxでのネイティブGUIビルドには `libx11-dev` が必要です。
 
@@ -81,20 +81,23 @@ Bendによる一般N×N連立推論・運ゲー無し生成、10×10 GUIの実�
 
 [**完成までの執筆・実装予定**](COMPLETION_PLAN.md) に工程・ゲート・暫定スケジュールをまとめました。
 
-## 三公開数字に限定したBend固定点反復（リポジトリのみ）
+## 公開数字をリストで渡すBend固定点と二数字の差集合（読者ZIPに収録）
 
-第22章の配布済み `nxn_public_three_step.bend` は確定集合を手で渡す例です。一方、リポジトリ内の `intermediate/minesweeper/nxn_public_three_fixpoint.bend` は、三つの公開数字の単独制約をBend自身で繰り返し適用します。**読者ZIPには未収録**であり、現行PDFにもこの反復版の解説はまだ統合していません。
+第22章の`nxn_public_three_step.bend`は、既知安全集合を**手で渡す**三数字の例です。これとは別に、`nxn_public_three_fixpoint.bend`は**三公開数字に限定**して自動反復し、`nxn_public_many_fixpoint.bend`は公開数字を`List<&2,Clue>`で**任意個数**受け取ります。さらに`nxn_public_pair_gap.bend`では、単独数字の反復では進めない局面を二数字の差集合で解きます。3本とも**読者ZIPに収録**し、必要な相対importも同梱しました。
 
 ```sh
-bend intermediate/minesweeper/nxn_public_three_fixpoint.bend --check-only
-bend intermediate/minesweeper/nxn_public_three_fixpoint.bend
+bend examples/minesweeper/nxn_public_three_fixpoint.bend --check-only
+bend examples/minesweeper/nxn_public_three_fixpoint.bend
 # 206
-python3 intermediate/scripts/test_nxn_public_three_fixpoint.py
+bend examples/minesweeper/nxn_public_many_fixpoint.bend
+# 6
+bend examples/minesweeper/nxn_public_pair_gap.bend
+# 203
 ```
 
-期待出力は`206`です。地雷5・7番と安全1・3・4番を確定し、公開済み0・2・6番を含めた安全6マスと地雷2マスを`100*地雷数+安全数`で表しています。Python参照モデルとの**11件の有限照合**（有効6局面・拒否5件）はCI成功済みです。
+三数字版の期待出力は`206`です。地雷5・7番と安全1・3・4番を確定し、公開済み0・2・6番を含めた安全6マスと地雷2マスを`100*地雷数+安全数`で表しています。可変個数版の`6`は公開済み1・2・4・5番と追加安全7・8番の計6マスです。差集合版の`203`は**単独規則の既知安全2マス**と**差集合で増えた安全3マス**を別の符号で表しています。三つの数値はゲームのスコアでも、地雷の位置でもありません。
 
-入力は互いに異なる三つの公開数字と、別途正しいことが確認された初期確定集合に限定します。旗は証拠ではありません。燃料25回で停止し、矛盾を`Inconsistent`、未収束を`Limit`として区別します。三数字の連立制約による新たな結論、一般N×Nの運ゲー無し生成、10×10 GUI実機動作は保証しません。
+三数字版のPython参照モデルとの11件照合、可変個数版の19条件照合、差集合の48条件照合はCIで検証済みです。3×3の全8,631公開状態について単独規則の健全性を確認したのは**Python参照モデル**であり、Bendの全状態を実行したわけではありません。初期確定情報は別途正しいことが確認されたものだけを使い、旗は証拠にしません。反復は燃料不足を`Limit`として区別します。差集合のBend実習では未知近傍を手で指定しており、一般N×Nの自動連立推論・運ゲー無し生成は未完成です。
 
 ## 第7・8章の実行確認（File・時刻）
 
@@ -108,7 +111,7 @@ bend examples/46_elapsed_clock.bend
 
 最初の出力は`4`、次は`00 0a 0d ff`、最後は経過時間を表す整数です。時計の値は環境によって変わり、常に`20`になるとは限りません。ファイルの個数だけでは内容の正しさを保証できないため、4バイトの値と順序を別に確かめます。書き込み先に同名のディレクトリがある場合など、`File.open`が失敗するときは読み込みへ進まず終了します。
 
-現行プレビューの読者ZIPには、通常サンプル53本（import用補助モジュール1本を含む）とゲーム実習30本（10×10と三数字推論の相対import依存を含む）、PDF・README・LICENSEを収録しています。演習解答、内部の証明・テスト、編集用資料は同梱しません。
+現行プレビューの読者ZIPには、通常サンプル53本（import用補助モジュール1本を含む）とゲーム実習33本（10×10、可変個数固定点、二数字差集合の相対import依存を含む）、PDF・README・LICENSEを収録しています。演習解答、内部の証明・テスト、編集用資料は同梱しません。
 
 ## 制作の進捗と方針
 
