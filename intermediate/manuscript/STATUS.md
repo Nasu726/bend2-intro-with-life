@@ -1,5 +1,13 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-29：初手遅延生成のFresh所有権と2×2境界回帰（検証候補）
+
+- 検証PR #77のCI #40717125134は**Intermediate Bend examples失敗**。Python 8,910件、Tests、Reader download bundles、XeLaTeX/PDF/ZIP一致、公開情報推論ジョブは成功したが、Bend型検査で `click` 内の `Fresh{n,count,seed}` の `n` が `Geo.valid_index(n,index)` と `begin_if_valid(...,n,...)` に二重消費されて停止。これは前回の `gcd` 等の修正とは独立した所有権エラー。
+- `Fresh{+n,count,seed}` とし、既存の `nxn_relocate.bend` で成功済みの構築子フィールド再利用束縛に合わせた。2×2・地雷3個の最小盤面について、無効クリック→開始前旗→有効クリック、初手勝利後の追加クリックを独立PythonオラクルとBend照合の双方へ2ケース追加（75→77）。修正後のBend型検査・実行照合はCI成功前には**未確認**。
+- 正本 `b94cd1bd` の採用表紙 `cover_art.tex` blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1`、第7/8章TeX、124ページPDF、91件ZIP、既存Bend fixtureは不変更。全CIが成功するまで正本統合しない。
+
+---
+
 ## 2026-10-29：初手遅延生成のBend所有権修正（検証候補）
 
 - 検証PR #77 のCI #40705760380で、Bend本体`gcd`のローカル`r`を再帰引数とゼロ判定に二重使用したため`r (consumed more than once)`が発生。先のテストハーネスの構造照合エラーとは別の原因で、**Bend 75件は未成功**。

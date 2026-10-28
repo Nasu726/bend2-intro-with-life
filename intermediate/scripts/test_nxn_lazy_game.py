@@ -83,6 +83,9 @@ def cases():
         (10, 10, 8765, (("click", 100), ("click", 0)), 0),
         (10, 10, 8765, (("mark", 0), ("click", 127), ("click", 5)), 5),
         (10, 10, 8765, (), 0),
+        # Minimal 2x2 full-mine-count boundary and terminal input stability.
+        (2, 3, 20261029, (("click", 4), ("mark", 3), ("click", 1)), 1),
+        (2, 3, 20261029, (("click", 1), ("click", 0)), 0),
     ]
     return out
 
@@ -112,7 +115,7 @@ def generate_harness(checks):
 
 def verify_prestart_contract():
     """Boundary actions do not select a first cell or alter Fresh."""
-    assert len(cases()) == 75
+    assert len(cases()) == 77
     n, count, seed = 10, 10, 8765
     assert expected(n, count, seed, (), 0) == 300
     assert expected(n, count, seed, (("mark", 0), ("click", 127)), 0) == 300

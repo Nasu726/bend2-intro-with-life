@@ -100,7 +100,7 @@ def active_click(state: Terminal.State, +index: U32) -> Game:
 
 def click(game: Game, +index: U32) -> Game:
   match game:
-    case Fresh{n, count, seed}:
+    case Fresh{+n, count, seed}:
       begin_if_valid(Geo.valid_index(n, index), n, count, seed, index)
     case Active{state}:
       active_click(state, index)
