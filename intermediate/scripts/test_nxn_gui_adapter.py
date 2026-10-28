@@ -75,6 +75,11 @@ def preflight():
     assert index(100, 3199, 3199) == 9999
     assert all(0 <= n <= 100 for n, _, _ in GEOMETRY)
     assert all(oracle(*t) in range(0, 401) for t in TRACES)
+    # Bend resolves only already-filled definitions; guard generated source order.
+    generated = harness(GEOMETRY, TRACES[:1])
+    assert generated.index("def one_if_true(") < generated.index("def equal(")
+    assert generated.index("def equal(") < generated.index("def geom_0(")
+    assert generated.count("def main() -> U32:") == 1
     assert all(oracle(*t) == 300 for t in TRACES[:5])
     assert oracle(*TRACES[7]) == oracle(*TRACES[6])
     assert oracle(*TRACES[8]) == oracle(*TRACES[6])
@@ -84,12 +89,12 @@ def preflight():
 def harness(geometry, traces):
     lines = [
         "import Base", "import ./nxn_gui_adapter.bend as GUI", "",
-        "def equal(a: U32, b: U32) -> U32:",
-        "  one_if_true(U32.is_eq(a, b))", "",
         "def one_if_true(b: Bool) -> U32:",
         "  match b:",
         "    case True{}:", "      1",
         "    case False{}:", "      0", "",
+        "def equal(a: U32, b: U32) -> U32:",
+        "  one_if_true(U32.is_eq(a, b))", "",
     ]
     cases = []
     for k, (n, x, y) in enumerate(geometry):
