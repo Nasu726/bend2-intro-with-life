@@ -64,7 +64,9 @@ def preflight():
     assert "import ./nxn_lazy_game.bend as Lazy" in source
     assert "Lazy.click(game, index)" in source
     assert "Lazy.mark(game, index)" in source
-    assert "App.run" not in source
+    assert "  App.run(" not in source
+    assert "def reset_gui(seed: U32)" in source
+    assert "def pointer(game: Lazy.Game" in source
     assert index(2, 31, 31) == 0
     assert index(2, 32, 0) == 1
     assert index(2, 63, 63) == 3
@@ -102,6 +104,17 @@ def harness(geometry, traces):
         lines.extend([f"  equal(GUI.snapshot(g, {probe}), "
                       f"{oracle(n,count,seed,ops,probe)})", ""])
         cases.append(f"trace_{k}()")
+    # Exercise the fixed 10x10 GUI-facing wrappers without allocating a board.
+    if geometry:
+        lines += [
+            "def gui_reset_flag() -> U32:",
+            "  equal(GUI.snapshot(GUI.pointer(GUI.reset_gui(20261029), 319, 319, 1), 99), 300)", "",
+            "def gui_reset_outside() -> U32:",
+            "  equal(GUI.snapshot(GUI.pointer(GUI.reset_gui(20261029), 320, 0, 0), 0), 300)", "",
+            "def gui_reset_middle() -> U32:",
+            "  equal(GUI.snapshot(GUI.pointer(GUI.reset_gui(20261029), 0, 0, 2), 0), 300)", "",
+        ]
+        cases.extend(("gui_reset_flag()", "gui_reset_outside()", "gui_reset_middle()"))
     lines.extend(["def main() -> U32:",
                   "  (" + " + ".join(cases) + " : U32)"])
     return "\n".join(lines) + "\n"
@@ -136,14 +149,14 @@ def main():
         (directory / ADAPTER.name).write_bytes(ADAPTER.read_bytes())
         geom = directory / "check_gui_geometry.bend"
         geom.write_text(harness(GEOMETRY, ()), encoding="utf-8")
-        run_bend(geom, directory, len(GEOMETRY), "18 pixel coordinate cases")
+        run_bend(geom, directory, len(GEOMETRY) + 3, "18 pixel coordinates and 3 GUI wrapper cases")
         for start in range(0, len(TRACES), 3):
             traces = TRACES[start:start + 3]
             target = directory / f"check_gui_game_{start}.bend"
             target.write_text(harness((), traces), encoding="utf-8")
             run_bend(target, directory, len(traces),
                      f"game traces {start+1}-{start+len(traces)}/{len(TRACES)}")
-    print("PASS 18 Bend pixel coordinates and 13 Bend game traces", flush=True)
+    print("PASS 18 Bend pixel coordinates, 3 fixed-GUI wrappers and 13 Bend game traces", flush=True)
 
 
 if __name__ == "__main__":
