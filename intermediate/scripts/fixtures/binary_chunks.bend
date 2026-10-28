@@ -1,6 +1,6 @@
 import Base
 
-# This test fixture reads a regular file in three bounded chunks.
+# This test fixture performs four bounded reads of a regular file.
 # Three data reads are followed by a fourth read that must observe EOF
 # for every tested regular file of length 0..5.
 def after_fourth(result: File & Result<&1, &1, U32 & String, List<&2, U32>>) -> IO(Unit):
