@@ -883,3 +883,18 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - バージョン1・必須フィールド厳格一致・重複JSONキー拒否・boolを整数として拒否・昇順一意のセル番号・64KiB上限・不正時終了コード3を契約とする。新規7テストで正常例・改ざん・途中切れ・不正JSON・サイズ上限・別プロセスを検査する。
 - 第22章補稿にBendの既存単一数字実行（タグ1）とPython固定点証明書の生成→JSON→検査の実行例・結果・仕組み・演習を追加。**BendがJSONを生成した、Bendで固定点推論が完成したとは主張しない**。
 - 手元Python 3の新規7テスト成功。実リポジトリの全CIは検証PRで判定する。**TeX本文・生成PDF・読者ZIP、採用済み表紙 `cover_art.tex`、第7・8章Byte/File・IO.now/IO.sleepは不変更**。一般N×N運ゲー無し生成、10×10 GUI実機、全23章校閲も未完成。
+
+## 2026-10-28：初手後に盤面を生成するFresh契約（検証候補）
+
+- 正本 `9011dad3` の4ワークフロー成功を確認。直前のコミットは第22章のBend固定点と二数字差集合をTeX/PDF/ZIPへ統合。採用表紙blob `ba9b5c4c...` 不変。
+- Freshは `n/mine_count/seed` のみを保持し、初手の有効な左クリック後にそのセルを除外して生成する。`nxn_lazy_placement.bend`・`nxn_lazy_game.bend`、独立Python回帰、CI、21章補稿、要件台帳を一体で検証する。
+- 旧`start.bend`・`nxn_full_game.bend`・4×4 GUIは事前配置の低レベル教材／旧UIであり、新Fresh契約と混同しない。今回の新コードはリポジトリ限定。TeX・PDF・読者ZIP・採用表紙・第7/8章は不変更。
+- Bend実行・全CIは検証PRで判定し、成功前には正本へ統合しない。GUI移行、一般運ゲー無し生成、乱数品質、全称証明、全23章校閲は未完成。
+
+- **検証CI初回診断**：Bend例ジョブの新規テストで `Placement.Ready` が別モジュールの `Ready` と大域コンストラクタ名衝突（duplicate declaration）し、型検査前に停止。独自名 `LazyReady` / `LazyRejected` に改名した。既存のXeLaTeX/PDF/ZIP一致、Tests、Reader bundlesは成功。新規Bendテストは既存23分の例ジョブから分離し、15分上限の専用ジョブで再検証する。**再検証成功前に正本へ統合しない**。
+
+- **二回目の専用Bend検査診断**：`fill`内の局所計算束縛 `draw = advance(rng)` を、`select`の分岐条件に使ったため「computed value cannot be scrutinized」が発生。Bend 2.0.39のmatch制約に合わせ、条件と再帰引数で`advance(rng)`を直接使う純粋式へ変更。分岐規則・乱数系列は不変更。専用CIの再実行を待ち、正本への未検証pushはしない。
+
+- **三回目の専用Bend検査診断**：失敗位置はBool分岐ではなく、`(updated, remaining) = select(...)` の**計算結果タプルを局所分解**していた点。Bendのscrutinee規則に従い、`fill`の引数を `MineWords & U32` の組に変更し、計算済み組は次の再帰呼び出しへそのまま渡す。関数引数でのみ組を分解する構成へ修正。選択規則・初手除外は不変更。専用CIで再検査する。
+
+- **四回目のBend検査診断**：再帰燃料`fuel`の前で`pair`を分解すると、`fuel`のmatch順序違反。燃料・初手スキップを先に`match fuel skip`で同時分岐し、後続引数`pair`を必要な分岐内だけで分解するよう整理。停止性の減少引数と配置規則は維持。専用CIで再検査する。
