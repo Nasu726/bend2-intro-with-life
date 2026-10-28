@@ -5,7 +5,7 @@
 - 正本 `d6f126e3` の全4ワークフロー成功を確認。TeX第22章に残っていた「Bendが自動で繰り返し調べない」という旧説明を訂正し、可変個数固定点（出力6）と二数字差集合（出力203）のBendコード、実行結果、停止条件、演習、保証範囲を本文へ追加。
 - 読者ZIPの許可リストに `nxn_public_three_fixpoint.bend`、`nxn_public_many_fixpoint.bend`、`nxn_public_pair_gap.bend` を追加。既存の相対import依存を満たし、通常53＋ゲーム33＋PDF/README/LICENSE＝89エントリ。解答・Pythonテスト・編集資料は収録しない。
 - 第22章の3×3全公開状態8,631の監査は**Python参照モデル**の有限検証（誤確定0、不完全1,672）。二数字の48条件はBendの有限照合であり、一般N×Nの連立推論の証明ではない。
-- **検証用ブランチでXeLaTeX、Bend実行、PDF/ZIP一致を通してから正本へ1コミットで反映する**。採用済み表紙 `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1`、第7章Byte/File、第8章IO.now/IO.sleepは不変更。一般運ゲー無し生成・10×10 GUI実機・全23章最終校閲は未完成。
+- **PR外の検証ブランチでBendの3例（206/6/203）型検査・実行、XeLaTeX（121ページ）、表紙画素一致、PDF/ZIPのバイト一致、89エントリ許可リスト、構造テストをすべて成功**（[検証CI #40609798635](https://github.com/Nasu726/bend2-intro-with-life/actions/runs/40609798635)）。正本への1コミット統合は通常PR CIの全成功後に行う。採用済み表紙 `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1`、第7章Byte/File、第8章IO.now/IO.sleepは不変更。一般運ゲー無し生成・10×10 GUI実機・全23章最終校閲は未完成。
 
 ---
 
