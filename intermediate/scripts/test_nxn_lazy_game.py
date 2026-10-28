@@ -79,15 +79,21 @@ def cases():
         (10, 10, 222, (("click", 100), ("mark", 0)), 0),
         (10, 10, 333, (("click", 127),), 0),
         (100, 9999, 0, (("click", 10000),), 0),
+        # Invalid click and pre-start flag must not choose the first cell.
+        (10, 10, 8765, (("click", 100), ("click", 0)), 0),
+        (10, 10, 8765, (("mark", 0), ("click", 127), ("click", 5)), 5),
+        (10, 10, 8765, (), 0),
     ]
     return out
 
 def generate_harness(checks):
     lines = ["import Base", "import ./nxn_lazy_game.bend as Lazy", "",
-             "def equal(a: U32, b: U32) -> U32:",
-             "  eq = U32.is_eq(a, b)", "  match eq:",
+             "def one_if_true(ok: Bool) -> U32:",
+             "  match ok:",
              "    case True{}:", "      1",
-             "    case False{}:", "      0", ""]
+             "    case False{}:", "      0", "",
+             "def equal(a: U32, b: U32) -> U32:",
+             "  one_if_true(U32.is_eq(a, b))", ""]
     for k, (n, count, seed, ops, probe) in enumerate(checks):
         lines += [f"def case_{k}() -> U32:",
                   f"  g = Lazy.new({n}, {count}, {seed})"]
@@ -123,4 +129,11 @@ def main():
     print(f"PASS 8910 placement invariants and {len(checks)} Bend differential cases")
 
 if __name__ == "__main__":
-    main()
+    import sys
+    if sys.argv[1:] == ["--python-only"]:
+        assert invariant_checks() == 8910
+        print("PASS 8910 independent Python placement invariants")
+    elif not sys.argv[1:]:
+        main()
+    else:
+        raise SystemExit("usage: test_nxn_lazy_game.py [--python-only]")

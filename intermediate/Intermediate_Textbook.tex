@@ -753,6 +753,48 @@ python3 -c "from pathlib import Path; print(Path('sample_bytes.bin').read_bytes(
 
 \exercise{\code{45_binary_file.bend}のリストを\code{[1, 2, 3]}に変え、実行結果を確かめてみましょう。次に4バイトの順序を逆にした場合、個数を数えるだけでは変更を検出できない理由を説明してみましょう。}
 
+
+\section{短いバイト列を分割して終端を確かめる}
+ファイルが大きいとき、一度の読み取りで全部を取り出せるとは限りません。\code{File.read_bytes(file, 2)}は一度に\textbf{最大2バイト}を要求します。実際に何バイト返ったかと、終端で何が返るかを分けて調べてみましょう。
+
+\sample{54_binary_chunks.bend}{2バイトずつ4回読み込む}
+まず\code{45_binary_file.bend}で4バイトのファイルを作り、同じフォルダーから分割読み込みの例を実行します。
+\begin{lstlisting}[language={},caption={バイトの分割読み込み}]
+bend examples/45_binary_file.bend
+bend examples/54_binary_chunks.bend
+\end{lstlisting}
+\begin{lstlisting}[language={},caption={4バイトのファイルを4回読んだ結果}]
+2
+2
+0
+0
+\end{lstlisting}
+
+Bendコードは、各回の\code{File.read_bytes}が返す\code{File}と\code{Result}を受け取ります。成功したら\code{List.length}を表示し、\textbf{返された新しいハンドル}を次の読み取りへ渡します。最後は\code{File.close}で閉じ、失敗時にも受け取ったハンドルを閉じます。読み取り位置を引き継ぐため、同じ先頭2バイトを4回読むのではありません。
+
+\begin{lstlisting}[caption={一回分の読み取りと次の処理（抜粋）}]
+second: File & Result<&1, &1, U32 & String, List<&2, U32>> <-
+  File.read_bytes(file, 2)
+after_second(second)
+\end{lstlisting}
+
+テストではPython 3が長さ0〜5バイトの通常ファイルを作り、Bendの型検査と実行結果を照合しています。各行は一回の読み取りで返った\textbf{バイト数}です。
+\begin{lstlisting}[language={},caption={通常ファイルの長さと4回の読み取り結果（CI検証済み）}]
+length  first  second  third  fourth
+0       0      0       0      0
+1       1      0       0      0
+2       2      0       0      0
+3       2      1       0      0
+4       2      2       0      0
+5       2      2       1      0
+\end{lstlisting}
+
+5バイトのファイルでは3回目に1バイト返るため、3回の読み取りだけでは終端を直接観測できません。\textbf{4回目の空リスト}によって、今回の通常ファイルで終端に達したことを確認できます。ファイルの内容が変化していないことと、存在しないファイルを正常な空ファイルと取り違えないことも検査しています。
+
+ただし、これは\textbf{0〜5バイトの通常ファイルに対する有限の実行検査}です。パイプやソケット、途中で短く返る読み取り、すべてのOSの挙動を保証するものではありません。長さだけで値や順序の一致も分からないので、前節の\code{00 0a 0d ff}という実バイトの照合も必要です。
+
+\exercise{\code{54_binary_chunks.bend}の読み取り上限を2から3に変え、0〜5バイトのファイルで4回の表示がどう変わるか予想してから試してみましょう。次に、読み取り上限より長いファイルを終端まで読むための反復を考えてみましょう。}
+
 \section{マインスイーパーの保存に応用する}
 実際の戦績を保存するときは、盤面サイズ、地雷数、勝利数などを別の項目にします。読み込んだ文字列は外部から渡されたデータです。値が欠けている、数字として読めない、範囲から外れている場合には、ゲームの内部状態として採用せず、\code{Maybe}や\code{Result}で失敗を表します。読み込みに成功したことと、\textbf{内容が正しいこと}は別です。
 
@@ -808,6 +850,37 @@ IO.print(Nat.show(Nat.sub(finish, start)))
 \end{pointbox}
 
 \exercise{\code{46_elapsed_clock.bend}の待機時間を\code{0}、\code{20}、\code{100}に変えて何度か実行してみましょう。出力が毎回同じにならない理由と、\code{Nat.sub}自体が毎回同じ結果を返す理由を説明してみましょう。}
+
+
+\section{待機時間の境界を実際に測る}
+\code{IO.sleep(20)}を一度実行するだけでは、たまたま表示された値が正しいのか判断しづらいことがあります。待機を0・20・100ミリ秒に変え、\textbf{差を計算する前の時計値}も調べましょう。
+
+\sample{55_clock_intervals.bend}{0・20・100ミリ秒の待機前後を読む}
+\begin{lstlisting}[language={},caption={三種類の待機を測る}]
+bend examples/55_clock_intervals.bend
+\end{lstlisting}
+\begin{lstlisting}[caption={時計の生の値を二つとも表示する部分（抜粋）}]
+a: Nat <- IO.now()
+Unit <- IO.sleep(0)
+b: Nat <- IO.now()
+Unit <- IO.print(Nat.show(a))
+Unit <- IO.print(Nat.show(b))
+\end{lstlisting}
+
+プログラムは同じ形を0・20・100ミリ秒の順で実行し、\textbf{合計6行の自然数}を表示します。1・2行目、3・4行目、5・6行目がそれぞれ待機前後の値です。時刻そのものは実行ごとに変わるので、固定の6個の数値を正解とはしません。
+
+\begin{lstlisting}[language={},caption={検証で観察する条件（実測値は固定しない）}]
+request(ms)   observed condition
+0             finish >= start
+20            finish >= start; elapsed >= 10
+100           finish >= start; elapsed >= 50
+\end{lstlisting}
+
+CIではBendの型検査を通し、プログラムを\textbf{3回実行}してこの条件を確認しています。これは\textbf{有限の受入検査}であり、一般的な保証ではありません。さらに、各待機で観測した差の合計が、外側の単調時計で測ったプロセス全体の時間を大幅に超えないかも調べます。10と50はLinux CIで待機が完全に無視されていないかを見るための\textbf{緩い受入下限}であり、すべてのOSでの精度保証や厳密な待機時間の仕様ではありません。上限も保証していません。
+
+\code{Nat.sub(finish, start)}だけを表示すると、時計が逆行しても自然数の減算結果が0になり、問題を見落とす可能性があります。そのため、この検証では差にする前の値を表示して\code{start <= finish}を直接調べます。ゲームのタイマーでも、外部の時計を読む処理と、読み取った数値を扱う純粋な計算を分けると確認しやすくなります。
+
+\exercise{\code{55_clock_intervals.bend}を3回動かし、0・20・100ミリ秒の観測差が毎回同じになるか確かめてみましょう。次に20を50へ変更し、「50ミリ秒待つよう要求すること」と「必ず50ミリ秒経過したこと」が異なる理由を説明してみましょう。}
 
 \section{乱数の取得と失敗の伝播}
 \code{IO.random_u32()}の型は\code{IO(Result<..., U32>)}であり、単に\code{U32}が返るわけではありません。外部機能が失敗する可能性を明示するためです。\code{IO.try}を使うと成功した\code{U32}を取り出せますが、失敗したときは後続の\code{IO.print}へは進みません。
