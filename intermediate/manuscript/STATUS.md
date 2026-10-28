@@ -896,3 +896,5 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - **二回目の専用Bend検査診断**：`fill`内の局所計算束縛 `draw = advance(rng)` を、`select`の分岐条件に使ったため「computed value cannot be scrutinized」が発生。Bend 2.0.39のmatch制約に合わせ、条件と再帰引数で`advance(rng)`を直接使う純粋式へ変更。分岐規則・乱数系列は不変更。専用CIの再実行を待ち、正本への未検証pushはしない。
 
 - **三回目の専用Bend検査診断**：失敗位置はBool分岐ではなく、`(updated, remaining) = select(...)` の**計算結果タプルを局所分解**していた点。Bendのscrutinee規則に従い、`fill`の引数を `MineWords & U32` の組に変更し、計算済み組は次の再帰呼び出しへそのまま渡す。関数引数でのみ組を分解する構成へ修正。選択規則・初手除外は不変更。専用CIで再検査する。
+
+- **四回目のBend検査診断**：再帰燃料`fuel`の前で`pair`を分解すると、`fuel`のmatch順序違反。燃料・初手スキップを先に`match fuel skip`で同時分岐し、後続引数`pair`を必要な分岐内だけで分解するよう整理。停止性の減少引数と配置規則は維持。専用CIで再検査する。
