@@ -170,6 +170,8 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_public_pair_gap.py
       - name: Verify arbitrary-overlap two-clue public deductions
         run: python3 intermediate/scripts/test_nxn_public_overlap.py
+      - name: Audit 560 two-clue public states and execute 40 nonnested Bend cases
+        run: python3 intermediate/scripts/test_nxn_public_pair_overlap_audit.py
       - name: Verify bounded three-clue public deductions
         run: python3 intermediate/scripts/test_nxn_public_three_small.py
       - name: Verify N x N public-only unknown-neighbor extraction
