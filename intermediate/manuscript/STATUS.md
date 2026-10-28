@@ -1,5 +1,14 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-28：第7章Byte/File検収と第8章時計の実行境界（検証候補）
+
+- 検証用PR #81のBend型検査・通常ファイル0〜5バイトの三分割読込・EOF・欠損拒否、TeX/PDF/読者ZIP整合性を含む全CI成功を確認し、正本PR #4へ `9f52a624` の1コミットで統合済み。正本の統合後CIでLean 4配布サーバーへのTLS接続エラーが一度発生したため、失敗ジョブだけ再実行した。これはBend教材の実行失敗とは区別する。
+- 第8章の `IO.now` / `IO.sleep` を0・20・100ミリ秒で検査する `scripts/fixtures/clock_intervals.bend`、実行テスト `scripts/test_clock_intervals.py`、補稿 `08_時計の単調性と待機境界.md` を追加。Bend自身が出す六つの生の時刻について、単調性・緩い待機下限・外側の時計との整合を三回照合する。**追加分のBend型検査・実行・CIは検証用PRで判定するまで未確認**。
+- 採用表紙 `cover_art.tex`（blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1`）、TeX本文・PDF・読者ZIP、第7章の既存実行コード・第8章配布サンプル `46_elapsed_clock.bend` は不変更。両補稿の本編統合、一般N×N運ゲー無し生成、10×10 GUI実機、全23章校閲は未完成。
+
+---
+
+
 ## 2026-10-28：第7章の分割バイト読み込み・EOF境界（検証候補）
 
 - `scripts/fixtures/binary_chunks.bend` と `scripts/test_byte_file_chunks.py` を追加。既存第7章の `File.read_bytes` の上限・返されたハンドル・ファイル終端を、通常ファイル長0〜5の6条件、欠損ファイル拒否、Bend型検査、実ファイル不変更で独立検証する。
