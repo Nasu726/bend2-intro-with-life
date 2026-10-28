@@ -14,7 +14,8 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 GAME = ROOT / "minesweeper"
 FILES = ("nxn_geometry.bend", "nxn_neighbors.bend", "nxn_public_local.bend",
-         "nxn_public_three_fixpoint.bend", "nxn_public_many_fixpoint.bend")
+         "nxn_public_three_fixpoint.bend", "nxn_public_many_fixpoint.bend",
+         "nxn_public_many_checked.bend")
 
 
 def neighbors(n, index):
@@ -40,6 +41,10 @@ def model(n, public, known_mines=(), known_safe=(), fuel=None):
         return None
     mines, safe = set(known_mines), set(known_safe)
     if any(type(i) is not int or i < 0 or i >= n*n for i in (*known_mines, *known_safe)):
+        return None
+    if tuple(known_mines) != tuple(sorted(mines)):
+        return None
+    if tuple(known_safe) != tuple(sorted(safe)):
         return None
     if mines & safe or not set(cells) <= safe:
         return None
@@ -103,6 +108,16 @@ def fixtures():
         (3, base[:3]+((5,8),), (), (1,2,4,5), 10),  # impossible digit
         (3, base, (1,), (1,2,4,5), 10),       # mine overlaps revealed
         (3, base, (), (1,2,4,5), 0),         # no sweeps
+        # Structural validation is necessary even with no public clues.
+        (3, (), (0,), (0,), 1),              # overlap
+        (3, (), (9,), (), 1),               # out-of-board mine
+        (3, (), (), (9,), 1),               # out-of-board safe
+        (3, (), (0,0), (), 1),             # repeated mine
+        (3, (), (), (1,1), 1),             # repeated safe
+        (3, (), (2,1), (), 1),             # unsorted mines
+        (3, (), (), (2,1), 1),             # unsorted safe
+        (3, (), (0,), (1,), 1),             # valid empty-clue evidence
+        (2, (), (0,), (1,), 5),             # valid N=2 evidence
     ])
     return result
 
@@ -119,6 +134,7 @@ def source(cases):
     lines = [
         "import Base",
         "import ./nxn_public_many_fixpoint.bend as Many",
+        "import ./nxn_public_many_checked.bend as Checked",
         "import ./nxn_public_three_fixpoint.bend as Fix",
         "import ./nxn_public_local.bend as Rule", "",
         "def count(items: List<&2, U32>) -> U32:",
@@ -149,7 +165,7 @@ def source(cases):
     ]
     for i, (n, public, mines, safe, fuel) in enumerate(cases):
         expected = model(n, public, mines, safe, fuel)
-        call = (f"Many.infer_many({n}, {clue_literal(public)}, "
+        call = (f"Checked.infer_many_checked({n}, {clue_literal(public)}, "
                 f"{fuel}n, {literal(mines)}, {literal(safe)})")
         lines.append(f"def case_{i}() -> U32:")
         if expected is None:
@@ -166,14 +182,16 @@ def source(cases):
 
 def main():
     cases = fixtures()
-    assert len(cases) == 19, len(cases)
+    assert len(cases) == 28, len(cases)
     assert model(*cases[0]) == ((), (1,2,4,5,7,8))
     assert model(*cases[1]) == ((5,7), (0,1,2,3,4,6))
     assert model(*cases[9]) == "Limit"
     assert model(*cases[10]) == ((), tuple(range(9)))
     assert model(*cases[11]) == ((), tuple(range(9)))
     assert model(*cases[12]) == ((), tuple(range(9)))
-    assert model(*cases[-1]) == "Limit"
+    assert model(*cases[18]) == "Limit"
+    assert model(*cases[-2]) == ((0,), (1,))
+    assert model(*cases[-1]) == ((0,), (1,))
     print(f"PASS {len(cases)} Python many-clue fixture expectations", flush=True)
     if sys.argv[1:] == ["--model-only"]:
         return
@@ -191,7 +209,7 @@ def main():
                 raise AssertionError(f"{args}: {p.stdout}\n{p.stderr}")
             if len(args) == 2 and p.stdout.strip().splitlines()[-1] != str(len(cases)):
                 raise AssertionError(f"expected {len(cases)} passing checks: {p.stdout}")
-        sample = GAME / "nxn_public_many_fixpoint.bend"
+        sample = GAME / "nxn_public_many_checked.bend"
         p = subprocess.run(("bend", str(sample)), cwd=GAME,
                            capture_output=True, text=True, timeout=360,
                            env=dict(os.environ, BEND_NO_TELEMETRY="1"))

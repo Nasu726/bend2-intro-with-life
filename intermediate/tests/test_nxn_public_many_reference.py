@@ -88,6 +88,24 @@ class ManyClueReference(unittest.TestCase):
             self.assertEqual(result, model(n, public, known_mines, shown,
                                            n*n+2), trial)
 
+    def test_empty_clues_reject_bad_initial_sets(self):
+        # Without any opened digit, a purely local rule would never visit
+        # the contradictory entries. The public API must reject them first.
+        bad = (
+            ((0,), (0,)),
+            ((9,), ()),
+            ((), (9,)),
+            ((0, 0), ()),
+            ((), (1, 1)),
+            ((2, 1), ()),
+            ((), (2, 1)),
+        )
+        for mines, safe in bad:
+            with self.subTest(mines=mines, safe=safe):
+                self.assertIsNone(model(3, (), mines, safe, 1))
+        self.assertEqual(model(3, (), (0,), (1,), 1), ((0,), (1,)))
+        self.assertEqual(model(2, (), (0,), (1,), 5), ((0,), (1,)))
+
     def test_invalid_evidence_and_fuel(self):
         public = ((1,1),(2,0),(4,1),(5,0))
         safe = (1,2,4,5)
