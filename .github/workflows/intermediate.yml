@@ -63,6 +63,8 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_playthrough.py
       - name: Verify N x N full first-click, flood and terminal transitions
         run: python3 intermediate/scripts/test_nxn_full_game.py
+      - name: Lazy first-click generation regression
+        run: python3 intermediate/scripts/test_nxn_lazy_game.py
       - name: Verify N x N first-click relocation
         run: python3 intermediate/scripts/test_nxn_relocate.py
       - name: Verify N x N non-wrapping ordered neighbor frontier
