@@ -42,6 +42,28 @@ class ChapterFlowTest(unittest.TestCase):
         self.assertIn("IO.sleep", self.chapters[7][1])
         self.assertIn("46_elapsed_clock.bend", self.chapters[7][1])
 
+    def test_file_and_clock_verified_lesson_sections(self):
+        chapter7, chapter8 = self.chapters[6][1], self.chapters[7][1]
+        self.assertIn("54_binary_chunks.bend", chapter7)
+        self.assertIn("55_clock_intervals.bend", chapter8)
+        self.assertIn("4回目の空リスト", chapter7)
+        self.assertIn("3回実行", chapter8)
+        for number, chapter in ((7, chapter7), (8, chapter8)):
+            with self.subTest(chapter=number):
+                self.assertIn("有限", chapter)
+                self.assertIn(r"\exercise{", chapter)
+
+    def test_reader_samples_match_bend_verified_fixtures(self):
+        for name, fixture in (
+            ("54_binary_chunks.bend", "binary_chunks.bend"),
+            ("55_clock_intervals.bend", "clock_intervals.bend"),
+        ):
+            with self.subTest(sample=name):
+                self.assertEqual(
+                    (ROOT / "src" / name).read_bytes(),
+                    (ROOT / "scripts" / "fixtures" / fixture).read_bytes(),
+                )
+
     def test_chapter_parser_ignores_sections(self):
         fixture = "\\part{X}\n\\chapter{A}\n\\section{a}\ntext\n\\chapter{B}\n\\exercise{b}"
         self.assertEqual(chapter_blocks(fixture), [("A", "\n\\section{a}\ntext\n"), ("B", "\n\\exercise{b}")])

@@ -56,6 +56,7 @@ INTERMEDIATE_EXAMPLES = (
     "49_map_update_delete.bend", "50_set_from_list.bend",
     "51_atomic_counter.bend", "52_pair_exists.bend",
     "53_chan_poll.bend",
+    "54_binary_chunks.bend", "55_clock_intervals.bend",
 )
 
 # Runnable 4x4 replay lesson and its exact relative-import dependencies.
@@ -118,6 +119,13 @@ PDFを読み、examples/ 内のコードを実行してください。
 公式ガイド: https://github.com/bendlang/bend/blob/main/guide/GUIDE.md
 
 例: bend examples/01_set.bend
+バイトの分割読み込み（45を先に実行して4バイトのファイルを作る）:
+bend examples/45_binary_file.bend
+bend examples/54_binary_chunks.bend
+期待結果: 2, 2, 0, 0（4行）
+時計の生の値と0/20/100ms待機を比較:
+bend examples/55_clock_intervals.bend
+期待結果: 6行の自然数。時刻そのものは毎回変わります。
 4×4盤面のCLIリプレイ実習（対話入力ではなく引数を一括指定）:
 bend examples/minesweeper/cli_replay.bend c0 f1 c1
 操作 c番号=左クリック、f番号=旗、r=リセット。
