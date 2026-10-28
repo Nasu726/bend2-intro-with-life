@@ -1,14 +1,29 @@
 import Base
 
 # This test fixture reads a regular file in three bounded chunks.
-# It reports each returned list length, including an empty EOF read.
-def after_third(result: File & Result<&1, &1, U32 & String, List<&2, U32>>) -> IO(Unit):
+# Three data reads are followed by a fourth read that must observe EOF
+# for every tested regular file of length 0..5.
+def after_fourth(result: File & Result<&1, &1, U32 & String, List<&2, U32>>) -> IO(Unit):
   (file, status) = result
   match status:
     case Done{bytes}:
       do IO<Unit>:
         Unit <- File.close(file)
         IO.print(Nat.show(List.length(&2, U32, bytes)))
+    case Fail{error}:
+      do IO<Unit>:
+        Unit <- File.close(file)
+        IO.die(Unit, 1, "fourth byte read failed")
+
+def after_third(result: File & Result<&1, &1, U32 & String, List<&2, U32>>) -> IO(Unit):
+  (file, status) = result
+  match status:
+    case Done{bytes}:
+      do IO<Unit>:
+        Unit <- IO.print(Nat.show(List.length(&2, U32, bytes)))
+        fourth: File & Result<&1, &1, U32 & String, List<&2, U32>> <-
+          File.read_bytes(file, 2)
+        after_fourth(fourth)
     case Fail{error}:
       do IO<Unit>:
         Unit <- File.close(file)

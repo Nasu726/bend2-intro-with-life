@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Real Bend File.read_bytes chunk/EOF regression for chapter 7.
 
-The 0..5 byte inputs are local regular files, not a general short-read
+Four bounded reads ensure that even a five-byte file reaches an empty EOF
+read. The 0..5 byte inputs are local regular files, not a general short-read
 guarantee for pipes, sockets, or all operating systems.
 """
 from pathlib import Path
@@ -37,8 +38,11 @@ def main() -> int:
             payload = bytes([0, 10, 13, 255, 42][:length])
             file.write_bytes(payload)
             got = run(FIXTURE, cwd)
-            expected = [min(2, max(0, length - offset)) for offset in (0, 2, 4)]
+            expected = [min(2, max(0, length - offset)) for offset in (0, 2, 4, 6)]
             observed = got.stdout.strip().splitlines()
+            # The fourth read must return an empty list, including for length=5.
+            if expected[-1] != 0:
+                raise AssertionError(f"length={length}: test did not reach EOF")
             if got.returncode or observed != [str(n) for n in expected]:
                 raise AssertionError(
                     f"length={length}: expected {expected}, got {observed}; "
