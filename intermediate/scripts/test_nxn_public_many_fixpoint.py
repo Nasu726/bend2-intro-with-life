@@ -41,6 +41,10 @@ def model(n, public, known_mines=(), known_safe=(), fuel=None):
     mines, safe = set(known_mines), set(known_safe)
     if any(type(i) is not int or i < 0 or i >= n*n for i in (*known_mines, *known_safe)):
         return None
+    if tuple(known_mines) != tuple(sorted(mines)):
+        return None
+    if tuple(known_safe) != tuple(sorted(safe)):
+        return None
     if mines & safe or not set(cells) <= safe:
         return None
     if any(type(i) is not int or type(v) is not int
@@ -103,6 +107,16 @@ def fixtures():
         (3, base[:3]+((5,8),), (), (1,2,4,5), 10),  # impossible digit
         (3, base, (1,), (1,2,4,5), 10),       # mine overlaps revealed
         (3, base, (), (1,2,4,5), 0),         # no sweeps
+        # Structural validation is necessary even with no public clues.
+        (3, (), (0,), (0,), 1),              # overlap
+        (3, (), (9,), (), 1),               # out-of-board mine
+        (3, (), (), (9,), 1),               # out-of-board safe
+        (3, (), (0,0), (), 1),             # repeated mine
+        (3, (), (), (1,1), 1),             # repeated safe
+        (3, (), (2,1), (), 1),             # unsorted mines
+        (3, (), (), (2,1), 1),             # unsorted safe
+        (3, (), (0,), (1,), 1),             # valid empty-clue evidence
+        (2, (), (0,), (1,), 5),             # valid N=2 evidence
     ])
     return result
 
@@ -166,14 +180,16 @@ def source(cases):
 
 def main():
     cases = fixtures()
-    assert len(cases) == 19, len(cases)
+    assert len(cases) == 28, len(cases)
     assert model(*cases[0]) == ((), (1,2,4,5,7,8))
     assert model(*cases[1]) == ((5,7), (0,1,2,3,4,6))
     assert model(*cases[9]) == "Limit"
     assert model(*cases[10]) == ((), tuple(range(9)))
     assert model(*cases[11]) == ((), tuple(range(9)))
     assert model(*cases[12]) == ((), tuple(range(9)))
-    assert model(*cases[-1]) == "Limit"
+    assert model(*cases[18]) == "Limit"
+    assert model(*cases[-2]) == ((0,), (1,))
+    assert model(*cases[-1]) == ((0,), (1,))
     print(f"PASS {len(cases)} Python many-clue fixture expectations", flush=True)
     if sys.argv[1:] == ["--model-only"]:
         return

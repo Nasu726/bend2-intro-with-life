@@ -14,8 +14,8 @@ type Clue is Data:
 
 # Reject repeated/out-of-range/unrevealed public digits. Every opened clue
 # must appear in the initial safe set; flags are not a substitute.
-# The remaining initial evidence must be sorted/unique/in-range/consistent,
-# and independently certified by the caller.
+# The initial certified sets are structurally checked below. Their truth
+# (outside revealed digits) still requires independent evidence from caller.
 def valid_clues(+n: U32, clues: List<&2, Clue>,
                 +safe: List<&2, U32>, +seen: List<&2, U32>) -> Bool:
   match clues:
@@ -29,6 +29,33 @@ def valid_clues(+n: U32, clues: List<&2, Clue>,
           Bool.and(Rule.contains(safe, index),
           Bool.and(Bool.not(Rule.contains(seen, index)),
                    valid_clues(n, rest, safe, index <> seen)))))
+
+# Initial evidence is a sorted strictly increasing list of valid cell indices.
+# Check disjointness against the opposite certified set. This rejects
+# duplicate, unsorted, out-of-board, or overlapping initial evidence even
+# when there are no revealed clues. Certification itself is external.
+def after_previous(previous: Maybe<&2, U32>, +item: U32) -> Bool:
+  match previous:
+    case None{}:
+      True{}
+    case Some{old}:
+      U32.is_lt(old, item)
+
+def valid_initial_list(+n: U32, items: List<&2, U32>,
+                       +other: List<&2, U32>, previous: Maybe<&2, U32>) -> Bool:
+  match items:
+    case Nil{}:
+      True{}
+    case +item <> rest:
+      Bool.and(Geo.valid_index(n, item),
+      Bool.and(after_previous(previous, item),
+      Bool.and(Bool.not(Rule.contains(other, item)),
+               valid_initial_list(n, rest, other, Some{item}))))
+
+def valid_initial(+n: U32, +mines: List<&2, U32>,
+                  +safe: List<&2, U32>) -> Bool:
+  Bool.and(valid_initial_list(n, mines, safe, None{}),
+           valid_initial_list(n, safe, mines, None{}))
 
 # A full round runs the same single-number rule once for each revealed digit.
 # Applying the remaining rules first changes only the order of propagation,
@@ -79,8 +106,10 @@ def checked(ok: Bool, fuel: Nat, +n: U32,
 # the input evidence is valid (each changing sweep certifies a fresh cell).
 # Bad/short fuel is detectable as Limit. Empty clue lists are allowed.
 def infer_many(+n: U32, +clues: List<&2, Clue>, fuel: Nat,
-               mines: List<&2, U32>, +safe: List<&2, U32>) -> Fix.Propagation:
-  checked(Bool.and(Geo.valid_size(n), valid_clues(n, clues, safe, Nil{})),
+               +mines: List<&2, U32>, +safe: List<&2, U32>) -> Fix.Propagation:
+  checked(Bool.and(Geo.valid_size(n),
+          Bool.and(valid_clues(n, clues, safe, Nil{}),
+                   valid_initial(n, mines, safe))),
           fuel, n, clues, mines, safe)
 
 # 3x3 public digits 1/2/4/5: four revealed cells establish safety of 7/8.
