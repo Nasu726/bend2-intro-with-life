@@ -33,11 +33,10 @@ def fill(fuel: Nat, board: Words.MineWords, +clicked: U32, +pos: U32,
           fill(k, board, clicked, (pos + 1 : U32), slots, left, rng,
                U32.is_eq((pos + 1 : U32), clicked))
         case False{}:
-          draw = advance(rng)
           (updated, remaining) = select(
-            U32.is_lt(U32.mod(draw, slots), left), board, pos, left)
+            U32.is_lt(U32.mod(advance(rng), slots), left), board, pos, left)
           fill(k, updated, clicked, (pos + 1 : U32),
-               (slots - 1 : U32), remaining, draw,
+               (slots - 1 : U32), remaining, advance(rng),
                U32.is_eq((pos + 1 : U32), clicked))
 
 def if_valid(valid: Bool, +n: U32, +mine_count: U32,
