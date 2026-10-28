@@ -32,6 +32,8 @@ jobs:
           python-version: '3.12'
       - name: Check structural coverage
         run: python3 -m unittest discover -s intermediate/tests -v
+      - name: Validate lazy-placement Python invariants before Bend install
+        run: python3 intermediate/scripts/test_nxn_lazy_game.py --python-only
       - name: Install Bend 2
         shell: bash
         run: |
@@ -63,6 +65,8 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_playthrough.py
       - name: Verify N x N full first-click, flood and terminal transitions
         run: python3 intermediate/scripts/test_nxn_full_game.py
+      - name: Verify first-click-generated N x N play
+        run: python3 intermediate/scripts/test_nxn_lazy_game.py
       - name: Verify N x N first-click relocation
         run: python3 intermediate/scripts/test_nxn_relocate.py
       - name: Verify N x N non-wrapping ordered neighbor frontier
