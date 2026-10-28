@@ -22,22 +22,22 @@ def select(chosen: Bool, board: Words.MineWords, +pos: U32,
 
 # Sample exactly mine_count out of n*n-1 cells without replacement.
 # The clicked cell is skipped before any RNG advance or mine assignment.
-def fill(fuel: Nat, board: Words.MineWords, +clicked: U32, +pos: U32,
-         +slots: U32, +left: U32, +rng: U32, skip: Bool) -> Words.MineWords:
+def fill(fuel: Nat, pair: Words.MineWords & U32, +clicked: U32,
+         +pos: U32, +slots: U32, +rng: U32, skip: Bool) -> Words.MineWords:
+  (board, left) = pair
   match fuel:
     case 0n:
       board
     case 1n+k:
       match skip:
         case True{}:
-          fill(k, board, clicked, (pos + 1 : U32), slots, left, rng,
-               U32.is_eq((pos + 1 : U32), clicked))
+          fill(k, (board, left), clicked, (pos + 1 : U32),
+               slots, rng, U32.is_eq((pos + 1 : U32), clicked))
         case False{}:
-          (updated, remaining) = select(
-            U32.is_lt(U32.mod(advance(rng), slots), left), board, pos, left)
-          fill(k, updated, clicked, (pos + 1 : U32),
-               (slots - 1 : U32), remaining, advance(rng),
-               U32.is_eq((pos + 1 : U32), clicked))
+          fill(k, select(U32.is_lt(U32.mod(advance(rng), slots), left),
+                         board, pos, left),
+               clicked, (pos + 1 : U32), (slots - 1 : U32),
+               advance(rng), U32.is_eq((pos + 1 : U32), clicked))
 
 def if_valid(valid: Bool, +n: U32, +mine_count: U32,
              +seed: U32, +clicked: U32) -> Placement:
@@ -45,8 +45,8 @@ def if_valid(valid: Bool, +n: U32, +mine_count: U32,
     case False{}:
       LazyRejected{}
     case True{}:
-      LazyReady{fill(U32.to_nat((n * n : U32)), Words.new(n), clicked, 0,
-                 (n * n - 1 : U32), mine_count, seed, U32.is_eq(0, clicked))}
+      LazyLazyReady{fill(U32.to_nat((n * n : U32)), (Words.new(n), mine_count),
+                     clicked, 0, (n * n - 1 : U32), seed, U32.is_eq(0, clicked))}
 
 def place(+n: U32, +mine_count: U32, +seed: U32,
           +clicked: U32) -> Placement:

@@ -894,3 +894,5 @@ TeX・生成PDF・読者ZIP・採用表紙は変更しない。
 - **検証CI初回診断**：Bend例ジョブの新規テストで `Placement.Ready` が別モジュールの `Ready` と大域コンストラクタ名衝突（duplicate declaration）し、型検査前に停止。独自名 `LazyReady` / `LazyRejected` に改名した。既存のXeLaTeX/PDF/ZIP一致、Tests、Reader bundlesは成功。新規Bendテストは既存23分の例ジョブから分離し、15分上限の専用ジョブで再検証する。**再検証成功前に正本へ統合しない**。
 
 - **二回目の専用Bend検査診断**：`fill`内の局所計算束縛 `draw = advance(rng)` を、`select`の分岐条件に使ったため「computed value cannot be scrutinized」が発生。Bend 2.0.39のmatch制約に合わせ、条件と再帰引数で`advance(rng)`を直接使う純粋式へ変更。分岐規則・乱数系列は不変更。専用CIの再実行を待ち、正本への未検証pushはしない。
+
+- **三回目の専用Bend検査診断**：失敗位置はBool分岐ではなく、`(updated, remaining) = select(...)` の**計算結果タプルを局所分解**していた点。Bendのscrutinee規則に従い、`fill`の引数を `MineWords & U32` の組に変更し、計算済み組は次の再帰呼び出しへそのまま渡す。関数引数でのみ組を分解する構成へ修正。選択規則・初手除外は不変更。専用CIで再検査する。
