@@ -20,9 +20,9 @@ def finish(session: Step.Session) -> Terminal.State:
 def begin(result: Placement.Placement, +n: U32, +mine_count: U32,
           +seed: U32, +clicked: U32) -> Game:
   match result:
-    case Placement.Invalid{}:
+    case Placement.LazyRejected{}:
       Fresh{n, mine_count, seed}
-    case Placement.Ready{board}:
+    case Placement.LazyReady{board}:
       Active{finish(Flood.reveal(Step.new(board), clicked))}
 
 def active_click(state: Terminal.State, +index: U32) -> Game:

@@ -5,8 +5,8 @@ import ./nxn_geometry.bend as Geo
 import ./nxn_mine_words.bend as Words
 
 type Placement is Type:
-  Ready{board: Words.MineWords}
-  Invalid{}
+  LazyReady{board: Words.MineWords}
+  LazyRejected{}
 
 # Reproducible 32-bit LCG; not cryptographically secure.
 def advance(+state: U32) -> U32:
@@ -44,9 +44,9 @@ def if_valid(valid: Bool, +n: U32, +mine_count: U32,
              +seed: U32, +clicked: U32) -> Placement:
   match valid:
     case False{}:
-      Invalid{}
+      LazyRejected{}
     case True{}:
-      Ready{fill(U32.to_nat((n * n : U32)), Words.new(n), clicked, 0,
+      LazyReady{fill(U32.to_nat((n * n : U32)), Words.new(n), clicked, 0,
                  (n * n - 1 : U32), mine_count, seed, U32.is_eq(0, clicked))}
 
 def place(+n: U32, +mine_count: U32, +seed: U32,
@@ -65,9 +65,9 @@ def bit_code(present: Bool) -> U32:
 
 def inspect(result: Placement, +probe: U32) -> U32:
   match result:
-    case Invalid{}:
+    case LazyRejected{}:
       2
-    case Ready{board}:
+    case LazyReady{board}:
       (unused, present) = Words.has(board, probe)
       bit_code(present)
 

@@ -63,8 +63,6 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_playthrough.py
       - name: Verify N x N full first-click, flood and terminal transitions
         run: python3 intermediate/scripts/test_nxn_full_game.py
-      - name: Verify lazy first-click placement and game without prebuilt mines
-        run: python3 intermediate/scripts/test_nxn_lazy_game.py
       - name: Verify N x N first-click relocation
         run: python3 intermediate/scripts/test_nxn_relocate.py
       - name: Verify N x N non-wrapping ordered neighbor frontier
@@ -180,3 +178,26 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_public_six_mask.py
       - name: Verify public three-clue masks and bounded Bend inference together
         run: python3 intermediate/scripts/test_nxn_public_three_bridge.py
+
+  lazy-first-click:
+    name: N x N lazy first-click (Bend)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      BEND_NO_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Bend 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://bend-lang.com/install.sh -o /tmp/install-bend.sh
+          sh /tmp/install-bend.sh
+          echo "$HOME/.bend/bin" >> "$GITHUB_PATH"
+      - name: Check Bend compiler version
+        run: bend version
+      - name: Verify lazy first-click placement and game without prebuilt mines
+        run: python3 intermediate/scripts/test_nxn_lazy_game.py
