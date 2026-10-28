@@ -14,7 +14,8 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 GAME = ROOT / "minesweeper"
 FILES = ("nxn_geometry.bend", "nxn_neighbors.bend", "nxn_public_local.bend",
-         "nxn_public_three_fixpoint.bend", "nxn_public_many_fixpoint.bend")
+         "nxn_public_three_fixpoint.bend", "nxn_public_many_fixpoint.bend",
+         "nxn_public_many_checked.bend")
 
 
 def neighbors(n, index):
@@ -133,6 +134,7 @@ def source(cases):
     lines = [
         "import Base",
         "import ./nxn_public_many_fixpoint.bend as Many",
+        "import ./nxn_public_many_checked.bend as Checked",
         "import ./nxn_public_three_fixpoint.bend as Fix",
         "import ./nxn_public_local.bend as Rule", "",
         "def count(items: List<&2, U32>) -> U32:",
@@ -163,7 +165,7 @@ def source(cases):
     ]
     for i, (n, public, mines, safe, fuel) in enumerate(cases):
         expected = model(n, public, mines, safe, fuel)
-        call = (f"Many.infer_many({n}, {clue_literal(public)}, "
+        call = (f"Checked.infer_many_checked({n}, {clue_literal(public)}, "
                 f"{fuel}n, {literal(mines)}, {literal(safe)})")
         lines.append(f"def case_{i}() -> U32:")
         if expected is None:
@@ -207,7 +209,7 @@ def main():
                 raise AssertionError(f"{args}: {p.stdout}\n{p.stderr}")
             if len(args) == 2 and p.stdout.strip().splitlines()[-1] != str(len(cases)):
                 raise AssertionError(f"expected {len(cases)} passing checks: {p.stdout}")
-        sample = GAME / "nxn_public_many_fixpoint.bend"
+        sample = GAME / "nxn_public_many_checked.bend"
         p = subprocess.run(("bend", str(sample)), cwd=GAME,
                            capture_output=True, text=True, timeout=360,
                            env=dict(os.environ, BEND_NO_TELEMETRY="1"))
