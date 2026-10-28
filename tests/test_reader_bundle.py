@@ -44,6 +44,10 @@ class TestReaderBundle(unittest.TestCase):
         self.assertIn("nxn_public_three_bridge.bend", included)
         self.assertIn("nxn_public_local.bend", included)
         self.assertIn("nxn_public_three_step.bend", included)
+        for filename in ("nxn_public_three_fixpoint.bend",
+                         "nxn_public_many_fixpoint.bend",
+                         "nxn_public_pair_gap.bend"):
+            self.assertIn(filename, included)
         for name in sorted(included):
             source = (ROOT / "intermediate/minesweeper" / name).read_text(
                 encoding="utf-8")
@@ -56,6 +60,16 @@ class TestReaderBundle(unittest.TestCase):
     def test_public_three_step_is_learner_material(self):
         with zipfile.ZipFile(ROOT / "reader-packages/bend2-intermediate-reader-preview.zip") as z:
             for filename in ("nxn_public_local.bend", "nxn_public_three_step.bend"):
+                name = "bend2-intermediate-reader/examples/minesweeper/" + filename
+                self.assertEqual(z.read(name),
+                                 (ROOT / "intermediate/minesweeper" / filename).read_bytes())
+
+    def test_chapter22_new_examples_are_exact_learner_material(self):
+        files = ("nxn_public_three_fixpoint.bend",
+                 "nxn_public_many_fixpoint.bend",
+                 "nxn_public_pair_gap.bend")
+        with zipfile.ZipFile(ROOT / "reader-packages/bend2-intermediate-reader-preview.zip") as z:
+            for filename in files:
                 name = "bend2-intermediate-reader/examples/minesweeper/" + filename
                 self.assertEqual(z.read(name),
                                  (ROOT / "intermediate/minesweeper" / filename).read_bytes())
