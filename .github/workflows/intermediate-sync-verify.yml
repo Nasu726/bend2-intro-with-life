@@ -1,0 +1,52 @@
+name: Temporary chapter 21 PDF and reader ZIP materialization
+on:
+  push:
+    branches:
+      - verify/ch21-reader-20261030
+    paths:
+      - 'intermediate/Intermediate_Textbook.tex'
+      - 'scripts/build_reader_bundle.py'
+      - 'tests/test_reader_bundle.py'
+      - '.github/workflows/intermediate-sync-verify.yml'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: verify/ch21-reader-20261030
+      - name: Compile TeX with same toolchain as textbook CI
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: intermediate/Intermediate_Textbook.tex
+          latexmk_use_xelatex: true
+          texlive_version: '2025'
+          os: debian
+          extra_system_packages: fonts-noto-cjk fonts-noto-core
+      - name: Verify warnings, build reader ZIP and commit only generated binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOG='Intermediate_Textbook.log'
+          if test -s intermediate/Intermediate_Textbook.log; then LOG='intermediate/Intermediate_Textbook.log'; fi
+          test -s "$LOG"
+          if grep -nE 'Overfull|Underfull|LaTeX Font Warning|LaTeX Warning' "$LOG"; then
+            echo 'TeX layout warnings; refusing to publish' >&2
+            exit 1
+          fi
+          if test -s Intermediate_Textbook.pdf; then
+            cp Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          else
+            cp intermediate/Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          fi
+          python3 scripts/build_reader_bundle.py intermediate
+          python3 -m unittest tests.test_reader_bundle -v
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- 'intermediate/Bend2を使いこなす_プレビュー.pdf' 'reader-packages/bend2-intermediate-reader-preview.zip'
+          git diff --cached --quiet && { echo 'No binary change'; exit 1; }
+          git commit -m 'build: materialize chapter 21 PDF and reader ZIP on verification branch'
+          git push origin HEAD:refs/heads/verify/ch21-reader-20261030

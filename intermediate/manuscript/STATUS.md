@@ -1,5 +1,13 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-30：第21章10×10初手生成GUIを配布TeX・学習用ZIPへ統合（検証候補）
+
+- 正本Draft PR #4先端`b41e10d0`の4ワークフロー（Intermediate textbook、Tests、PDF layout、Reader download bundles）はすべて成功。PR #95・#96の修正を含むGUI Image31条件＋旗6条件はheadlessで成功、`App.run`入口型検査も成功。第7章Byte/File/EOF、第8章IO.now/IO.sleepの実行検証も成功。前回台帳の「検証待ち」は履歴であり、現在の失敗ではない。
+- 今回は第21章TeXに必要性→実際のBendコード→出力`8689825`→仕組み→演習を追加。`nxn_lazy_game`、GUI adapter/events/render/appの5モジュールを読者ZIPの明示allowlistへ追加し、相対importの閉包とZIP内実ファイル一致をテスト。READMEと学習用案内を同期する。演習解答・検証スクリプト・編集資料はZIPへ入れない。
+- 検証用ブランチでXeLaTeXを通し、生成PDFとZIPを同一ソースから作ってコミット済みバイナリとのテキスト・全ページ画素・ZIP全ファイル一致を照合するまで**正本へ統合しない**。採用済み`intermediate/cover_art.tex`のblob `ba9b5c4c...` は一切変更しない。OS GUI実機操作・GUI保存/復元・一般N×N運ゲー無し生成・全23章の最終校閲は未完成。
+
+---
+
 ## 2026-10-29：GUI描画二回目の型検査エラーを修正（検証待ち）
 
 - 検証PR #95（`403a3fc4`）のCI #40884336195：N×N推論・XeLaTeX・Tests・Reader bundlesは成功。しかしIntermediate Bend examplesは**失敗**。原因は`test_nxn_gui_render.py`が生成する`view_twice_probe`内の`(again, image2) = RENDER.view(game)`であり、Bendが「計算値を直接matchできない」と拒否した。既存31条件の再実行、新規6条件の型検査・実行には到達していない。結果の不一致が証明されたわけではない。

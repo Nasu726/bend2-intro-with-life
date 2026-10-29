@@ -57,6 +57,17 @@ class TestReaderBundle(unittest.TestCase):
                              f"{name} imports omitted learner files: "
                              f"{sorted(imports - included)}")
 
+    def test_nxn_gui_is_complete_learner_material(self):
+        """Ship the validated lazy GUI with all relative-import dependencies."""
+        expected = ["nxn_lazy_game.bend","nxn_gui_adapter.bend","nxn_gui_events.bend","nxn_gui_render.bend","nxn_gui_app.bend"]
+        for filename in expected:
+            self.assertIn(filename, INTERMEDIATE_GAME_FILES)
+        with zipfile.ZipFile(ROOT / "reader-packages/bend2-intermediate-reader-preview.zip") as z:
+            for filename in expected:
+                name = "bend2-intermediate-reader/examples/minesweeper/" + filename
+                self.assertEqual(z.read(name),
+                                 (ROOT / "intermediate/minesweeper" / filename).read_bytes())
+
     def test_public_three_step_is_learner_material(self):
         with zipfile.ZipFile(ROOT / "reader-packages/bend2-intermediate-reader-preview.zip") as z:
             for filename in ("nxn_public_local.bend", "nxn_public_three_step.bend"):

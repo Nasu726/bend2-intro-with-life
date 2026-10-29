@@ -2331,6 +2331,73 @@ bend examples/minesweeper/nxn_playthrough.bend
 最後に二つの\code{Game.click}の順序を入れ替え、
 同じ終局状態になるか確かめてみましょう。}
 
+\section{10×10のGUIで初手生成と描画を分ける}
+4×4の例では、最初から地雷マスク33を持つ盤面を使いました。
+しかし10×10の新しい実習では、\textbf{最初の左クリックが決まるまで地雷を生成しません}。
+この違いを守るため、クリックを解釈する処理と画面を描く処理を別々に作ります。
+
+\file{examples/minesweeper/nxn_lazy_game.bend}の\code{Fresh}は、
+盤面の幅・地雷数・乱数の種だけを保持します。
+\code{nxn_gui_adapter.bend}は画面座標をマス番号に変換し、
+左クリックをゲームの\code{click}、右クリックを\code{mark}へ渡します。
+\code{nxn_gui_events.bend}は\code{Event}の押下と解放を区別し、
+\code{R}でリセット、\code{Esc}で終了するための値を返します。
+これらはウィンドウを開かずに調べられる純粋な部分です。
+
+最後に\code{App.run}へ渡す入口を作ります。
+次の二つの関数は同梱の\code{nxn_gui_app.bend}から抜き出したものです。
+
+\begin{lstlisting}[caption={状態を保持して描画し、イベントを渡す}]
+def view(game: Lazy.Game) -> Lazy.Game & Image:
+  Render.view(game)
+
+def tick(events: List<Event>, game: Lazy.Game) -> IO(Maybe<Lazy.Game>):
+  Events.tick(events, game, 20261029)
+\end{lstlisting}
+
+\code{Render.view}は\code{Lazy.Game}と\code{Image}の組を返します。
+内部の地雷配置を描画関数へ直接渡すのではなく、\code{Hidden}、
+\code{Flag}、\code{Open}という\textbf{公開済みのマスの状態}から色を決めます。
+描画用に\code{Array.clone}を使うのは、元のゲーム状態を次の操作へ残すためです。
+
+\begin{lstlisting}[language={},caption={画面を開かずに描画色を調べる}]
+bend examples/minesweeper/nxn_gui_render.bend
+8689825
+\end{lstlisting}
+
+\code{8689825}は、開始前の左上マスの内側を表す色の整数値です。
+画面を表示した結果ではありません。10×10の盤面は1マス32画素なので、
+有効な領域は左上の320×320画素です。
+ウィンドウ全体は512×512画素で、残りは余白として扱います。
+たとえば\code{(319,319)}は99番のマスですが、
+\code{(320,0)}は余白なのでクリックしてもゲームを変えません。
+
+\begin{lstlisting}[language={},caption={GUIの型検査とデスクトップでの起動例}]
+bend examples/minesweeper/nxn_gui_app.bend --check-only
+bend examples/minesweeper/nxn_gui_app.bend -o minesweeper10
+./minesweeper10
+\end{lstlisting}
+
+一行目はGUIの入口が型検査を通るか調べます。
+二行目以降は\textbf{GUIが利用できるデスクトップ環境で試すためのコマンド}です。
+Linuxでは\code{libx11-dev}などの環境依存ライブラリが必要です。
+
+\begin{pointbox}
+\textbf{検証済みと未検証を区別しましょう。}
+Bendのheadless検証では、Imageの色・境界・数字の形を31条件、
+初手前の右クリック・旗の付け外し・再描画後の状態を6条件、
+計37条件で照合し、\code{App.run}の入口も型検査しています。
+一方、実際のOSウィンドウの起動、マウス入力の配送、画面上の見た目は
+まだ実機で検収していません。37条件は一般の盤面すべてを証明するものでもありません。
+\end{pointbox}
+
+\exercise{まず\code{nxn_gui_render.bend}の出力を確認してみましょう。
+次に\code{nxn_gui_adapter.bend}を読み、座標\code{(319,319)}と
+\code{(320,0)}がそれぞれどのように扱われるか予想してみましょう。
+GUIを起動できる環境では、最初の左クリックの前後で右クリックの効果が
+違うか、旗を立ててから\code{R}でリセットするとどうなるか試してみましょう。
+実機で試せない場合は、型検査と描画色の実行結果だけを確認しましょう。}
+
 \section{部品から完成へ進むための検査順}
 ここまでの参考実装には、旗・クリック・敗北・勝利と初手安全、0の連鎖公開があります。4×4のGUIとCLI操作履歴の保存に加え、10×10の二手勝利もBendで実行検証しました。ただし10×10 GUIの実機操作、GUI保存、任意の盤面での動作保証は残っています。実装の進捗と、読者が遊べる完成品を混同しないでください。
 
