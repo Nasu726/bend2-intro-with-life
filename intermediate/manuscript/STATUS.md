@@ -1,5 +1,32 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-30：第7章Byte/File追加検証のBend do構文を修正（PR #100検証候補）
+
+- 正本PR #4は先端 `07814a42` で7件のCI成功。検証PR #100は先端 `48171f74`、正本から2コミット先行・遅れ0。採用表紙 `intermediate/cover_art.tex` blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` を確認し不変更。
+- CI #40942434945 は Tests、Reader download bundles、XeLaTeX、N×N公開推論が成功した一方、Intermediate Bend examples の `Verify bounded binary File reads and EOF` で失敗。ログの診断は `expected: a pattern (a binder or a constructor)` / `observed: {digest : IO(Unit)}`、場所は追加fixtureの `do IO<Unit>:` 直下の `+digest = List.foldl(...)`。以前のアフィン二重消費とは別の**IOブロック内の純粋束縛構文**の問題。
+- `+digest` と `+length` の純粋束縛を `do IO` の前へ移し、IO内部は `IO.print` のみに限定。第7章補稿の実コードと説明を同時修正。独立Python検査に0〜2バイトの**全65,793列**について257進指紋の衝突がないこと、およびBend fixtureの純粋束縛位置の静的回帰条件を追加。既存24内容ケース、6長さケース、EOF・欠損・内容不変の照合は維持。
+- **修正後のBend型検査・実行、全CIは未確認**。検証ブランチで全ゲートが通るまで正本へ統合しない。第8章IO.now/IO.sleep、配布TeX・PDF・読者ZIP、表紙は不変更。GUI実機、長方形・多様な運ゲー無し盤面、23章最終校閲は残課題。
+
+---
+
+## 2026-10-30：第7章の追加バイト値検証、アフィン所有権エラー修正（検証待ち）
+
+- 正本Draft PR #4先端 `07814a42` は7ワークフロー成功、採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` 不変。検証PR #100先端 `f932520c` は正本より1コミット先行・遅れ0。Tests／Reader download bundles／Intermediate XeLaTeX PDF／N×N公開推論は成功。ただしIntermediate Bend examplesの `Verify bounded binary File reads and EOF` で失敗したため正本には統合していない。
+- CI #40933060755、job #123656295440 の原因：追加fixture `report_chunk(bytes)` が `List.length(bytes)` と `List.foldl(bytes)` の2回で同じアフィンな `List<&2,U32>` を消費し、Bend 2が `bytes (consumed more than once)` を報告。配布fixtureの不具合ではない。
+- 修正：追加fixtureを単一 `List.foldl` に変更。2バイト以内の257進指紋は空=0、1バイト=1〜256、2バイト=258〜66048で区別できるため、指紋から長さを一意に復元し、値・順序・長さを照合する。第7章補稿を同じ実コードへ同期。**修正後Bend型検査・24内容ケース実行・PDF/ZIP一致は未確認。** 同一失敗を回避するため修正候補は1コミットで検証し、成功するまで正本PR #4を動かさない。第8章IO.now/IO.sleepとTeX/PDF/ZIPは不変更。
+- 未完成：10×10 GUI実機、長方形と多様な運ゲー無し盤面、23章全体の教育的校閲・配布同期。
+
+---
+
+## 2026-10-30：第7章Byte/Fileを長さだけでなく内容・順序まで検証（検証候補）
+
+- 正本PR #4先端は07814a42。任意M≤⌊N²/4⌋のN×N構成（検証PR #99）は全3ワークフロー成功後にlease付きfast-forwardで統合済み。PR #99は統合済みとして閉鎖。採用済み表紙blob ba9b5c4cb296e3adfd119ace6b55abc419c6faf1 不変。
+- 第7・8章のByte/File・IO.now/IO.sleepは**すでにTeX本編・PDF・学習用サンプルへ統合済み**であり、古い補稿末尾の「未統合」は現在の状態を反映していなかった。第7章の補稿を訂正し、追加検証だけを未統合として明記。
+- 既存の分割読み込みテストは0〜5バイトの読み取り長4回とEOFを確認していたが、返されたバイト値と順序を直接検証していなかった。**配布サンプル54と同一である従来fixtureを保持**し、別ファイル `binary_chunks_values.bend` で各2バイトチャンクの長さと257進の一意な指紋を出力する。Pythonオラクルで4系列×6長さ＝24内容ケースと、従来fixtureの6長さケースを照合する。0・10・13・255・逆順・反復・空・EOF・内容不変・欠損を確認。最大指紋66048はU32内。
+- 検証PR #100の初回CI #40932771485 は `test_reader_samples_match_bend_verified_fixtures` で失敗。原因は配布サンプル54と同一である必要のあるfixtureを直接変更したこと。これは内容のBend実行結果の失敗ではなく、構造契約の不一致。そこで追加検証を別fixtureに分離し、既存fixtureのblobを完全復元した単一修正候補へ置き換える。**修正後のBend型検査・実行、PDF/ZIP整合性、全CIは成功待ち。** 正本のTeX・PDF・読者ZIP・第7章配布サンプル54・第8章55は変更せず、テストfixture・Python・編集補稿・台帳のみ更新。成功までPR #4へ反映禁止。GUI実機、長方形、面白い多様な運ゲー無し盤面、23章最終校閲は未完成。
+
+---
+
 ## 2026-10-30：任意M≤⌊N²/4⌋の構成的運ゲー無し盤面（検証候補）
 
 - 対象を10≤N≤100、0≤M≤⌊N²/4⌋、任意初手に拡張。地雷M=qN+rを、初手と反対側のq本の全地雷列と、最内側1列の下端r個に分配するBend構成器を追加。ゲームは既存N×NのFullを使用。
