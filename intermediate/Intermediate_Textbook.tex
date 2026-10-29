@@ -2229,6 +2229,40 @@ GUI用の処理を追加しても、地雷数の計算や0領域の探索を新�
 
 \exercise{\code{gui.bend}の\code{cell_at}で、座標\code{(0,0)}・\code{(63,0)}・\code{(64,0)}・\code{(255,255)}・\code{(256,0)}が何を返すか予想してみましょう。次にウィンドウを起動し、最初の左クリック、旗の付け外し、敗北後の操作、\code{R}によるリセットを確かめてみましょう。画面を開けない環境では、\code{gui_smoke.bend}という検証用ソースをリポジトリから参照してみましょう。}
 
+\section{10×10のGUIで、状態とイベントを一つにつなぐ}
+ここまでは4×4を使い、入力、状態、描画を別々に確かめました。次は10×10の実例で、\code{App.run}に渡す二つの関数が何をするかを確認します。盤面の大きさや見た目を豪華にすることが目的ではありません。これまで学んだ\code{Maybe}、\code{Event}、\code{Array.clone}、\code{Image}が一つのプログラムでどう協力するかに注目してください。
+
+\begin{lstlisting}[caption={nxn_gui_app.bendのApp.runへの接続}]
+def view(game: Lazy.Game) -> Lazy.Game & Image:
+  Render.view(game)
+
+def tick(events: List<Event>, game: Lazy.Game) -> IO(Maybe<Lazy.Game>):
+  Events.tick(events, game, 20261029)
+
+def main() -> IO(Unit):
+  App.run(~Lazy.Game, ~App{view, tick},
+    "Minesweeper 10x10: left/right click, R reset, Esc close",
+    512, 512, GUI.reset_gui(20261029))
+\end{lstlisting}
+
+\code{Lazy.Game}は、初手前の\code{Fresh{n,count,seed}}と、初手後の盤面を保持する\code{Active{state}}などを区別します。最初の有効な\textbf{左クリック}が届くまで、地雷の集合は生成しません。右クリックと画面外クリックは\code{Fresh}のままです。\code{view}は公開セルを\code{Image}へ変換し、ゲーム状態を次の更新のために返します。\code{tick}はイベントを渡し、\code{Some{game}}なら続行、\code{None{}}なら終了します。
+
+\begin{lstlisting}[language={},caption={学習用10×10 GUIを実行する（LinuxのGUI環境）}]
+bend examples/minesweeper/nxn_gui_app.bend --check-only
+bend examples/minesweeper/nxn_gui_app.bend -o minesweeper10
+./minesweeper10
+\end{lstlisting}
+
+最初の行は型検査だけで、ウィンドウは開きません。二行目はネイティブ実行ファイルを作り、三行目で起動します。表示後に左上をクリックすると、そのマスを避けて地雷が生成され、公開した数字が画面に現れます。右クリックでは旗を切り替え、\code{r}または\code{R}で未公開の初期画面に戻り、Escで終了します。画面は512×512画素ですが、操作できる10×10盤面は左上の320×320画素で、残りは余白です。ウィンドウの見た目に特別な素材は必要ありません。
+
+実装の責務は三つに分かれます。\code{nxn_gui_adapter.bend}は32画素単位の座標を添字に直し、\code{nxn_gui_events.bend}は押下・解放・キー入力を区別し、\code{nxn_gui_render.bend}は公開済みのマスだけで画像を作ります。ゲームの進行規則は\code{nxn_lazy_game.bend}へ残します。このように分ければ、画面を開けない環境でも多くの処理を純粋なBendコードとして調べられます。
+
+\begin{pointbox}
+\textbf{検査の範囲}：型検査と17件の画像計算に加え、Linux X11の仮想ディスプレイでネイティブGUIを起動し、初手クリック、旗、リセット、Esc終了を有限の操作列で確認しています。物理的な画面・GPU全般、すべての盤面の勝敗表示や保存・復元を保証するものではありません。またこれは\textbf{通常の初手安全版}であり、運ゲー無し生成器ではありません。
+\end{pointbox}
+
+\exercise{まず\code{nxn_gui_adapter.bend}を開き、座標\code{(319,319)}と\code{(320,0)}が何番のマスまたは範囲外になるか予想してみましょう。次に\code{nxn_gui_events.bend}で\code{Mouse}の\code{True{}}と\code{False{}}の違いを探し、離すときにも公開すると何が起こるか説明してみましょう。最後に\code{Fresh}のままで右クリックしても地雷集合が作られない理由を、\code{Lazy.Game}の型から考えてみましょう。}
+
 \section{時間・リセット・保存は境界の仕事}
 経過時間は現在時刻を読むIOと、時刻の差を計算する純粋関数に分けます。ゲーム終了時に時間を止め、リセット時に新しい開始時刻を設定します。リセットは公開済みのマスを空に戻す操作なので、「クリックで公開済み集合が減らない」という不変条件を無条件に適用してはいけません。
 

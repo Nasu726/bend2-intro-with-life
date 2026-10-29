@@ -89,6 +89,12 @@ INTERMEDIATE_GAME_FILES = (
     "nxn_step.bend",
     "nxn_terminal.bend",
     "nxn_victory.bend",
+    # Chapter 21: working native 10x10 GUI with lazy first-click placement.
+    "nxn_lazy_game.bend",
+    "nxn_gui_adapter.bend",
+    "nxn_gui_events.bend",
+    "nxn_gui_render.bend",
+    "nxn_gui_app.bend",
 )
 
 def readme(track: str) -> str:
@@ -168,6 +174,15 @@ bend examples/minesweeper/nxn_public_three_fixpoint.bend
 bend examples/minesweeper/nxn_public_pair_gap.bend
 期待結果: 203（既知安全2マス、差集合で追加安全3マス）
 これは未知近傍を手で渡す有限教材で、一般N×Nの完全連立推論ではありません。
+
+10×10初手安全マインスイーパーのGUI。学習の焦点はFresh/Active、Maybe、
+Event、Image、Array.clone、App.runのつながりです。演出を増やす例ではありません:
+bend examples/minesweeper/nxn_gui_app.bend --check-only
+bend examples/minesweeper/nxn_gui_app.bend -o minesweeper10
+./minesweeper10
+Linux X11仮想ディスプレイ上のネイティブ起動・クリック・旗・リセット・
+Esc終了の有限検証は成功。物理画面・GPU・保存機能や全操作列の検証ではありません。
+通常の初手安全版であり、運ゲー無し版とは異なります。
 
 4×4マインスイーパーのGUIをネイティブビルドして起動:
 bend examples/minesweeper/gui.bend -o minesweeper

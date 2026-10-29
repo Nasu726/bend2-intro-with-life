@@ -35,6 +35,10 @@ bend examples/04_flag_laws.bend --verdict
 bend examples/minesweeper/cli_replay.bend c0 f1 c1
 bend examples/minesweeper/gui.bend -o minesweeper
 ./minesweeper
+# 第21章の10×10版（Linux GUI環境）
+bend examples/minesweeper/nxn_gui_app.bend --check-only
+bend examples/minesweeper/nxn_gui_app.bend -o minesweeper10
+./minesweeper10
 bend examples/minesweeper/public_solver.bend
 bend examples/minesweeper/noguess_generator.bend
 bend examples/minesweeper/nxn_playthrough.bend
@@ -50,7 +54,13 @@ bend examples/minesweeper/cli_save.bend load
 
 第21章では、同梱の `examples/minesweeper/cli_replay.bend` と関連6モジュールで4×4ゲームの操作を再生できます。`c0` は番号0のクリック、`f1` は番号1の旗、`r` はリセットです。これは**引数を一括指定する実習**であり、まだ対話式CLIではありません。固定の地雷配置で初手安全・勝敗・0連鎖を学びます。
 
-現在は**執筆途中のプレビュー版**です。マインスイーパーGUIの実装、Bend型検査、ネイティブコンパイル、座標・状態・未知のマウスボタンの13件の純粋テストは用意しました。画面上での実機操作確認とGUI本体の保存・復元、任意の大きさの運ゲー無し盤面生成はまだ完了していません。一方、固定4×4 CLIの操作履歴保存・復元と、4×4・地雷2個・左上開始に限定したBend製の運ゲー無し生成器は動作検証済みです。演習の参考実装や追加の技術資料は、必要に応じて[リポジトリ内の参考コード](solutions/)から参照できます。
+現在は**執筆途中のプレビュー版**です。4×4 GUIの型検査・ネイティブビルド・13件の純粋入力テストと、10×10 GUIの17件のheadless画像照合・Linux X11仮想ディスプレイでの起動と有限操作列（初手、旗、リセット、Esc終了）の確認を実施しました。実際の物理ディスプレイでの目視検収、GUI保存・復元、任意の大きさの運ゲー無し盤面生成はまだ完了していません。一方、固定4×4 CLIの操作履歴保存・復元と、4×4・地雷2個・左上開始に限定したBend製の運ゲー無し生成器は動作検証済みです。演習の参考実装や追加の技術資料は、必要に応じて[リポジトリ内の参考コード](solutions/)から参照できます。
+
+### 10×10 GUIで学ぶ最小構成
+
+第21章に、従来の4×4から10×10へ進む短い実習を追加しました。画面を華やかにするためではなく、`Lazy.Game`の`Fresh`／`Active`、`Maybe`による終了、`Event`から純粋な状態遷移への変換、`Image`と`Array.clone`による描画を、`App.run`で一つにつなぐための教材です。
+
+同梱の`nxn_gui_app.bend`と必要なimport依存4本を使い、LinuxのGUI環境で実行できます。10×10は通常の初手安全版であり、**運ゲー無しを保証するものではありません**。X11仮想画面での初手・旗・リセット・終了は有限検証済みですが、実モニターでの目視やすべてのイベント列の検査とは区別します。
 
 ## 10×10のBend実習とリポジトリ内の追加検証
 
@@ -113,7 +123,7 @@ bend examples/55_clock_intervals.bend
 
 最初の出力は`4`、次は`00 0a 0d ff`、時計の例は経過時間を表す整数です。`54_binary_chunks.bend`は先に作った4バイトのファイルを2バイトずつ4回読み、`2`・`2`・`0`・`0`を表示します。`55_clock_intervals.bend`は0/20/100msの待機前後の時計値を6行表示します。時計の値は環境によって変わり、常に`20`になるとは限りません。ファイルの個数だけでは内容の正しさを保証できないため、4バイトの値と順序を別に確かめます。書き込み先に同名のディレクトリがある場合など、`File.open`が失敗するときは読み込みへ進まず終了します。
 
-現行プレビューの読者ZIPには、通常サンプル55本（import用補助モジュール1本を含む）とゲーム実習33本（10×10、可変個数固定点、二数字差集合の相対import依存を含む）、PDF・README・LICENSEを収録しています。演習解答、内部の証明・テスト、編集用資料は同梱しません。
+現行プレビューの読者ZIPには、通常サンプル55本（import用補助モジュール1本を含む）とゲーム実習38本（10×10、可変個数固定点、二数字差集合の相対import依存を含む）、PDF・README・LICENSEを収録しています。演習解答、内部の証明・テスト、編集用資料は同梱しません。
 
 ## 制作の進捗と方針
 

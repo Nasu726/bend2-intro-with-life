@@ -1,0 +1,78 @@
+name: Sync intermediate learner GUI candidate on verification branch
+on:
+  push:
+    branches:
+      - verify/learner-gui-20261029
+    paths:
+      - 'intermediate/Intermediate_Textbook.tex'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    if: github.repository == 'Nasu726/bend2-intro-with-life' && github.ref == 'refs/heads/verify/learner-gui-20261029'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Guard adopted cover from modification
+        run: test "$(git hash-object intermediate/cover_art.tex)" = "ba9b5c4cb296e3adfd119ace6b55abc419c6faf1"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compose reader PDF
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: intermediate/Intermediate_Textbook.tex
+          latexmk_use_xelatex: true
+          texlive_version: '2025'
+          os: debian
+          extra_system_packages: fonts-noto-cjk fonts-noto-core
+      - name: Check layout, rebuild exact learner ZIP, and verify contents
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOG=Intermediate_Textbook.log
+          if test -s intermediate/Intermediate_Textbook.log; then LOG=intermediate/Intermediate_Textbook.log; fi
+          test -s "$LOG"
+          if grep -nE 'Overfull|Underfull|LaTeX Font Warning|LaTeX Warning' "$LOG"; then exit 1; fi
+          if test -s Intermediate_Textbook.pdf; then
+            cp Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          else
+            cp intermediate/Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          fi
+          python3 scripts/build_reader_bundle.py intermediate
+          python3 -m unittest discover -s intermediate/tests -v
+          python3 -m unittest tests.test_reader_bundle -v
+          python3 - <<'PY'
+          import sys, zipfile
+          from pathlib import Path
+          sys.path.insert(0, 'scripts')
+          from build_reader_bundle import INTERMEDIATE_EXAMPLES, INTERMEDIATE_GAME_FILES
+          pdf = Path('intermediate/Bend2を使いこなす_プレビュー.pdf').read_bytes()
+          with zipfile.ZipFile('reader-packages/bend2-intermediate-reader-preview.zip') as z:
+              files=z.namelist()
+              assert len(files)==96
+              assert len(INTERMEDIATE_EXAMPLES)==55 and len(INTERMEDIATE_GAME_FILES)==38
+              assert z.read('bend2-intermediate-reader/textbook.pdf') == pdf
+              assert z.testzip() is None
+              assert all(not x.endswith(('.py','.tex')) and '/solutions/' not in x for x in files)
+          print('PASS 96 learner entries with byte-identical PDF')
+          PY
+      - name: Commit verified PDF and ZIP to verifier only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add 'intermediate/Bend2を使いこなす_プレビュー.pdf' 'reader-packages/bend2-intermediate-reader-preview.zip'
+          if git diff --cached --quiet; then
+            echo 'No changes to generated materials'
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'Sync validated intermediate learner PDF and ZIP to GUI lesson'
+            git push origin HEAD:refs/heads/verify/learner-gui-20261029
+          fi

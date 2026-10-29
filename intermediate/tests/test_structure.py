@@ -176,6 +176,28 @@ class BookStructure(unittest.TestCase):
             for x in range(4):
                 self.assertEqual(y*4+x, 4*y+x)
 
+    def test_10x10_gui_is_minimal_learner_material(self):
+        """The new GUI teaches Bend APIs, not a supposedly complete game."""
+        from build_reader_bundle import INTERMEDIATE_GAME_FILES
+        chapter = re.split(r"\\chapter\{[^}]+\}", BOOK.read_text(encoding="utf-8"))[21]
+        example_names = (
+            "nxn_lazy_game.bend", "nxn_gui_adapter.bend", "nxn_gui_events.bend",
+            "nxn_gui_render.bend", "nxn_gui_app.bend",
+        )
+        for name in example_names:
+            self.assertIn(name, INTERMEDIATE_GAME_FILES)
+            self.assertTrue((ROOT / "minesweeper" / name).is_file())
+        for term in ("App.run(~Lazy.Game", "Events.tick(events, game, 20261029)",
+                     "Render.view(game)", "GUI.reset_gui(20261029)"):
+            self.assertIn(term, (ROOT / "minesweeper" / "nxn_gui_app.bend").read_text())
+        for term in ("10×10のGUIで、状態とイベントを一つにつなぐ",
+                     "Fresh{n,count,seed}", "Array.clone", "nxn_gui_app.bend",
+                     "通常の初手安全版", "運ゲー無し生成器ではありません"):
+            self.assertIn(term, chapter)
+        self.assertIn("bend examples/minesweeper/nxn_gui_app.bend",
+                      (ROOT / "README.md").read_text(encoding="utf-8"))
+        self.assertIn("96エントリ", (ROOT / "COMPLETION_PLAN.md").read_text(encoding="utf-8"))
+
     def test_gui_coordinate_reference_boundaries(self):
         # Independent arithmetic oracle for the chapter's 4x4 / 64px mapping.
         # This does not replace Bend's 13 executable gui_smoke checks.
