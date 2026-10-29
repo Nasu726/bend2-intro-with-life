@@ -2232,7 +2232,7 @@ GUI用の処理を追加しても、地雷数の計算や0領域の探索を新�
 \section{10×10のGUIで、状態とイベントを一つにつなぐ}
 ここまでは4×4を使い、入力、状態、描画を別々に確かめました。次は10×10の実例で、\code{App.run}に渡す二つの関数が何をするかを確認します。盤面の大きさや見た目を豪華にすることが目的ではありません。これまで学んだ\code{Maybe}、\code{Event}、\code{Array.clone}、\code{Image}が一つのプログラムでどう協力するかに注目してください。
 
-\begin{lstlisting}[caption={nxn_gui_app.bendのApp.runへの接続}]
+\begin{lstlisting}[caption={GUIのApp.runへの接続}]
 def view(game: Lazy.Game) -> Lazy.Game & Image:
   Render.view(game)
 

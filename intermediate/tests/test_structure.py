@@ -176,6 +176,13 @@ class BookStructure(unittest.TestCase):
             for x in range(4):
                 self.assertEqual(y*4+x, 4*y+x)
 
+    def test_gui_listing_caption_is_tex_safe(self):
+        """Listing captions are TeX options, not verbatim Bend source."""
+        book = BOOK.read_text(encoding="utf-8")
+        self.assertIn(r"\begin{lstlisting}[caption={GUIのApp.runへの接続}]", book)
+        for caption in re.findall(r"\\begin\{lstlisting\}\[caption=\{([^}]+)\}", book):
+            self.assertNotIn("_", caption, f"TeX-unsafe underscore in caption: {caption}")
+
     def test_10x10_gui_is_minimal_learner_material(self):
         """The new GUI teaches Bend APIs, not a supposedly complete game."""
         from build_reader_bundle import INTERMEDIATE_GAME_FILES
