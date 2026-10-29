@@ -42,7 +42,35 @@ def length_from_digest(value: int) -> int:
     raise AssertionError(f"Out-of-range <=2-byte fingerprint: {value}")
 
 
+def verify_fingerprint() -> None:
+    """Prove injectivity over all 0-, 1-, and 2-byte sequences."""
+    observed = {0}
+    for b in range(256):
+        fingerprint = digest(bytes((b,)))
+        if fingerprint in observed or length_from_digest(fingerprint) != 1:
+            raise AssertionError("1-byte digest collision or length error")
+        observed.add(fingerprint)
+    for left in range(256):
+        for right in range(256):
+            fingerprint = digest(bytes((left, right)))
+            if fingerprint in observed or length_from_digest(fingerprint) != 2:
+                raise AssertionError("2-byte digest collision or length error")
+            observed.add(fingerprint)
+    if len(observed) != 1 + 256 + 65536:
+        raise AssertionError("Unexpected fingerprint cardinality")
+    print("PASS exhaustive 65,793 fingerprints (length <= 2)", flush=True)
+
+
 def main() -> int:
+    verify_fingerprint()
+    fixture_source = CONTENT_FIXTURE.read_text(encoding="utf-8")
+    chunk_body = fixture_source.split("def report_chunk(", 1)[1].split(
+        "\ndef after_fourth(", 1
+    )[0]
+    # Bend IO/do expects monadic patterns. Pure shared lets must precede it.
+    if not (chunk_body.index("+digest =") < chunk_body.index("+length =")
+            < chunk_body.index("do IO<Unit>:")):
+        raise AssertionError("Pure shared lets were placed inside do IO")
     if not shutil.which("bend"):
         raise AssertionError("Bend 2 is required for byte-chunk verification")
     if not FIXTURE.is_file():

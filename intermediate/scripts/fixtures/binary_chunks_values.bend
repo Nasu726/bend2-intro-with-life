@@ -26,9 +26,9 @@ def digest_length(is_empty: Bool, is_single: Bool) -> U32:
 # The affine list is consumed ONCE by foldl. The U32 result is shared,
 # rather than consuming the File.read_bytes list twice.
 def report_chunk(bytes: List<&2, U32>) -> IO(Unit):
+  +digest = List.foldl(~&2, ~U32, ~U32, ~digest_step, bytes, 0)
+  +length = digest_length(U32.is_lt(digest, 1), U32.is_lt(digest, 257))
   do IO<Unit>:
-    +digest = List.foldl(~&2, ~U32, ~U32, ~digest_step, bytes, 0)
-    +length = digest_length(U32.is_lt(digest, 1), U32.is_lt(digest, 257))
     Unit <- IO.print(U32.show(length))
     IO.print(U32.show(digest))
 
