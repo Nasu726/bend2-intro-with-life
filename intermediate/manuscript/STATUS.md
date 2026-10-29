@@ -1,5 +1,47 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-29：Imageサンプラーの照合順エラーを検証ブランチで修正（CI待ち）
+
+- 検証PR #89のCI #40830730276：Tests、Reader download bundles、PDF layout、XeLaTeX、公開情報推論は成功。Bend examplesはImage型検査で `'bottom' can't be matched in this position` により失敗。原因は `pixel_at` の局所 `+half/+bottom/+right` 定義後に `match bottom` を行ったこと。停止性の直接子再帰は維持する必要がある。
+- `pixel_at_walk(img,bottom,right,x,y,size)` の引数として象限選択Boolを渡し、`match img` → `match bottom right` の後に局所計算する方式へ変更。四分木の子 `tl/tr/bl/br` に直接再帰する。4象限の独立画素期待値を追加し、headless条件を13→17件へ拡張。第21章補稿も同期。
+- この変更は検証用ブランチの候補であり、**Bend型検査・17件の実行照合・App.run型検査・XeLaTeX/PDF/ZIPの新CI成功はまだ未確認**。正本PR #4は変更しない。採用表紙blob `ba9b5c4c...` と第7/8章、124ページPDF、91件ZIPは変更しない。実機GUI・一般N×N運ゲー無し・全23章校閲は未完成。
+
+---
+
+## 2026-10-29：GUI Imageサンプラーの構造的停止性を修正（検証候補）
+
+- 検証PR #89のCI #40824036274：Tests／Reader download bundles／PDF layout／XeLaTeX／公開情報推論は成功。Bend examplesは13件のPython静的期待値検査後、`pixel_at` の型検査で停止。エラーは `expected : a decreasing self-call`。四分木の子を `choose_quadrant` に通すと、Bendの停止性検査が再帰呼び出しの第一引数を構造的な子と認識できない。
+- `pixel_at` 内で上下左右のBoolを直接照合し、各分岐で `tl/tr/bl/br` を再帰呼び出しの第一引数へ渡す。静的回帰条件を追加し、選択ヘルパー経由の再帰を禁止。今回のBend型検査・headless実行13件・App.run型検査・第7/8章の再実行は検証CI待ち。正本PR #4は変更しない。
+- 採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1`、TeX本文、124ページPDF、91エントリ読者ZIPは不変更。実機GUI・一般N×N運ゲー無し・全23章校閲は未完成。
+
+---
+
+
+## 2026-10-29：GUI Imageの複製可能リスト型を明示（検証候補）
+
+- PR #89のCI #40818478747：Tests／Reader download bundles／PDF layout／XeLaTeX／公開情報推論は成功。Bend examplesのImage型検査は `picture` の `+cells: List<Game.Square>` に対する「expected Data, observed Type」で失敗。第7章Byte/File・第8章IO.now/IO.sleepとApp.run型検査は後続skipにつき、今回の成功とは数えない。
+- `Array.to_list` が返す `List<Game.Square>` は既定でaffine。四分木の複数分岐で参照するため、`shared_squares` により `List<&2, Game.Square>` を構築し、`picture`／`visible_code`／`list_code` の型を揃える。静的回帰検査も追加。
+- Bend型検査・headless描画13条件・App.run型検査は次のCIで確認。正本PR #4は検証完了まで不変更。採用表紙、TeX・124ページPDF・91件ZIPは不変更。実機GUI・一般N×N運ゲー無し・全23章校閲は未完成。
+
+---
+
+## 2026-10-29：GUI ImageのBendパターン照合順を修正（検証候補）
+
+- 検証PR #89の初回CI #40813140729はTests／Reader download bundles／PDF layout／XeLaTeX／公開情報推論が成功し、Bend examplesの新規Image型検査で停止。`list_code(fuel,cells)` が後方の引数 `cells` を先にmatchし、その内側で先行引数 `fuel` をmatchしたため、Bend 2.0.39が照合順序違反と診断した。headless描画13条件の静的期待値は成功したが、Bend型検査・実行とApp.run型検査は未成功。
+- `fuel` を先に照合し、その各分岐で `cells` を照合する構造へ修正。Python静的事前検査に順序の回帰条件を追加。**修正後のBend型検査・実行、App.run型検査、全CIが成功するまでは正本へ統合しない**。
+- 表紙 `intermediate/cover_art.tex`、第7/8章、TeX・124ページPDF・91件読者ZIPは変更しない。実機GUIと一般N×N運ゲー無し生成、23章最終校閲は未完成。
+
+---
+
+## 2026-10-29：10×10 Image描画とApp.run入口（検証候補）
+
+- 正本先端 `5d3258ad` の4ワークフロー（Intermediate textbook / Tests / Reader download bundles / PDF layout）は全成功。採用表紙 `cover_art.tex` のblob `ba9b5c4c...` を確認し、他作業の先端差分なし。第7章Byte/File、第8章IO.now/IO.sleepは配布統合済みのまま維持。
+- `nxn_gui_render.bend` に公開セルだけのImage描画を実装し、`Array.clone` によってゲーム状態の所有権を保持する。16×16タイル・512×512画素のキャンバスの左上320×320画素を10×10盤面とし、余白192画素はクリック無作用。8×8論理画素タイルに境界・旗・数字を描く。`nxn_gui_app.bend` に既存のイベント配送と `App.run` を接続。
+- `test_nxn_gui_render.py` に13件の独立Python期待値に基づくheadless Image照合とGUI入口のBend型検査を追加。Pythonの静的事前検査・構文検査はローカル成功。**Bend実行・App.run型検査・CIは検証PR成功まで未確認**。OS実機ウィンドウ・操作は引き続き未検証。
+- 正本PR #4は検証完了まで不変更。採用表紙、TeX本文、124ページPDF、91エントリ読者ZIP、第7/8章は変更しない。一般N×N運ゲー無し生成と全23章校閲も未完成。
+
+---
+
 ## 2026-10-29：GUI境界Bendハーネスの定義順序を修正（検証候補）
 
 - PR #87のCI #40773482601はTests／Reader download bundles／XeLaTeX／公開情報推論に成功し、Bend examplesだけ失敗。Bend 2.0.39の`--check-only`で生成テスト`equal`が**未定義の後続`one_if_true`**を呼んだため停止。ゲーム本体の所有権や描画の不具合とは断定しない。
