@@ -1,5 +1,13 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-29：GUI Imageの複製可能リスト型を明示（検証候補）
+
+- PR #89のCI #40818478747：Tests／Reader download bundles／PDF layout／XeLaTeX／公開情報推論は成功。Bend examplesのImage型検査は `picture` の `+cells: List<Game.Square>` に対する「expected Data, observed Type」で失敗。第7章Byte/File・第8章IO.now/IO.sleepとApp.run型検査は後続skipにつき、今回の成功とは数えない。
+- `Array.to_list` が返す `List<Game.Square>` は既定でaffine。四分木の複数分岐で参照するため、`shared_squares` により `List<&2, Game.Square>` を構築し、`picture`／`visible_code`／`list_code` の型を揃える。静的回帰検査も追加。
+- Bend型検査・headless描画13条件・App.run型検査は次のCIで確認。正本PR #4は検証完了まで不変更。採用表紙、TeX・124ページPDF・91件ZIPは不変更。実機GUI・一般N×N運ゲー無し・全23章校閲は未完成。
+
+---
+
 ## 2026-10-29：GUI ImageのBendパターン照合順を修正（検証候補）
 
 - 検証PR #89の初回CI #40813140729はTests／Reader download bundles／PDF layout／XeLaTeX／公開情報推論が成功し、Bend examplesの新規Image型検査で停止。`list_code(fuel,cells)` が後方の引数 `cells` を先にmatchし、その内側で先行引数 `fuel` をmatchしたため、Bend 2.0.39が照合順序違反と診断した。headless描画13条件の静的期待値は成功したが、Bend型検査・実行とApp.run型検査は未成功。

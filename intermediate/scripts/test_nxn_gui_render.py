@@ -71,6 +71,13 @@ def preflight():
     app = APP.read_text(encoding="utf-8")
     assert "Array.clone(Game.Square, cells)" in renderer
     assert "Array.to_list(Game.Square, inspect)" in renderer
+    assert "def shared_squares(cells: List<Game.Square>) -> List<&2, Game.Square>:" in renderer
+    assert "square <> shared_squares(rest)" in renderer
+    assert "def list_code(fuel: Nat, cells: List<&2, Game.Square>)" in renderer
+    assert "def visible_code(valid: Bool, cells: List<&2, Game.Square>" in renderer
+    assert "+cells: List<&2, Game.Square>) -> Image:" in renderer
+    assert "shared_squares(Array.to_list(Game.Square, inspect))" in renderer
+    assert "shared_squares(Array.to_list(Game.Square, Array.new(" in renderer
     assert "Lazy.Fresh{n, count, seed}" in renderer
     assert "Step.square_code(square)" in renderer
     code_lookup = renderer.split("def list_code(", 1)[1].split("\ndef visible_code(", 1)[0]

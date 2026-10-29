@@ -22,8 +22,17 @@ def cell_color(+code: U32) -> U32:
       choose(U32.is_eq(code, 10), 15658734,
         choose(U32.is_lt(code, 19), 1578496, 0))))
 
+# Array.to_list returns an affine list even when its elements are Data.
+# Rebuild a duplicable public-cell list before branching the Image.
+def shared_squares(cells: List<Game.Square>) -> List<&2, Game.Square>:
+  match cells:
+    case Nil{}:
+      Nil{}
+    case square <> rest:
+      square <> shared_squares(rest)
+
 # The cloned Array becomes a list. Only the first 100 logical cells are read.
-def list_code(fuel: Nat, cells: List<Game.Square>) -> U32:
+def list_code(fuel: Nat, cells: List<&2, Game.Square>) -> U32:
   match fuel:
     case 0n:
       match cells:
@@ -38,7 +47,7 @@ def list_code(fuel: Nat, cells: List<Game.Square>) -> U32:
         case square <> rest:
           list_code(k, rest)
 
-def visible_code(valid: Bool, cells: List<Game.Square>, +x: U32, +y: U32) -> U32:
+def visible_code(valid: Bool, cells: List<&2, Game.Square>, +x: U32, +y: U32) -> U32:
   match valid:
     case True{}:
       list_code(U32.to_nat((y * 10 + x : U32)), cells)
@@ -97,7 +106,7 @@ def tile_draw(+depth: Nat, +code: U32, +x: U32, +y: U32) -> Image:
       Qua{tl, tr, bl, br}
 
 # Only public square codes are passed to the recursive image constructor.
-def picture(+depth: Nat, +x: U32, +y: U32, +cells: List<Game.Square>) -> Image:
+def picture(+depth: Nat, +x: U32, +y: U32, +cells: List<&2, Game.Square>) -> Image:
   match depth:
     case 0n:
       tile_draw(3n, visible_code(
@@ -112,14 +121,14 @@ def picture(+depth: Nat, +x: U32, +y: U32, +cells: List<Game.Square>) -> Image:
 
 def fresh_picture() -> Image:
   picture(4n, 0, 0,
-    Array.to_list(Game.Square, Array.new(Game.Square, 7n, Game.Hidden{})))
+    shared_squares(Array.to_list(Game.Square, Array.new(Game.Square, 7n, Game.Hidden{}))))
 
 # Keep the original affine visible Array in the game; inspect only its clone.
 def view_cloned(n: U32, mines: Words.MineWords, phase: Step.Phase,
                 pair: Array<Game.Square> & Array<Game.Square>) -> Step.Session & Image:
   (keep, inspect) = pair
   (Step.Session{n, mines, keep, phase},
-   picture(4n, 0, 0, Array.to_list(Game.Square, inspect)))
+   picture(4n, 0, 0, shared_squares(Array.to_list(Game.Square, inspect))))
 
 def view_session(session: Step.Session) -> Step.Session & Image:
   match session:
