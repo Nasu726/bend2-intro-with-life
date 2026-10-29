@@ -74,3 +74,39 @@ EscとCloseは`None`、R/rは地雷集合を作らない`Fresh`へ戻し、マ�
 既存の有限検証では、座標18件・10×10ラッパー3件・ゲーム操作列13件、イベント列16件が成功しています。**画像のピクセル一致、ウィンドウ生成、OSイベントの配送、10×10実機操作、一般N×N運ゲー無し性は未検証**です。これらの実装・検証後に限り第21章のTeX本編と読者ZIPへ同期します。
 
 演習として、リセット後に全セルが未公開へ戻ることと、初手前の右クリックで盤面が生成されないことを、表示と内部状態の両方で確かめてみましょう。
+
+## 2026-10-29：10×10のImage描画とApp.run入口（検証候補）
+
+### 必要性
+
+入力イベントをゲームへ渡せても、画面に公開情報を描かなければ遊べません。一方で、画面を描くたびに地雷を再生成したり、隠された地雷位置を描画側へ渡したりしてはいけません。そこで、`nxn_gui_render.bend`では`Fresh`の描画を未公開セル100個だけから作り、`Active`では`Array.clone(Game.Square, cells)`で可視セル配列を複製します。地雷を保持する元のゲーム状態はそのまま返します。
+
+### 具体的なBendコード
+
+```bend
+def view_session(session: Step.Session) -> Step.Session & Image:
+  match session:
+    case Step.Session{n, mines, cells, phase}:
+      view_cloned(n, mines, phase, Array.clone(Game.Square, cells))
+
+def view(game: Lazy.Game) -> Lazy.Game & Image:
+  match game:
+    case Lazy.Fresh{n, count, seed}:
+      (Lazy.Fresh{n, count, seed}, fresh_picture())
+    case Lazy.Active{state}:
+      active_view(view_state(state))
+    case Lazy.Invalid{}:
+      (Lazy.Invalid{}, Pix{0})
+```
+
+`nxn_gui_app.bend`では`App.run(~Lazy.Game, ~App{view, tick}, ..., 512, 512, GUI.reset_gui(20261029))`を入口とし、既存の`Events.tick`へイベントを渡します。Imageは2の累乗の四分木なので、16×16タイルを描く128×128のImageを512×512画素へ拡大します。1タイルは32×32画素です。左上10×10タイル（320×320画素）のみ操作可能で、右側・下側の192画素は黒い余白とし、既存の座標変換でクリックを拒否します。各タイルには境界線と数字の7セグメント表示を置きます。
+
+### 実行結果・検証境界
+
+独立Python参照モデルでは、初手前の状態コードは`300`、seed `20261029`で左上を最初に開いたセルのコードは`10`（数字0）です。画素の期待値は、未公開セル内部`8689825`、数字0の背景`15658734`、右下の余白`0`です。13条件をBendのheadless実行で照合し、GUI入口を`--check-only`で型検査するテストを追加しました。**この補稿を作成した時点ではBend実行とApp.run型検査のCI結果は未確認**です。Python静的事前検査は成功しています。
+
+`Image`のピクセル検査は実際のOSウィンドウでの描画やマウス配送の検査ではありません。GUI実機でのクリック、旗、勝敗、リセット、Esc、ウィンドウ終了、表示倍率を確認するまでは正式なGUI完成とは扱いません。旧4×4 GUIは変更せず、配布TeX/PDF/読者ZIPへの統合も別の検収工程とします。
+
+### 演習
+
+初手前の未公開セルを描く処理で`Lazy.generate`が呼ばれないことを確かめてみましょう。次に、`Image`の右下の余白と、実際の10×10盤面の右下のマスを比べてみましょう。最後に、数字0と数字2の画素を比較し、7セグメント表示がどの位置に現れるか試してみましょう。

@@ -1,5 +1,14 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-29：10×10 Image描画とApp.run入口（検証候補）
+
+- 正本先端 `5d3258ad` の4ワークフロー（Intermediate textbook / Tests / Reader download bundles / PDF layout）は全成功。採用表紙 `cover_art.tex` のblob `ba9b5c4c...` を確認し、他作業の先端差分なし。第7章Byte/File、第8章IO.now/IO.sleepは配布統合済みのまま維持。
+- `nxn_gui_render.bend` に公開セルだけのImage描画を実装し、`Array.clone` によってゲーム状態の所有権を保持する。16×16タイル・512×512画素のキャンバスの左上320×320画素を10×10盤面とし、余白192画素はクリック無作用。8×8論理画素タイルに境界・旗・数字を描く。`nxn_gui_app.bend` に既存のイベント配送と `App.run` を接続。
+- `test_nxn_gui_render.py` に13件の独立Python期待値に基づくheadless Image照合とGUI入口のBend型検査を追加。Pythonの静的事前検査・構文検査はローカル成功。**Bend実行・App.run型検査・CIは検証PR成功まで未確認**。OS実機ウィンドウ・操作は引き続き未検証。
+- 正本PR #4は検証完了まで不変更。採用表紙、TeX本文、124ページPDF、91エントリ読者ZIP、第7/8章は変更しない。一般N×N運ゲー無し生成と全23章校閲も未完成。
+
+---
+
 ## 2026-10-29：GUI境界Bendハーネスの定義順序を修正（検証候補）
 
 - PR #87のCI #40773482601はTests／Reader download bundles／XeLaTeX／公開情報推論に成功し、Bend examplesだけ失敗。Bend 2.0.39の`--check-only`で生成テスト`equal`が**未定義の後続`one_if_true`**を呼んだため停止。ゲーム本体の所有権や描画の不具合とは断定しない。
