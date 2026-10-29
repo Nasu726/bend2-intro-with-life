@@ -36,3 +36,28 @@ def reset_gui(seed: U32) -> Lazy.Game:
 ## 統合境界
 
 今回の変更は内部Bendコード・独立Pythonテスト・CI・編集補稿・進捗台帳だけです。TeX本文、配布PDF/ZIP、採用済み表紙、第7章Byte/File・第8章IO.now/IO.sleepは不変更。補稿は検証後に第21章本文へ採用する候補であり、読者ZIPには入れません。
+
+## 2026-10-29：イベント配送をゲームに接続する（検証候補）
+
+座標変換だけでは、押下・解放・リセット・ウィンドウ終了を区別できません。`nxn_gui_events.bend` ではBendの`Event`を純粋なゲーム状態遷移へ変換します。
+
+```bend
+def event(e: Event, game: Lazy.Game, seed: U32) -> Maybe<Lazy.Game>:
+  match e:
+    case Close{}:
+      None{}
+    case Key{27, True{}}:
+      None{}
+    case Key{114, True{}}:
+      Some{GUI.reset_gui(seed)}
+    case Key{82, True{}}:
+      Some{GUI.reset_gui(seed)}
+    case Mouse{x, y, button, True{}}:
+      Some{GUI.pointer(game, x, y, button)}
+    case _:
+      Some{game}
+```
+
+EscとCloseは`None`、R/rは地雷集合を作らない`Fresh`へ戻し、マウスの押下だけを既存の座標変換へ渡します。例えば、リセット後の`snapshot(...,0)`は`300`、Closeは`None`です。16種類の入力列を独立Python期待値とBend実行で照合するテストを追加しますが、**検証CI完了までは新規実行結果を確認済みとは記しません**。
+
+マウスの押下と解放、初手後のリセット、RとEscの違いを試してみましょう。これは`App.run`でOSイベントを受け取った実機試験ではなく、描画用`Image`も未実装です。TeX・PDF・読者ZIPへの反映は別途同一版検証が必要です。

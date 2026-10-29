@@ -38,6 +38,8 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_lazy_game.py --python-only
       - name: Validate N x N GUI pixel routing before Bend install
         run: python3 intermediate/scripts/test_nxn_gui_adapter.py --static-only
+      - name: Validate GUI event dispatch before Bend install
+        run: python3 intermediate/scripts/test_nxn_gui_events.py --static-only
       - name: Install Bend 2
         shell: bash
         run: |
@@ -73,6 +75,8 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_lazy_game.py
       - name: Verify lazy N x N GUI pixel and button controller
         run: python3 intermediate/scripts/test_nxn_gui_adapter.py
+      - name: Verify N x N GUI event dispatch
+        run: python3 intermediate/scripts/test_nxn_gui_events.py
       - name: Verify N x N first-click relocation
         run: python3 intermediate/scripts/test_nxn_relocate.py
       - name: Verify N x N non-wrapping ordered neighbor frontier
