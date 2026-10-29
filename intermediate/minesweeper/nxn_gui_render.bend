@@ -191,9 +191,21 @@ def pixel_at(img: Image, +x: U32, +y: U32, +size: U32) -> U32:
       color
     case Qua{tl, tr, bl, br}:
       +half = U32.div(size, 2)
-      pixel_at(choose_quadrant(U32.is_ge(y, half), U32.is_ge(x, half),
-                              tl, tr, bl, br),
-               U32.mod(x, half), U32.mod(y, half), half)
+      +bottom = U32.is_ge(y, half)
+      +right = U32.is_ge(x, half)
+      match bottom:
+        case True{}:
+          match right:
+            case True{}:
+              pixel_at(br, U32.mod(x, half), U32.mod(y, half), half)
+            case False{}:
+              pixel_at(bl, x, U32.mod(y, half), half)
+        case False{}:
+          match right:
+            case True{}:
+              pixel_at(tr, U32.mod(x, half), y, half)
+            case False{}:
+              pixel_at(tl, x, y, half)
 
 def top_left(img: Image) -> U32:
   match img:

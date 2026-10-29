@@ -87,6 +87,10 @@ def preflight():
     assert "picture(4n, 0, 0" in renderer
     assert "tile_draw(3n, visible_code(" in renderer
     assert "def pixel_at(img: Image" in renderer
+    sampler = renderer.split("def pixel_at(", 1)[1].split("def top_left(", 1)[0]
+    assert "pixel_at(choose_quadrant(" not in sampler
+    assert "match bottom:" in sampler and sampler.count("match right:") == 2
+    assert all(f"pixel_at({q}," in sampler for q in ("tl", "tr", "bl", "br"))
     assert "Bool.and(U32.is_lt(x, 10), U32.is_lt(y, 10))" in renderer
     assert "Words.has(" not in renderer and "Lazy.generate(" not in renderer
     assert "App.run(" not in renderer

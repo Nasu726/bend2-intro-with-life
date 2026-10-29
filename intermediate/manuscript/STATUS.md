@@ -1,5 +1,14 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-29：GUI Imageサンプラーの構造的停止性を修正（検証候補）
+
+- 検証PR #89のCI #40824036274：Tests／Reader download bundles／PDF layout／XeLaTeX／公開情報推論は成功。Bend examplesは13件のPython静的期待値検査後、`pixel_at` の型検査で停止。エラーは `expected : a decreasing self-call`。四分木の子を `choose_quadrant` に通すと、Bendの停止性検査が再帰呼び出しの第一引数を構造的な子と認識できない。
+- `pixel_at` 内で上下左右のBoolを直接照合し、各分岐で `tl/tr/bl/br` を再帰呼び出しの第一引数へ渡す。静的回帰条件を追加し、選択ヘルパー経由の再帰を禁止。今回のBend型検査・headless実行13件・App.run型検査・第7/8章の再実行は検証CI待ち。正本PR #4は変更しない。
+- 採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1`、TeX本文、124ページPDF、91エントリ読者ZIPは不変更。実機GUI・一般N×N運ゲー無し・全23章校閲は未完成。
+
+---
+
+
 ## 2026-10-29：GUI Imageの複製可能リスト型を明示（検証候補）
 
 - PR #89のCI #40818478747：Tests／Reader download bundles／PDF layout／XeLaTeX／公開情報推論は成功。Bend examplesのImage型検査は `picture` の `+cells: List<Game.Square>` に対する「expected Data, observed Type」で失敗。第7章Byte/File・第8章IO.now/IO.sleepとApp.run型検査は後続skipにつき、今回の成功とは数えない。
