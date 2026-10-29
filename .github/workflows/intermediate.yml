@@ -44,6 +44,8 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_gui_render.py --static-only
       - name: Audit constructive N x N no-guess evidence without Bend
         run: python3 intermediate/scripts/test_nxn_noguess_constructive.py --static-only
+      - name: Audit quarter-density N x N no-guess evidence
+        run: python3 intermediate/scripts/test_nxn_noguess_density.py --static-only
       - name: Install Bend 2
         shell: bash
         run: |
@@ -85,6 +87,8 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_gui_render.py
       - name: Verify constructive N x N no-guess Bend board and replay
         run: python3 intermediate/scripts/test_nxn_noguess_constructive.py
+      - name: Verify quarter-density N x N Bend generator
+        run: python3 intermediate/scripts/test_nxn_noguess_density.py
       - name: Verify N x N first-click relocation
         run: python3 intermediate/scripts/test_nxn_relocate.py
       - name: Verify N x N non-wrapping ordered neighbor frontier
