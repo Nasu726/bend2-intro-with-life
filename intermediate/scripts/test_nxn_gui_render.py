@@ -139,6 +139,7 @@ def preflight():
     assert "Bool.and(U32.is_lt(x, 10), U32.is_lt(y, 10))" in renderer
     assert "Words.has(" not in renderer and "Lazy.generate(" not in renderer
     assert "App.run(" not in renderer
+    assert "pixel_at(fresh_picture(), 1, 1, 128)" in renderer
     assert "App.run(~Lazy.Game" in app
     assert "512, 512, GUI.reset_gui(20261029)" in app
     assert "Events.tick(events, game, 20261029)" in app
@@ -196,6 +197,8 @@ def main():
             "6 public-view and flag checks typecheck")
         run(("bend", str(extra_path)), directory,
             "6 public-view and flag expectations", extra_count)
+        run(("bend", str(directory / RENDER.name)), directory,
+            "standalone reader GUI render sample", HIDDEN)
         run(("bend", str(directory / APP.name), "--check-only"), directory,
             "App.run typecheck (no desktop launch)")
     print("PASS 31 Image checks, 6 public-view checks and App.run typecheck; OS GUI still unverified", flush=True)

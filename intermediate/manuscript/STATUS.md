@@ -3,7 +3,7 @@
 ## 2026-10-30：第21章10×10初手生成GUIを配布TeX・学習用ZIPへ統合（検証候補）
 
 - 正本Draft PR #4先端`b41e10d0`の4ワークフロー（Intermediate textbook、Tests、PDF layout、Reader download bundles）はすべて成功。PR #95・#96の修正を含むGUI Image31条件＋旗6条件はheadlessで成功、`App.run`入口型検査も成功。第7章Byte/File/EOF、第8章IO.now/IO.sleepの実行検証も成功。前回台帳の「検証待ち」は履歴であり、現在の失敗ではない。
-- 今回は第21章TeXに必要性→実際のBendコード→出力`8689825`→仕組み→演習を追加。`nxn_lazy_game`、GUI adapter/events/render/appの5モジュールを読者ZIPの明示allowlistへ追加し、相対importの閉包とZIP内実ファイル一致をテスト。READMEと学習用案内を同期する。演習解答・検証スクリプト・編集資料はZIPへ入れない。
+- 今回は第21章TeXに必要性→実際のBendコード→出力`8689825`→仕組み→演習を追加。加えて配布サンプル`nxn_gui_render.bend`の`main`が期待色`8689825`を返すことをBend実行テストへ組み込み、本文のコマンド例と実行結果を直接照合する。`nxn_lazy_game`、GUI adapter/events/render/appの5モジュールを読者ZIPの明示allowlistへ追加し、相対importの閉包とZIP内実ファイル一致をテスト。READMEと学習用案内を同期する。演習解答・検証スクリプト・編集資料はZIPへ入れない。
 - 検証用ブランチでXeLaTeXを通し、生成PDFとZIPを同一ソースから作ってコミット済みバイナリとのテキスト・全ページ画素・ZIP全ファイル一致を照合するまで**正本へ統合しない**。採用済み`intermediate/cover_art.tex`のblob `ba9b5c4c...` は一切変更しない。OS GUI実機操作・GUI保存/復元・一般N×N運ゲー無し生成・全23章の最終校閲は未完成。
 
 ---
