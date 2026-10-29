@@ -46,10 +46,15 @@ def harness():
          oracle(10, 10, SEED, ((0, 0, 0),), 0)),
         ("active-view-top-left", "view_first(RENDER.view(GUI.pointer(GUI.reset_gui(20261029), 0, 0, 0)))",
          expected_first_color()),
+        ("quadrant-tl", "RENDER.pixel_at(quadrant(), 0, 0, 2)", 11),
+        ("quadrant-tr", "RENDER.pixel_at(quadrant(), 1, 0, 2)", 22),
+        ("quadrant-bl", "RENDER.pixel_at(quadrant(), 0, 1, 2)", 33),
+        ("quadrant-br", "RENDER.pixel_at(quadrant(), 1, 1, 2)", 44),
     ]
     lines = [
         "import Base", "import ./nxn_gui_render.bend as RENDER",
         "import ./nxn_gui_adapter.bend as GUI", "import ./nxn_lazy_game.bend as Lazy", "",
+        "def quadrant() -> Image:", "  Qua{Pix{11}, Pix{22}, Pix{33}, Pix{44}}", "",
         "def one_if_true(b: Bool) -> U32:",
         "  match b:", "    case True{}:", "      1", "    case False{}:", "      0", "",
         "def equal(a: U32, b: U32) -> U32:",
@@ -87,10 +92,13 @@ def preflight():
     assert "picture(4n, 0, 0" in renderer
     assert "tile_draw(3n, visible_code(" in renderer
     assert "def pixel_at(img: Image" in renderer
-    sampler = renderer.split("def pixel_at(", 1)[1].split("def top_left(", 1)[0]
+    sampler = renderer.split("def pixel_at_walk(", 1)[1].split("def top_left(", 1)[0]
+    assert "match img:\\n" not in sampler or "match bottom right:" in sampler
+    assert "match bottom right:" in sampler
+    assert sampler.index("match bottom right:") < sampler.index("+half =")
+    assert all(f"pixel_at_walk({q}," in sampler for q in ("tl", "tr", "bl", "br"))
     assert "pixel_at(choose_quadrant(" not in sampler
-    assert "match bottom:" in sampler and sampler.count("match right:") == 2
-    assert all(f"pixel_at({q}," in sampler for q in ("tl", "tr", "bl", "br"))
+    assert "def pixel_at(img: Image" in sampler
     assert "Bool.and(U32.is_lt(x, 10), U32.is_lt(y, 10))" in renderer
     assert "Words.has(" not in renderer and "Lazy.generate(" not in renderer
     assert "App.run(" not in renderer
@@ -100,12 +108,12 @@ def preflight():
     assert "GUI.pointer" not in renderer
     assert first_clue() in range(4)
     source, count = harness()
-    assert count == 13
+    assert count == 17
     assert source.index("def one_if_true(") < source.index("def equal(")
     assert source.index("def view_first(") < source.index("def check_0(")
     assert source.count("def main() -> U32:") == 1
     assert oracle(10, 10, SEED, ((0, 0, 0),), 0) not in (300, 400)
-    print("PASS 13 independent headless render expectations and App.run structural contract", flush=True)
+    print("PASS 17 independent headless render expectations and App.run structural contract", flush=True)
 
 
 def run(cmd, cwd, label, expected=None):
@@ -136,7 +144,7 @@ def main():
         path = directory / "check_gui_image.bend"
         path.write_text(source, encoding="utf-8")
         run(("bend", str(path), "--check-only"), directory, "Image typecheck")
-        run(("bend", str(path)), directory, "13 Image expectations", count)
+        run(("bend", str(path)), directory, "17 Image expectations", count)
         run(("bend", str(directory / APP.name), "--check-only"), directory,
             "App.run typecheck (no desktop launch)")
     print("PASS headless Image checks and App.run typecheck; OS GUI still unverified", flush=True)
