@@ -41,6 +41,11 @@ def harness():
         ("tile-border", "RENDER.tile_pixel(0, 0, 1)", 2697513),
         ("fresh-top-left-interior", "RENDER.pixel_at(RENDER.fresh_picture(), 1, 1, 128)", HIDDEN),
         ("fresh-bottom-right-padding", "RENDER.pixel_at(RENDER.fresh_picture(), 127, 127, 128)", PADDING),
+        ("fresh-last-cell", "RENDER.pixel_at(RENDER.fresh_picture(), 79, 79, 128)", HIDDEN),
+        ("fresh-first-right-padding", "RENDER.pixel_at(RENDER.fresh_picture(), 80, 79, 128)", PADDING),
+        ("fresh-first-bottom-padding", "RENDER.pixel_at(RENDER.fresh_picture(), 79, 80, 128)", PADDING),
+        ("prestart-flag-does-not-open", "view_first(RENDER.view(GUI.pointer(GUI.reset_gui(20261029), 319, 319, 1)))", HIDDEN),
+        ("prestart-padding-click-keeps-fresh", "view_state(RENDER.view(GUI.pointer(GUI.reset_gui(20261029), 320, 0, 0)))", 300),
         ("fresh-view-state", "view_state(RENDER.view(GUI.reset_gui(20261029)))", 300),
         ("active-view-state", "view_state(RENDER.view(GUI.pointer(GUI.reset_gui(20261029), 0, 0, 0)))",
          oracle(10, 10, SEED, ((0, 0, 0),), 0)),
@@ -108,12 +113,12 @@ def preflight():
     assert "GUI.pointer" not in renderer
     assert first_clue() in range(4)
     source, count = harness()
-    assert count == 17
+    assert count == 22
     assert source.index("def one_if_true(") < source.index("def equal(")
     assert source.index("def view_first(") < source.index("def check_0(")
     assert source.count("def main() -> U32:") == 1
     assert oracle(10, 10, SEED, ((0, 0, 0),), 0) not in (300, 400)
-    print("PASS 17 independent headless render expectations and App.run structural contract", flush=True)
+    print("PASS 22 independent headless render expectations and App.run structural contract", flush=True)
 
 
 def run(cmd, cwd, label, expected=None):
@@ -144,7 +149,7 @@ def main():
         path = directory / "check_gui_image.bend"
         path.write_text(source, encoding="utf-8")
         run(("bend", str(path), "--check-only"), directory, "Image typecheck")
-        run(("bend", str(path)), directory, "17 Image expectations", count)
+        run(("bend", str(path)), directory, "22 Image expectations", count)
         run(("bend", str(directory / APP.name), "--check-only"), directory,
             "App.run typecheck (no desktop launch)")
     print("PASS headless Image checks and App.run typecheck; OS GUI still unverified", flush=True)
