@@ -1,5 +1,22 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-29：GUI描画二回目の型検査エラーを修正（検証待ち）
+
+- 検証PR #95（`403a3fc4`）のCI #40884336195：N×N推論・XeLaTeX・Tests・Reader bundlesは成功。しかしIntermediate Bend examplesは**失敗**。原因は`test_nxn_gui_render.py`が生成する`view_twice_probe`内の`(again, image2) = RENDER.view(game)`であり、Bendが「計算値を直接matchできない」と拒否した。既存31条件の再実行、新規6条件の型検査・実行には到達していない。結果の不一致が証明されたわけではない。
+- 修正候補では`view_probe(RENDER.view(game), index)`へ置換し、生成ハーネスに直接分解が混入しない静的回帰検査を追加。第21章補稿に必要性・Bendコード・理由・演習を追記。**Bend型検査、37条件の実行、PDF/ZIP一致を含む全CI成功までは正本PR #4へ統合しない。**
+- 正本先端`bc95c482`を変更しない。採用済み`intermediate/cover_art.tex`のblob `ba9b5c4c...`、第7・8章のByte/File・IO.now/IO.sleep、TeX配布本編・124ページPDF・91エントリZIPを変更しない。GUI実機・一般N×N運ゲー無し生成・全23章最終校閲は未完了。
+
+---
+
+## 2026-10-29：GUIの可視状態・旗表示を追加検証（検証PR候補）
+
+- 正本Draft PR #4の先端は`bc95c482`。統合後CI #40874623924（Intermediate textbook）、Tests #40874623844、PDF layout #40874623861、Reader download bundles #40874623868はすべて成功。前回の31件のImage headless照合とApp.run型検査は**検証済み**。前回台帳の「検証待ち」は当時の履歴であり、現在の結果ではない。
+- 新規6条件では、初手前の右クリックがFreshを保つこと、初手後にセル99へ立てた旗のsnapshotとImage画素、隣接する未公開セルの画素、旗解除、描画二回後の状態保存を独立Python期待値と照合する。既存31件は保持し、新規6件は別のBend実行ハーネスへ分割して実行時間を抑える。第21章補稿とテストを同期。
+- **新規6条件のBend型検査・実行および全CIは未確認**。検証ブランチで合格するまで正本へ統合しない。採用表紙blob `ba9b5c4c...`、第7・8章Byte/File・IO.now/IO.sleep、TeX、124ページPDF、91エントリZIPは不変更。OS GUI実機、一般N×N運ゲー無し生成、全23章最終校閲は未完成。
+
+---
+
+
 ## 2026-10-29：10×10 Image描画の境界・二段四分木回帰を追加（検証候補）
 
 - 正本先端 `24e80384` のIntermediate textbook／Reader download bundles／Tests／PDF layoutは全成功。前回統合したheadless 17条件とApp.run型検査は成功済み。採用表紙blob `ba9b5c4c...` と第7・8章Byte/File・IO.now/IO.sleep、TeX・124ページPDF・91エントリZIPは不変更。
