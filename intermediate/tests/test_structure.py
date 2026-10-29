@@ -176,6 +176,28 @@ class BookStructure(unittest.TestCase):
             for x in range(4):
                 self.assertEqual(y*4+x, 4*y+x)
 
+    def test_chapter21_lazy_gui_learner_contract(self):
+        from build_reader_bundle import INTERMEDIATE_GAME_FILES
+        text = BOOK.read_text(encoding="utf-8")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        plan = (ROOT / "COMPLETION_PLAN.md").read_text(encoding="utf-8")
+        self.assertIn(chr(92) + "section{10×10のGUIで初手生成と描画を分ける}", text)
+        self.assertIn("bend examples/minesweeper/nxn_gui_render.bend", text)
+        self.assertIn("8689825", text)
+        self.assertIn("37条件", text)
+        self.assertIn("実際のOSウィンドウの起動", text)
+        self.assertIn("nxn_gui_app.bend", readme)
+        app = (ROOT / "minesweeper" / "nxn_gui_app.bend").read_text(encoding="utf-8")
+        renderer = (ROOT / "minesweeper" / "nxn_gui_render.bend").read_text(encoding="utf-8")
+        self.assertIn("App.run(~Lazy.Game", app)
+        self.assertIn("Events.tick(events, game, 20261029)", app)
+        self.assertIn("pixel_at(fresh_picture(), 1, 1, 128)", renderer)
+        self.assertNotIn("Lazy.generate(", renderer)
+        for name in ("nxn_lazy_game.bend", "nxn_gui_adapter.bend",
+                     "nxn_gui_events.bend", "nxn_gui_render.bend", "nxn_gui_app.bend"):
+            self.assertIn(name, INTERMEDIATE_GAME_FILES)
+        self.assertIn("ZIPは**96エントリ**", plan)
+
     def test_gui_coordinate_reference_boundaries(self):
         # Independent arithmetic oracle for the chapter's 4x4 / 64px mapping.
         # This does not replace Bend's 13 executable gui_smoke checks.

@@ -1,11 +1,88 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
-## 2026-10-29：10×10 GUIのX11仮想ディスプレイ検収を追加（検証候補）
+## 2026-10-30：第21章GUI読者配布を正本統合・X11検収を最新正本へ再調停
 
-- 正本 `24e80384` の4ワークフロー（Intermediate textbook、Tests、PDF layout、Reader download bundles）はすべて成功。GUIの `App.run` 型検査と17件のheadless画素検査は成功済みだが、OSウィンドウ起動・入力実配送は未検証だった。
-- `scripts/test_nxn_gui_desktop.py` と別ワークフロー `intermediate-gui-desktop.yml` を用意。Bend 2で `nxn_gui_app.bend` をネイティブビルドし、Xvfb上で実ウィンドウを検出、X11マウスクリックとキーボード入力を配送し、スクリーンショットを比較する。初手前の盤外・右クリックの無作用、初手左クリックによる画面変化、独立Pythonモデルで未公開のマスへの旗、Rでの初期画面復帰、Escの正常終了が受入条件。スクリーンショットはCI artifactに保存。
-- `21_X11仮想ディスプレイ検収.md` に必要性、実Bendコード、期待観察結果、仕組み、演習、有限保証の境界を追記。**CIでのネイティブビルド・X11操作・画像検査は未実行**で、完了を主張しない。Xvfbは実際のOSイベント経路だが物理ディスプレイ/人間の目視/GPUの検収ではない。
-- 検証ブランチのみ変更。採用表紙 `intermediate/cover_art.tex` のblob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1`、第7章Byte/File、第8章IO.now/IO.sleep、TeX本文、124ページPDF、91エントリZIPは不変更。一般N×N運ゲー無し生成、GUI保存、全23章最終校閲は未完成。
+- GUI教材検証PR #97の合成先端 442513af は Intermediate textbook #40966993000、Tests #40966993014、Reader download bundles #40966993004 の全成功。検証済みtree edab3a352366b114da1ea37a43e23eccec043ff7を、正本 c846716b 上へ単一コミット 57db76b5 として期待SHA付き非強制fast-forward統合。第21章TeX、125ページPDF、96エントリZIP、学習用GUI5モジュール、配布・構造テストを同期。検証PR #97は統合済みとして閉鎖。表紙blob ba9b5c4cb296e3adfd119ace6b55abc419c6faf1 不変更。第7章Byte/Fileと第8章IO.now/IO.sleepの検証も保持。
+- 旧検証PR #91はネイティブGUIをXvfb上で実際に起動し、マウス左/右クリック、初手前無効操作、リセット、Esc終了、スクリーンショット差分を検査済み。旧先端 1754a950 の4ワークフローは成功（X11 #40847446993）。旧基準が古いためそのまま正本に統合せず、**現在の正本treeへ4ファイルのみ再調停**し、既存の検証ブランチで改めてCI実行する。GUIアプリ本体と独立Python盤面オラクルのblobが旧検証版と同一であることを確認。
+- X11補稿の古い「読者PDF/ZIPに未収録」「CI未確認」は更新し、旧CI成功と今回の再検証待ちを区別。新しい検証版が全成功するまでは正本へ統合しない。物理モニター/GPU、保存復元、長方形・多様な運ゲー無し盤面、23章の最終校閲は未完成。
+
+---
+
+## 2026-10-30：第21章10×10初手生成GUIを読者PDF・ZIPへ配布同期（検証候補）
+
+- 正本Draft PR #4先端 c846716b の4ワークフロー（Intermediate textbook / Tests / Reader download bundles / PDF layout）は全成功。第7章Byte/Fileの24内容・順序ケースと257進指紋65,793列の検査、第8章IO.now/IO.sleepを保持。第21章のGUI Image 31+6 headless検査とApp.run入口型検査も正本CIで成功。承認表紙blob ba9b5c4cb296e3adfd119ace6b55abc419c6faf1 は不変更。
+- 検証PR #97先端1bc44d5aは3ワークフローすべて成功。10×10初手生成GUIの「必要性→Bendコード→8689825→仕組み→演習」を第21章TeXへ追記し、既存GUI本体5モジュールをZIPへ明示収録。TeXから組版した125ページPDFと96エントリの学習用ZIP（解答・内部テストなし）、README、coverage、配布構造テストを同期した。承認済み表紙の最初のページは検証ワークフローで画素一致を確認済み。
+- ただし#97は旧正本b41e10d0から派生し、現行正本に対して7コミット先行・3コミット遅延のため、そのまま統合禁止。今回は**現行正本のtreeを基準**に#97の配布済みソース・PDF・ZIPとテストだけを移植し、古いSTATUSを上書きせず、この台帳を追加。検証専用ワークフロー intermediate-sync-verify.yml は正本に持ち込まない。
+- 合成後のBend実行・XeLaTeX・PDF/ZIP一致・読者ZIP allowlist・構造テスト・全CIは**未確認**。検証ブランチで全成功した後にのみ、正本先端を再確認し、1コミットに集約してfast-forwardする。OS上の10×10 GUI実起動・入力配送・保存復元、面白い多様な運ゲー無し盤面、長方形、23章の最終校閲は未完了。N=10〜100、0≤M≤⌊N²/4⌋の構成的盤面族はリポジトリで検証済みだが、GUI接続・一般ソルバーとは区別する。
+
+---
+
+## 2026-10-30：第7章Byte/File追加検証のBend do構文を修正（PR #100検証候補）
+
+- 正本PR #4は先端 `07814a42` で7件のCI成功。検証PR #100は先端 `48171f74`、正本から2コミット先行・遅れ0。採用表紙 `intermediate/cover_art.tex` blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` を確認し不変更。
+- CI #40942434945 は Tests、Reader download bundles、XeLaTeX、N×N公開推論が成功した一方、Intermediate Bend examples の `Verify bounded binary File reads and EOF` で失敗。ログの診断は `expected: a pattern (a binder or a constructor)` / `observed: {digest : IO(Unit)}`、場所は追加fixtureの `do IO<Unit>:` 直下の `+digest = List.foldl(...)`。以前のアフィン二重消費とは別の**IOブロック内の純粋束縛構文**の問題。
+- `+digest` と `+length` の純粋束縛を `do IO` の前へ移し、IO内部は `IO.print` のみに限定。第7章補稿の実コードと説明を同時修正。独立Python検査に0〜2バイトの**全65,793列**について257進指紋の衝突がないこと、およびBend fixtureの純粋束縛位置の静的回帰条件を追加。既存24内容ケース、6長さケース、EOF・欠損・内容不変の照合は維持。
+- **修正後のBend型検査・実行、全CIは未確認**。検証ブランチで全ゲートが通るまで正本へ統合しない。第8章IO.now/IO.sleep、配布TeX・PDF・読者ZIP、表紙は不変更。GUI実機、長方形・多様な運ゲー無し盤面、23章最終校閲は残課題。
+
+---
+
+## 2026-10-30：第7章の追加バイト値検証、アフィン所有権エラー修正（検証待ち）
+
+- 正本Draft PR #4先端 `07814a42` は7ワークフロー成功、採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` 不変。検証PR #100先端 `f932520c` は正本より1コミット先行・遅れ0。Tests／Reader download bundles／Intermediate XeLaTeX PDF／N×N公開推論は成功。ただしIntermediate Bend examplesの `Verify bounded binary File reads and EOF` で失敗したため正本には統合していない。
+- CI #40933060755、job #123656295440 の原因：追加fixture `report_chunk(bytes)` が `List.length(bytes)` と `List.foldl(bytes)` の2回で同じアフィンな `List<&2,U32>` を消費し、Bend 2が `bytes (consumed more than once)` を報告。配布fixtureの不具合ではない。
+- 修正：追加fixtureを単一 `List.foldl` に変更。2バイト以内の257進指紋は空=0、1バイト=1〜256、2バイト=258〜66048で区別できるため、指紋から長さを一意に復元し、値・順序・長さを照合する。第7章補稿を同じ実コードへ同期。**修正後Bend型検査・24内容ケース実行・PDF/ZIP一致は未確認。** 同一失敗を回避するため修正候補は1コミットで検証し、成功するまで正本PR #4を動かさない。第8章IO.now/IO.sleepとTeX/PDF/ZIPは不変更。
+- 未完成：10×10 GUI実機、長方形と多様な運ゲー無し盤面、23章全体の教育的校閲・配布同期。
+
+---
+
+## 2026-10-30：第7章Byte/Fileを長さだけでなく内容・順序まで検証（検証候補）
+
+- 正本PR #4先端は07814a42。任意M≤⌊N²/4⌋のN×N構成（検証PR #99）は全3ワークフロー成功後にlease付きfast-forwardで統合済み。PR #99は統合済みとして閉鎖。採用済み表紙blob ba9b5c4cb296e3adfd119ace6b55abc419c6faf1 不変。
+- 第7・8章のByte/File・IO.now/IO.sleepは**すでにTeX本編・PDF・学習用サンプルへ統合済み**であり、古い補稿末尾の「未統合」は現在の状態を反映していなかった。第7章の補稿を訂正し、追加検証だけを未統合として明記。
+- 既存の分割読み込みテストは0〜5バイトの読み取り長4回とEOFを確認していたが、返されたバイト値と順序を直接検証していなかった。**配布サンプル54と同一である従来fixtureを保持**し、別ファイル `binary_chunks_values.bend` で各2バイトチャンクの長さと257進の一意な指紋を出力する。Pythonオラクルで4系列×6長さ＝24内容ケースと、従来fixtureの6長さケースを照合する。0・10・13・255・逆順・反復・空・EOF・内容不変・欠損を確認。最大指紋66048はU32内。
+- 検証PR #100の初回CI #40932771485 は `test_reader_samples_match_bend_verified_fixtures` で失敗。原因は配布サンプル54と同一である必要のあるfixtureを直接変更したこと。これは内容のBend実行結果の失敗ではなく、構造契約の不一致。そこで追加検証を別fixtureに分離し、既存fixtureのblobを完全復元した単一修正候補へ置き換える。**修正後のBend型検査・実行、PDF/ZIP整合性、全CIは成功待ち。** 正本のTeX・PDF・読者ZIP・第7章配布サンプル54・第8章55は変更せず、テストfixture・Python・編集補稿・台帳のみ更新。成功までPR #4へ反映禁止。GUI実機、長方形、面白い多様な運ゲー無し盤面、23章最終校閲は未完成。
+
+---
+
+## 2026-10-30：任意M≤⌊N²/4⌋の構成的運ゲー無し盤面（検証候補）
+
+- 対象を10≤N≤100、0≤M≤⌊N²/4⌋、任意初手に拡張。地雷M=qN+rを、初手と反対側のq本の全地雷列と、最内側1列の下端r個に分配するBend構成器を追加。ゲームは既存N×NのFullを使用。
+- 公開数字のみの単独制約で安全マスを証明する独立Pythonオラクルを実装。N=10〜25の全MおよびN=26〜100の代表密度・端数、計7,160ケースをローカルPythonで実行し推測不要を確認。有限照合であり、Bend型検査・実行・全CIを成功とは記さない。
+- 構成的証明の要点：r≤N−2なら初手0連鎖ですべての安全マスが開く。r=N−1なら最内列の先頭に安全マス1個が残るが、隣接する公開数字3が地雷3個を確定し、数字1の残数0から最後の安全マスを導ける。地雷数0も受理し、上限を超える設定を拒否する。
+- 第22章補稿とCIゲートを一括追加。採用表紙は既知blob ba9b5c4cb296e3adfd119ace6b55abc419c6faf1 で不変。配布TeX、PDF、読者ZIP、第7・8章Byte/FileとIO.now/IO.sleepは不変更。真のBend公開ソルバー、GUI接続、長方形、多様なランダム盤面、23章最終校閲は未完成。
+
+---
+
+## 2026-10-30：任意N≥10の構成的運ゲー無し盤面（検証候補）
+
+- 正本先端 `b41e10d0` で4ワークフロー成功、mainより528コミット先行・遅れ0。採用済み表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` 不変。第7・8章のByte/File・IO.now/IO.sleep、124ページPDF・91エントリ読者ZIPは維持。
+- 既存のN×Nゲーム（2〜100）を使い、任意のN=10〜100・任意初手で**地雷数N−1の必勝可能盤面族**を作るBendモジュール、公開数字だけから最後の安全マスを導く独立Python検査、第22章補稿とCIゲートを一括追加。証明は境界列の2→3→…→2という数字による左からの地雷確定。JavaScriptモデルで637条件、独立Pythonローカルで637条件成功。これはBend実行成功とは別。
+- Bend N=10の二手勝利期待出力は111。Bend型検査、N=10・100の配置端点、XeLaTeX/ZIP整合性を含む全CIの合格までは**検証候補**。現時点ではPR外検証として扱い正本への統合禁止。任意地雷数M、Bend公開ソルバーとの自動接続、GUI実機、配布TeX/PDF/ZIP統合、23章校閲は未完成。
+
+---
+
+## 2026-10-29：GUI描画二回目の型検査エラーを修正（検証待ち）
+
+- 検証PR #95（`403a3fc4`）のCI #40884336195：N×N推論・XeLaTeX・Tests・Reader bundlesは成功。しかしIntermediate Bend examplesは**失敗**。原因は`test_nxn_gui_render.py`が生成する`view_twice_probe`内の`(again, image2) = RENDER.view(game)`であり、Bendが「計算値を直接matchできない」と拒否した。既存31条件の再実行、新規6条件の型検査・実行には到達していない。結果の不一致が証明されたわけではない。
+- 修正候補では`view_probe(RENDER.view(game), index)`へ置換し、生成ハーネスに直接分解が混入しない静的回帰検査を追加。第21章補稿に必要性・Bendコード・理由・演習を追記。**Bend型検査、37条件の実行、PDF/ZIP一致を含む全CI成功までは正本PR #4へ統合しない。**
+- 正本先端`bc95c482`を変更しない。採用済み`intermediate/cover_art.tex`のblob `ba9b5c4c...`、第7・8章のByte/File・IO.now/IO.sleep、TeX配布本編・124ページPDF・91エントリZIPを変更しない。GUI実機・一般N×N運ゲー無し生成・全23章最終校閲は未完了。
+
+---
+
+## 2026-10-29：GUIの可視状態・旗表示を追加検証（検証PR候補）
+
+- 正本Draft PR #4の先端は`bc95c482`。統合後CI #40874623924（Intermediate textbook）、Tests #40874623844、PDF layout #40874623861、Reader download bundles #40874623868はすべて成功。前回の31件のImage headless照合とApp.run型検査は**検証済み**。前回台帳の「検証待ち」は当時の履歴であり、現在の結果ではない。
+- 新規6条件では、初手前の右クリックがFreshを保つこと、初手後にセル99へ立てた旗のsnapshotとImage画素、隣接する未公開セルの画素、旗解除、描画二回後の状態保存を独立Python期待値と照合する。既存31件は保持し、新規6件は別のBend実行ハーネスへ分割して実行時間を抑える。第21章補稿とテストを同期。
+- **新規6条件のBend型検査・実行および全CIは未確認**。検証ブランチで合格するまで正本へ統合しない。採用表紙blob `ba9b5c4c...`、第7・8章Byte/File・IO.now/IO.sleep、TeX、124ページPDF、91エントリZIPは不変更。OS GUI実機、一般N×N運ゲー無し生成、全23章最終校閲は未完成。
+
+---
+
+
+## 2026-10-29：10×10 Image描画の境界・二段四分木回帰を追加（検証候補）
+
+- 正本先端 `24e80384` のIntermediate textbook／Reader download bundles／Tests／PDF layoutは全成功。前回統合したheadless 17条件とApp.run型検査は成功済み。採用表紙blob `ba9b5c4c...` と第7・8章Byte/File・IO.now/IO.sleep、TeX・124ページPDF・91エントリZIPは不変更。
+- 10×10の最後の可視画素(79,79)と余白開始(80,79)、数字1/2の7セグメント表示4条件、二段四分木の四隅・中央境界8条件を追加。headless期待値を17→31へ拡張し、第21章補稿へ必要性・Bendコード・期待結果・演習を記録。検証ブランチの全CI成功まで正本PR #4へは反映しない。
+- 新規14条件のBend型検査・実行照合、XeLaTeX/PDF/ZIP整合性は**検証CI待ち**。OSウィンドウ操作、一般N×N運ゲー無し生成、23章最終校閲は未完成。
 
 ---
 
