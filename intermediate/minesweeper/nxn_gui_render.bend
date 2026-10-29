@@ -169,43 +169,40 @@ def view(game: Lazy.Game) -> Lazy.Game & Image:
     case Lazy.Invalid{}:
       (Lazy.Invalid{}, Pix{0})
 
-# Headless pixel sampler: select a quadrant without inspecting mine truth.
-def choose_x(right: Bool, left: Image, right_image: Image) -> Image:
-  match right:
-    case True{}:
-      right_image
-    case False{}:
-      left
-
-def choose_quadrant(bottom: Bool, right: Bool,
-                    tl: Image, tr: Image, bl: Image, br: Image) -> Image:
-  match bottom:
-    case True{}:
-      choose_x(right, bl, br)
-    case False{}:
-      choose_x(right, tl, tr)
-
-def pixel_at(img: Image, +x: U32, +y: U32, +size: U32) -> U32:
+# A headless Image sampler. Bend only allows matches before local statements.
+# Carry the quadrant booleans as binders and match them before calculating half.
+# Each recursive call consumes a direct child of Qua (structural decrease).
+def pixel_at_walk(img: Image, bottom: Bool, right: Bool,
+                  +x: U32, +y: U32, +size: U32) -> U32:
   match img:
     case Pix{color}:
       color
     case Qua{tl, tr, bl, br}:
-      +half = U32.div(size, 2)
-      +bottom = U32.is_ge(y, half)
-      +right = U32.is_ge(x, half)
-      match bottom:
-        case True{}:
-          match right:
-            case True{}:
-              pixel_at(br, U32.mod(x, half), U32.mod(y, half), half)
-            case False{}:
-              pixel_at(bl, x, U32.mod(y, half), half)
-        case False{}:
-          match right:
-            case True{}:
-              pixel_at(tr, U32.mod(x, half), y, half)
-            case False{}:
-              pixel_at(tl, x, y, half)
+      match bottom right:
+        case True{} True{}:
+          +half = U32.div(size, 2)
+          +nx = U32.mod(x, half)
+          +ny = U32.mod(y, half)
+          pixel_at_walk(br, U32.is_ge(ny, U32.div(half, 2)),
+                            U32.is_ge(nx, U32.div(half, 2)), nx, ny, half)
+        case True{} False{}:
+          +half = U32.div(size, 2)
+          +ny = U32.mod(y, half)
+          pixel_at_walk(bl, U32.is_ge(ny, U32.div(half, 2)),
+                            U32.is_ge(x, U32.div(half, 2)), x, ny, half)
+        case False{} True{}:
+          +half = U32.div(size, 2)
+          +nx = U32.mod(x, half)
+          pixel_at_walk(tr, U32.is_ge(y, U32.div(half, 2)),
+                            U32.is_ge(nx, U32.div(half, 2)), nx, y, half)
+        case False{} False{}:
+          +half = U32.div(size, 2)
+          pixel_at_walk(tl, U32.is_ge(y, U32.div(half, 2)),
+                            U32.is_ge(x, U32.div(half, 2)), x, y, half)
+
+def pixel_at(img: Image, +x: U32, +y: U32, +size: U32) -> U32:
+  pixel_at_walk(img, U32.is_ge(y, U32.div(size, 2)),
+                     U32.is_ge(x, U32.div(size, 2)), x, y, size)
 
 def top_left(img: Image) -> U32:
   match img:
