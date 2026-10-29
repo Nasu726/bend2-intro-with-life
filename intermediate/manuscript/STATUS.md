@@ -1,5 +1,13 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-29：10×10 Image描画の境界・二段四分木回帰を追加（検証候補）
+
+- 正本先端 `24e80384` のIntermediate textbook／Reader download bundles／Tests／PDF layoutは全成功。前回統合したheadless 17条件とApp.run型検査は成功済み。採用表紙blob `ba9b5c4c...` と第7・8章Byte/File・IO.now/IO.sleep、TeX・124ページPDF・91エントリZIPは不変更。
+- 10×10の最後の可視画素(79,79)と余白開始(80,79)、数字1/2の7セグメント表示4条件、二段四分木の四隅・中央境界8条件を追加。headless期待値を17→31へ拡張し、第21章補稿へ必要性・Bendコード・期待結果・演習を記録。検証ブランチの全CI成功まで正本PR #4へは反映しない。
+- 新規14条件のBend型検査・実行照合、XeLaTeX/PDF/ZIP整合性は**検証CI待ち**。OSウィンドウ操作、一般N×N運ゲー無し生成、23章最終校閲は未完成。
+
+---
+
 ## 2026-10-29：Imageサンプラーの照合順エラーを検証ブランチで修正（CI待ち）
 
 - 検証PR #89のCI #40830730276：Tests、Reader download bundles、PDF layout、XeLaTeX、公開情報推論は成功。Bend examplesはImage型検査で `'bottom' can't be matched in this position` により失敗。原因は `pixel_at` の局所 `+half/+bottom/+right` 定義後に `match bottom` を行ったこと。停止性の直接子再帰は維持する必要がある。

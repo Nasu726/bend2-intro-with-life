@@ -50,11 +50,27 @@ def harness():
         ("quadrant-tr", "RENDER.pixel_at(quadrant(), 1, 0, 2)", 22),
         ("quadrant-bl", "RENDER.pixel_at(quadrant(), 0, 1, 2)", 33),
         ("quadrant-br", "RENDER.pixel_at(quadrant(), 1, 1, 2)", 44),
+        ("fresh-last-playable-interior", "RENDER.pixel_at(RENDER.fresh_picture(), 79, 79, 128)", HIDDEN),
+        ("fresh-first-right-padding", "RENDER.pixel_at(RENDER.fresh_picture(), 80, 79, 128)", PADDING),
+        ("digit-one-right-stroke", "RENDER.tile_pixel(11, 5, 2)", NUMBER),
+        ("digit-one-left-background", "RENDER.tile_pixel(11, 2, 2)", EMPTY),
+        ("digit-two-top-stroke", "RENDER.tile_pixel(12, 3, 1)", NUMBER),
+        ("digit-two-middle-gap", "RENDER.tile_pixel(12, 3, 2)", EMPTY),
+        ("nested-00", "RENDER.pixel_at(quadrant4(), 0, 0, 4)", 1),
+        ("nested-30", "RENDER.pixel_at(quadrant4(), 3, 0, 4)", 6),
+        ("nested-03", "RENDER.pixel_at(quadrant4(), 0, 3, 4)", 11),
+        ("nested-33", "RENDER.pixel_at(quadrant4(), 3, 3, 4)", 16),
+        ("nested-11", "RENDER.pixel_at(quadrant4(), 1, 1, 4)", 4),
+        ("nested-21", "RENDER.pixel_at(quadrant4(), 2, 1, 4)", 7),
+        ("nested-12", "RENDER.pixel_at(quadrant4(), 1, 2, 4)", 10),
+        ("nested-22", "RENDER.pixel_at(quadrant4(), 2, 2, 4)", 13),
     ]
     lines = [
         "import Base", "import ./nxn_gui_render.bend as RENDER",
         "import ./nxn_gui_adapter.bend as GUI", "import ./nxn_lazy_game.bend as Lazy", "",
         "def quadrant() -> Image:", "  Qua{Pix{11}, Pix{22}, Pix{33}, Pix{44}}", "",
+        "def quadrant4() -> Image:",
+        "  Qua{Qua{Pix{1}, Pix{2}, Pix{3}, Pix{4}}, Qua{Pix{5}, Pix{6}, Pix{7}, Pix{8}}, Qua{Pix{9}, Pix{10}, Pix{11}, Pix{12}}, Qua{Pix{13}, Pix{14}, Pix{15}, Pix{16}}}", "",
         "def one_if_true(b: Bool) -> U32:",
         "  match b:", "    case True{}:", "      1", "    case False{}:", "      0", "",
         "def equal(a: U32, b: U32) -> U32:",
@@ -108,12 +124,12 @@ def preflight():
     assert "GUI.pointer" not in renderer
     assert first_clue() in range(4)
     source, count = harness()
-    assert count == 17
+    assert count == 31
     assert source.index("def one_if_true(") < source.index("def equal(")
     assert source.index("def view_first(") < source.index("def check_0(")
     assert source.count("def main() -> U32:") == 1
     assert oracle(10, 10, SEED, ((0, 0, 0),), 0) not in (300, 400)
-    print("PASS 17 independent headless render expectations and App.run structural contract", flush=True)
+    print("PASS 31 independent headless render expectations and App.run structural contract", flush=True)
 
 
 def run(cmd, cwd, label, expected=None):
@@ -144,7 +160,7 @@ def main():
         path = directory / "check_gui_image.bend"
         path.write_text(source, encoding="utf-8")
         run(("bend", str(path), "--check-only"), directory, "Image typecheck")
-        run(("bend", str(path)), directory, "17 Image expectations", count)
+        run(("bend", str(path)), directory, "31 Image expectations", count)
         run(("bend", str(directory / APP.name), "--check-only"), directory,
             "App.run typecheck (no desktop launch)")
     print("PASS headless Image checks and App.run typecheck; OS GUI still unverified", flush=True)
