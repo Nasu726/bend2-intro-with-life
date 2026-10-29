@@ -45,11 +45,15 @@ jobs:
           # The adopted cover must remain visually identical to the approved PDF.
           sudo apt-get update -qq
           sudo apt-get install -y -qq poppler-utils
-          git show b41e10d023f3065853c4b8ff452e8b3274db8914:'intermediate/Bend2を使いこなす_プレビュー.pdf' > /tmp/approved.pdf
+          # The verification branch starts from the approved PR and does not edit its cover.
+          test "$(git rev-parse HEAD:intermediate/cover_art.tex)" = 'ba9b5c4cb296e3adfd119ace6b55abc419c6faf1'
+          git show HEAD:'intermediate/Bend2を使いこなす_プレビュー.pdf' > /tmp/approved.pdf
           pdftoppm -f 1 -l 1 -singlefile -r 72 -png /tmp/approved.pdf /tmp/approved-cover >/dev/null 2>&1
           pdftoppm -f 1 -l 1 -singlefile -r 72 -png 'intermediate/Bend2を使いこなす_プレビュー.pdf' /tmp/new-cover >/dev/null 2>&1
           cmp /tmp/approved-cover.png /tmp/new-cover.png
           echo 'PASS: adopted cover first-page pixels unchanged'
+          pdfinfo 'intermediate/Bend2を使いこなす_プレビュー.pdf' | grep '^Pages:'
+          test "$(pdftotext 'intermediate/Bend2を使いこなす_プレビュー.pdf' - | wc -c)" -gt 5000
           python3 scripts/build_reader_bundle.py intermediate
           python3 -m unittest tests.test_reader_bundle -v
           git config user.name 'github-actions[bot]'
