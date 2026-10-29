@@ -1,5 +1,23 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-29：ゲームの機能追加よりBend APIの接続を学ぶ第21章改稿（検証候補）
+
+- ユーザー方針：『Bend 2を使いこなす』はゲーム制作・高機能化そのものではなく、型・所有権・IO・イベント・描画・失敗時の扱いを習得する教材。装飾や不要な機能拡張を避け、短い実コード、予想できる実行結果、仕組み、演習の順に編集する。
+- `Intermediate_Textbook.tex` 第21章に、10×10 `nxn_gui_app.bend` の`view/tick/App.run`、`Fresh`初手遅延生成、公開情報だけを使う`Image`、`Maybe`による終了を結ぶ短い節を追加。通常の初手安全版と運ゲー無し版の区別、X11仮想画面での有限検証と物理実機未検証を明記。
+- 読者ZIPに学習用5ファイル `nxn_lazy_game`・`nxn_gui_adapter`・`nxn_gui_events`・`nxn_gui_render`・`nxn_gui_app` を追加する候補。相対importは既存収録依存モジュールで閉じる。通常55・ゲーム38・付属3の**96エントリ**とし、構造検査を追加。
+- 第7章Byte/File・第8章IO.now/IO.sleep、採用表紙 `ba9b5c4c...` は変更対象から除外。**TeXの組版、PDFページ・ZIP同期と正本PR #4への統合は別の検証を要する。** 原稿だけの先行統合はしない。
+
+---
+
+## 2026-10-29：10×10 GUIのX11仮想ディスプレイ検収を追加（検証候補）
+
+- 正本 `24e80384` の4ワークフロー（Intermediate textbook、Tests、PDF layout、Reader download bundles）はすべて成功。GUIの `App.run` 型検査と17件のheadless画素検査は成功済みだが、OSウィンドウ起動・入力実配送は未検証だった。
+- `scripts/test_nxn_gui_desktop.py` と別ワークフロー `intermediate-gui-desktop.yml` を用意。Bend 2で `nxn_gui_app.bend` をネイティブビルドし、Xvfb上で実ウィンドウを検出、X11マウスクリックとキーボード入力を配送し、スクリーンショットを比較する。初手前の盤外・右クリックの無作用、初手左クリックによる画面変化、独立Pythonモデルで未公開のマスへの旗、Rでの初期画面復帰、Escの正常終了が受入条件。スクリーンショットはCI artifactに保存。
+- `21_X11仮想ディスプレイ検収.md` に必要性、実Bendコード、期待観察結果、仕組み、演習、有限保証の境界を追記。**CIでのネイティブビルド・X11操作・画像検査は未実行**で、完了を主張しない。Xvfbは実際のOSイベント経路だが物理ディスプレイ/人間の目視/GPUの検収ではない。
+- 検証ブランチのみ変更。採用表紙 `intermediate/cover_art.tex` のblob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1`、第7章Byte/File、第8章IO.now/IO.sleep、TeX本文、124ページPDF、91エントリZIPは不変更。一般N×N運ゲー無し生成、GUI保存、全23章最終校閲は未完成。
+
+---
+
 ## 2026-10-29：Imageサンプラーの照合順エラーを検証ブランチで修正（CI待ち）
 
 - 検証PR #89のCI #40830730276：Tests、Reader download bundles、PDF layout、XeLaTeX、公開情報推論は成功。Bend examplesはImage型検査で `'bottom' can't be matched in this position` により失敗。原因は `pixel_at` の局所 `+half/+bottom/+right` 定義後に `match bottom` を行ったこと。停止性の直接子再帰は維持する必要がある。
