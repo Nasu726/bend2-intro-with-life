@@ -89,6 +89,12 @@ INTERMEDIATE_GAME_FILES = (
     "nxn_step.bend",
     "nxn_terminal.bend",
     "nxn_victory.bend",
+    # Chapter 21: 10x10 first-click lazy GUI and exact relative imports.
+    "nxn_lazy_game.bend",
+    "nxn_gui_adapter.bend",
+    "nxn_gui_events.bend",
+    "nxn_gui_render.bend",
+    "nxn_gui_app.bend",
 )
 
 def readme(track: str) -> str:
@@ -176,6 +182,16 @@ bend examples/minesweeper/gui.bend -o minesweeper
 Linuxではlibx11-dev等の環境依存ライブラリが必要です。
 GUIのBend型検査・ネイティブコンパイル・純粋な座標処理はCI検査済みですが、
 実際のデスクトップ環境でのウィンドウ操作・見た目は別途確認してください。
+
+10×10の初手生成GUI（型検査はheadlessで検証済み、OS実機操作は未検証）:
+bend examples/minesweeper/nxn_gui_render.bend
+期待結果: 8689825（初手前の左上マスの内部色。画面の描画ではありません）
+bend examples/minesweeper/nxn_gui_app.bend --check-only
+デスクトップ環境がある場合だけ、実機起動を試してください:
+bend examples/minesweeper/nxn_gui_app.bend -o minesweeper10
+./minesweeper10
+10×10の有効範囲は左上320×320画素、ウィンドウ全体は512×512画素です。
+37件のheadless描画・旗テストは、OSでのウィンドウ操作を保証しません。
 
 07_gui_hello.bend はウィンドウ表示が可能な環境が必要です。
 証明例: bend examples/04_flag_laws.bend --verdict

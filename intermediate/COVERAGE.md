@@ -28,7 +28,7 @@
 | `IO.within`, `Poll` | 第9章（時間切れ・仕事の非取消・Ready/Waitを型に沿って解説） | `29_io_within.bend`、`53_chan_poll.bend` | withinのSome/None処理は型検査済み。Pollは空のWaitと9のReady{Some}を実行照合済み。閉鎖後のReady{None}、try_sendの待機、時間の競合は未検証 |
 | TCP/UDP/Socket/Listener | 第10章（TCPとUDPのローカル送受信実習を追加） | `27_tcp_connect.bend`、`47_tcp_loopback.bend`、`48_udp_loopback.bend` | 127.0.0.1でlisten/connect/accept/send/recv、UDP.bind/send_to/recv_fromとcloseを実行検査。長文フレーミング、外部ネットワーク、UDP損失の実機検査は今後 |
 | `Image`, `Pix`, `Qua` | 第11章を改稿（図・最小コード・出力・演習） | `31_image_quadrants.bend`、`07_gui_hello.bend` | 四分木の左上色を実行検査。ウィンドウ実機表示は別検査 |
-| `App`, `Event`, `Window` | 第12章で8×8の座標変換から4×4 GUIのview/tick・64画素・所有権へ接続、第14・21章 | `07_gui_hello.bend`、`23_cell_hit_test.bend`、`32_mouse_events.bend`、`minesweeper/gui.bend`、`gui_smoke.bend` | 8×8の独立例、4×4 GUIの型検査・Linuxネイティブビルド・13件のヘッドレス入力検査。実機の画面操作・GUI保存は未検収 |
+| `App`, `Event`, `Window` | 第12章で8×8座標から4×4 GUIへ、第21章で初手生成10×10 GUIのview/tickと公開情報Imageへ接続 | `07_gui_hello.bend`、`23_cell_hit_test.bend`、`32_mouse_events.bend`、`minesweeper/gui.bend`、`nxn_gui_adapter.bend`、`nxn_gui_events.bend`、`nxn_gui_render.bend`、`nxn_gui_app.bend` | 4×4 GUIの型検査・Linuxネイティブビルド・13件のheadless入力、10×10 GUIの描画31条件＋旗6条件とApp.run入口型検査は成功。10×10ネイティブビルド・OS実機操作・GUI保存は未検収 |
 | `Audio` | 第20章 | `26_audio_open.bend` | open/write/closeの型検査。実機での再生確認は今後 |
 | `law`, `Equal`, 帰納法 | 第15〜18章を再構成（入門的な法則→Boolの全称証明→Nat帰納法→盤面不変条件） | `04_flag_laws.bend`、`14_local_inference.bend`、`22_result_and_game.bend`、`24_bool_proofs.bend`、`33_nat_induction.bend` | Natについての帰納法を `--verdict` で新たに検査。依存型・一般の補題は今後 |
 | `@unsafe`, 外部信頼境界 | 第18・20章 | 追加実習 | 証明検査の境界 |
@@ -43,7 +43,7 @@
 | 16マスArray・地雷マスク・隣接地雷数・境界検査 | `minesweeper/LESSON.md`に解説草稿（第13・17章に一部統合） | `minesweeper/board4.bend`、`LAWS.bend`、`PROOF.bend` | 地雷マスク不変・空盤面の数字・具体的な数字・配列外操作の8法則を証明。Python独立オラクルで154ケースを実行。一般の隣接数の全称証明、公開時の安全判定は未完成 |
 | 旗の基本操作・局所法則 | 第13・15・17章 | `09_minesweeper_status.bend`, `04_flag_laws.bend`, `34_mine_mask_law.bend` | 最小の地雷マスク不変と旗ビット変更を `--verdict` で検査。全盤面の他条件は別途 |
 | クリック・旗・敗北・勝利の純粋ゲーム進行（G-02/G-03部分） | `minesweeper/LESSON.md`に追記（第17・21章に一部統合） | `minesweeper/session.bend`・`LAWS.bend`・`PROOF.bend` | 7法則を証明。初手と0領域の処理を別モジュールへ追加。43法則を先行宣言し、Bend検査と独立オラクルを利用。GUIの実機動作は未検証 |
-| 通常版マインスイーパー（GUI統合） | 第21章にCLI・GUIの起動方法、座標とイベント、Array.clone、7セグメント描画を収録 | `minesweeper/start.bend`、`cli_replay.bend`、`gui.bend`（同じエンジン） | CLI出力、GUIの13件の純粋入力検査とLinuxのネイティブビルド成功。実機ウィンドウでのクリック試験、GUIの保存・復元は未了。固定CLI操作履歴保存は別途実装・検証済み |
+| 通常版マインスイーパー（GUI統合） | 第21章に固定4×4 GUIと初手生成10×10 GUIの責任分離・起動方法・公開情報Image・Array.clone・演習を収録 | `minesweeper/start.bend`、`cli_replay.bend`、`gui.bend`、`nxn_lazy_game.bend`、`nxn_gui_app.bend`（10×10関連5モジュールを読者ZIPに収録） | 4×4 GUIの13件の純粋入力検査とLinuxネイティブビルド、10×10 GUIのheadless描画37条件とApp.run型検査が成功。OS上の10×10クリック試験・GUI保存復元は未了。固定CLI操作履歴保存は別途検証済み |
 | 運ゲー無し版 | 第22章に公開モデル120候補、実際に勝利まで追う限定版生成を収録 | `14_local_inference.bend`、`minesweeper/public_solver.bend`、`minesweeper/noguess_generator.bend`、`solutions/noguess_reference.py` | 公開情報だけを使うBendソルバーは独立13ケース照合、限定版生成はBendゲームで勝利しPython別実装でも `40960 / 0,12,14` を検証。Python参考検証器を全120配置・1,680件の0連鎖で独立照合し、不正公開情報と探索上限も検査。これはBendの全称証明ではない。一般サイズ・GUIへの導入は未了 |
 
 ## CIの判定範囲
