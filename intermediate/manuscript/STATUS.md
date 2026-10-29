@@ -1,5 +1,13 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-29：GUI ImageのBendパターン照合順を修正（検証候補）
+
+- 検証PR #89の初回CI #40813140729はTests／Reader download bundles／PDF layout／XeLaTeX／公開情報推論が成功し、Bend examplesの新規Image型検査で停止。`list_code(fuel,cells)` が後方の引数 `cells` を先にmatchし、その内側で先行引数 `fuel` をmatchしたため、Bend 2.0.39が照合順序違反と診断した。headless描画13条件の静的期待値は成功したが、Bend型検査・実行とApp.run型検査は未成功。
+- `fuel` を先に照合し、その各分岐で `cells` を照合する構造へ修正。Python静的事前検査に順序の回帰条件を追加。**修正後のBend型検査・実行、App.run型検査、全CIが成功するまでは正本へ統合しない**。
+- 表紙 `intermediate/cover_art.tex`、第7/8章、TeX・124ページPDF・91件読者ZIPは変更しない。実機GUIと一般N×N運ゲー無し生成、23章最終校閲は未完成。
+
+---
+
 ## 2026-10-29：10×10 Image描画とApp.run入口（検証候補）
 
 - 正本先端 `5d3258ad` の4ワークフロー（Intermediate textbook / Tests / Reader download bundles / PDF layout）は全成功。採用表紙 `cover_art.tex` のblob `ba9b5c4c...` を確認し、他作業の先端差分なし。第7章Byte/File、第8章IO.now/IO.sleepは配布統合済みのまま維持。

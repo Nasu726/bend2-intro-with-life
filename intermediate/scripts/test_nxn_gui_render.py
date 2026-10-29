@@ -73,6 +73,10 @@ def preflight():
     assert "Array.to_list(Game.Square, inspect)" in renderer
     assert "Lazy.Fresh{n, count, seed}" in renderer
     assert "Step.square_code(square)" in renderer
+    code_lookup = renderer.split("def list_code(", 1)[1].split("\ndef visible_code(", 1)[0]
+    assert "  match fuel:\n" in code_lookup
+    assert code_lookup.count("      match cells:\n") == 2
+    assert "      match fuel:" not in code_lookup
     assert "picture(4n, 0, 0" in renderer
     assert "tile_draw(3n, visible_code(" in renderer
     assert "def pixel_at(img: Image" in renderer

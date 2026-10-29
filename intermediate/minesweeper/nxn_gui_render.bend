@@ -24,14 +24,18 @@ def cell_color(+code: U32) -> U32:
 
 # The cloned Array becomes a list. Only the first 100 logical cells are read.
 def list_code(fuel: Nat, cells: List<Game.Square>) -> U32:
-  match cells:
-    case Nil{}:
-      99
-    case square <> rest:
-      match fuel:
-        case 0n:
+  match fuel:
+    case 0n:
+      match cells:
+        case Nil{}:
+          99
+        case square <> rest:
           Step.square_code(square)
-        case 1n+k:
+    case 1n+k:
+      match cells:
+        case Nil{}:
+          99
+        case square <> rest:
           list_code(k, rest)
 
 def visible_code(valid: Bool, cells: List<Game.Square>, +x: U32, +y: U32) -> U32:
