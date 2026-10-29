@@ -42,6 +42,14 @@ jobs:
           else
             cp intermediate/Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
           fi
+          # The adopted cover must remain visually identical to the approved PDF.
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
+          git show b41e10d023f3065853c4b8ff452e8b3274db8914:'intermediate/Bend2を使いこなす_プレビュー.pdf' > /tmp/approved.pdf
+          pdftoppm -f 1 -l 1 -singlefile -r 72 -png /tmp/approved.pdf /tmp/approved-cover >/dev/null 2>&1
+          pdftoppm -f 1 -l 1 -singlefile -r 72 -png 'intermediate/Bend2を使いこなす_プレビュー.pdf' /tmp/new-cover >/dev/null 2>&1
+          cmp /tmp/approved-cover.png /tmp/new-cover.png
+          echo 'PASS: adopted cover first-page pixels unchanged'
           python3 scripts/build_reader_bundle.py intermediate
           python3 -m unittest tests.test_reader_bundle -v
           git config user.name 'github-actions[bot]'
@@ -49,4 +57,6 @@ jobs:
           git add -- 'intermediate/Bend2を使いこなす_プレビュー.pdf' 'reader-packages/bend2-intermediate-reader-preview.zip'
           git diff --cached --quiet && { echo 'No binary change'; exit 1; }
           git commit -m 'build: materialize chapter 21 PDF and reader ZIP on verification branch'
+          git fetch origin verify/ch21-reader-20261030
+          git rebase FETCH_HEAD
           git push origin HEAD:refs/heads/verify/ch21-reader-20261030

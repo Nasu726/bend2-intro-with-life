@@ -2336,7 +2336,7 @@ bend examples/minesweeper/nxn_playthrough.bend
 しかし10×10の新しい実習では、\textbf{最初の左クリックが決まるまで地雷を生成しません}。
 この違いを守るため、クリックを解釈する処理と画面を描く処理を別々に作ります。
 
-\file{examples/minesweeper/nxn_lazy_game.bend}の\code{Fresh}は、
+\code{examples/minesweeper/nxn_lazy_game.bend}の\code{Fresh}は、
 盤面の幅・地雷数・乱数の種だけを保持します。
 \code{nxn_gui_adapter.bend}は画面座標をマス番号に変換し、
 左クリックをゲームの\code{click}、右クリックを\code{mark}へ渡します。
