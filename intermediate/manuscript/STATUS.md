@@ -1,5 +1,13 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-29：Imageサンプラーの照合順エラーを検証ブランチで修正（CI待ち）
+
+- 検証PR #89のCI #40830730276：Tests、Reader download bundles、PDF layout、XeLaTeX、公開情報推論は成功。Bend examplesはImage型検査で `'bottom' can't be matched in this position` により失敗。原因は `pixel_at` の局所 `+half/+bottom/+right` 定義後に `match bottom` を行ったこと。停止性の直接子再帰は維持する必要がある。
+- `pixel_at_walk(img,bottom,right,x,y,size)` の引数として象限選択Boolを渡し、`match img` → `match bottom right` の後に局所計算する方式へ変更。四分木の子 `tl/tr/bl/br` に直接再帰する。4象限の独立画素期待値を追加し、headless条件を13→17件へ拡張。第21章補稿も同期。
+- この変更は検証用ブランチの候補であり、**Bend型検査・17件の実行照合・App.run型検査・XeLaTeX/PDF/ZIPの新CI成功はまだ未確認**。正本PR #4は変更しない。採用表紙blob `ba9b5c4c...` と第7/8章、124ページPDF、91件ZIPは変更しない。実機GUI・一般N×N運ゲー無し・全23章校閲は未完成。
+
+---
+
 ## 2026-10-29：GUI Imageサンプラーの構造的停止性を修正（検証候補）
 
 - 検証PR #89のCI #40824036274：Tests／Reader download bundles／PDF layout／XeLaTeX／公開情報推論は成功。Bend examplesは13件のPython静的期待値検査後、`pixel_at` の型検査で停止。エラーは `expected : a decreasing self-call`。四分木の子を `choose_quadrant` に通すと、Bendの停止性検査が再帰呼び出しの第一引数を構造的な子と認識できない。
