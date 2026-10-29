@@ -29,7 +29,7 @@ def expected_first_color():
     return EMPTY
 
 
-def harness():
+def harness(extended=False):
     cases = [
         ("hidden", "RENDER.cell_color(0)", HIDDEN),
         ("flag", "RENDER.cell_color(1)", FLAG),
@@ -65,6 +65,21 @@ def harness():
         ("nested-12", "RENDER.pixel_at(quadrant4(), 1, 2, 4)", 10),
         ("nested-22", "RENDER.pixel_at(quadrant4(), 2, 2, 4)", 13),
     ]
+    if extended:
+        flagged = "GUI.pointer(GUI.pointer(GUI.reset_gui(20261029), 0, 0, 0), 319, 319, 1)"
+        unflagged = f"GUI.pointer({flagged}, 319, 319, 1)"
+        cases = [
+            ("fresh-right-flag-stays-fresh",
+             "view_probe(RENDER.view(GUI.pointer(GUI.reset_gui(20261029), 319, 319, 1)), 99)", 300),
+            ("active-flag-survives-render", f"view_probe(RENDER.view({flagged}), 99)",
+             oracle(10, 10, SEED, ((0, 0, 0), (319, 319, 1)), 99)),
+            ("active-flag-glyph", f"view_pixel(RENDER.view({flagged}), 76, 75)", FLAG),
+            ("adjacent-hidden-cell", f"view_pixel(RENDER.view({flagged}), 68, 75)", HIDDEN),
+            ("active-unflag-survives-render", f"view_probe(RENDER.view({unflagged}), 99)",
+             oracle(10, 10, SEED, ((0, 0, 0), (319, 319, 1), (319, 319, 1)), 99)),
+            ("repeated-render-keeps-flag", f"view_twice_probe(RENDER.view({flagged}), 99)",
+             oracle(10, 10, SEED, ((0, 0, 0), (319, 319, 1)), 99)),
+        ]
     lines = [
         "import Base", "import ./nxn_gui_render.bend as RENDER",
         "import ./nxn_gui_adapter.bend as GUI", "import ./nxn_lazy_game.bend as Lazy", "",
@@ -79,6 +94,13 @@ def harness():
         "  (game, img) = pair", "  GUI.snapshot(game, 0)", "",
         "def view_first(pair: Lazy.Game & Image) -> U32:",
         "  (game, img) = pair", "  RENDER.pixel_at(img, 1, 1, 128)", "",
+        "def view_probe(pair: Lazy.Game & Image, index: U32) -> U32:",
+        "  (game, img) = pair", "  GUI.snapshot(game, index)", "",
+        "def view_pixel(pair: Lazy.Game & Image, x: U32, y: U32) -> U32:",
+        "  (game, img) = pair", "  RENDER.pixel_at(img, x, y, 128)", "",
+        "def view_twice_probe(pair: Lazy.Game & Image, index: U32) -> U32:",
+        "  (game, img) = pair", "  (again, image2) = RENDER.view(game)",
+        "  GUI.snapshot(again, index)", "",
     ]
     for i, (_, expr, expected) in enumerate(cases):
         lines += [f"def check_{i}() -> U32:", f"  equal({expr}, {expected})", ""]
@@ -125,11 +147,16 @@ def preflight():
     assert first_clue() in range(4)
     source, count = harness()
     assert count == 31
+    extended_source, extended_count = harness(True)
+    assert extended_count == 6
+    assert extended_source.count("def main() -> U32:") == 1
+    assert oracle(10, 10, SEED, ((0, 0, 0), (319, 319, 1)), 99) == 1
+    assert oracle(10, 10, SEED, ((0, 0, 0), (319, 319, 1), (319, 319, 1)), 99) == 0
     assert source.index("def one_if_true(") < source.index("def equal(")
     assert source.index("def view_first(") < source.index("def check_0(")
     assert source.count("def main() -> U32:") == 1
     assert oracle(10, 10, SEED, ((0, 0, 0),), 0) not in (300, 400)
-    print("PASS 31 independent headless render expectations and App.run structural contract", flush=True)
+    print("PASS 31 geometry/glyph checks and 6 public-view/flag expectations (static oracle)", flush=True)
 
 
 def run(cmd, cwd, label, expected=None):
@@ -161,9 +188,16 @@ def main():
         path.write_text(source, encoding="utf-8")
         run(("bend", str(path), "--check-only"), directory, "Image typecheck")
         run(("bend", str(path)), directory, "31 Image expectations", count)
+        extra, extra_count = harness(True)
+        extra_path = directory / "check_gui_public_view.bend"
+        extra_path.write_text(extra, encoding="utf-8")
+        run(("bend", str(extra_path), "--check-only"), directory,
+            "6 public-view and flag checks typecheck")
+        run(("bend", str(extra_path)), directory,
+            "6 public-view and flag expectations", extra_count)
         run(("bend", str(directory / APP.name), "--check-only"), directory,
             "App.run typecheck (no desktop launch)")
-    print("PASS headless Image checks and App.run typecheck; OS GUI still unverified", flush=True)
+    print("PASS 31 Image checks, 6 public-view checks and App.run typecheck; OS GUI still unverified", flush=True)
 
 
 if __name__ == "__main__":
