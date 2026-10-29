@@ -1,5 +1,14 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-30：第7章の追加バイト値検証、アフィン所有権エラー修正（検証待ち）
+
+- 正本Draft PR #4先端 `07814a42` は7ワークフロー成功、採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` 不変。検証PR #100先端 `f932520c` は正本より1コミット先行・遅れ0。Tests／Reader download bundles／Intermediate XeLaTeX PDF／N×N公開推論は成功。ただしIntermediate Bend examplesの `Verify bounded binary File reads and EOF` で失敗したため正本には統合していない。
+- CI #40933060755、job #123656295440 の原因：追加fixture `report_chunk(bytes)` が `List.length(bytes)` と `List.foldl(bytes)` の2回で同じアフィンな `List<&2,U32>` を消費し、Bend 2が `bytes (consumed more than once)` を報告。配布fixtureの不具合ではない。
+- 修正：追加fixtureを単一 `List.foldl` に変更。2バイト以内の257進指紋は空=0、1バイト=1〜256、2バイト=258〜66048で区別できるため、指紋から長さを一意に復元し、値・順序・長さを照合する。第7章補稿を同じ実コードへ同期。**修正後Bend型検査・24内容ケース実行・PDF/ZIP一致は未確認。** 同一失敗を回避するため修正候補は1コミットで検証し、成功するまで正本PR #4を動かさない。第8章IO.now/IO.sleepとTeX/PDF/ZIPは不変更。
+- 未完成：10×10 GUI実機、長方形と多様な運ゲー無し盤面、23章全体の教育的校閲・配布同期。
+
+---
+
 ## 2026-10-30：第7章Byte/Fileを長さだけでなく内容・順序まで検証（検証候補）
 
 - 正本PR #4先端は07814a42。任意M≤⌊N²/4⌋のN×N構成（検証PR #99）は全3ワークフロー成功後にlease付きfast-forwardで統合済み。PR #99は統合済みとして閉鎖。採用済み表紙blob ba9b5c4cb296e3adfd119ace6b55abc419c6faf1 不変。

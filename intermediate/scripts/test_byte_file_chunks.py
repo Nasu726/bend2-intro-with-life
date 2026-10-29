@@ -31,6 +31,17 @@ def digest(chunk: bytes) -> int:
     return value
 
 
+def length_from_digest(value: int) -> int:
+    """Independent oracle for the <=2-byte digest length intervals."""
+    if value == 0:
+        return 0
+    if 1 <= value <= 256:
+        return 1
+    if 258 <= value <= 66048:
+        return 2
+    raise AssertionError(f"Out-of-range <=2-byte fingerprint: {value}")
+
+
 def main() -> int:
     if not shutil.which("bend"):
         raise AssertionError("Bend 2 is required for byte-chunk verification")
@@ -74,6 +85,9 @@ def main() -> int:
                             f"Reader sample length regression for {payload.hex()}: "
                             f"{sample.stdout!r} / {sample.stderr!r}"
                         )
+                for chunk in chunks:
+                    if length_from_digest(digest(chunk)) != len(chunk):
+                        raise AssertionError("Fingerprint cannot recover bounded chunk length")
                 expected = [str(value) for chunk in chunks
                             for value in (len(chunk), digest(chunk))]
                 observed = got.stdout.strip().splitlines()

@@ -9,10 +9,28 @@ import Base
 def digest_step(acc: U32, byte: U32) -> U32:
   (acc * 257 + byte + 1 : U32)
 
+# A bounded 0..2-byte digest also determines the length:
+# empty -> 0, one byte -> 1..256, two bytes -> 258..66048.
+# Pass Booleans as arguments so match operates on variables.
+def digest_length(is_empty: Bool, is_single: Bool) -> U32:
+  match is_empty:
+    case True{}:
+      0
+    case False{}:
+      match is_single:
+        case True{}:
+          1
+        case False{}:
+          2
+
+# The affine list is consumed ONCE by foldl. The U32 result is shared,
+# rather than consuming the File.read_bytes list twice.
 def report_chunk(bytes: List<&2, U32>) -> IO(Unit):
   do IO<Unit>:
-    Unit <- IO.print(Nat.show(List.length(&2, U32, bytes)))
-    IO.print(U32.show(List.foldl(~&2, ~U32, ~U32, ~digest_step, bytes, 0)))
+    +digest = List.foldl(~&2, ~U32, ~U32, ~digest_step, bytes, 0)
+    +length = digest_length(U32.is_lt(digest, 1), U32.is_lt(digest, 257))
+    Unit <- IO.print(U32.show(length))
+    IO.print(U32.show(digest))
 
 def after_fourth(result: File & Result<&1, &1, U32 & String, List<&2, U32>>) -> IO(Unit):
   (file, status) = result
