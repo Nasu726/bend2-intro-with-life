@@ -99,8 +99,7 @@ def harness(extended=False):
         "def view_pixel(pair: Lazy.Game & Image, x: U32, y: U32) -> U32:",
         "  (game, img) = pair", "  RENDER.pixel_at(img, x, y, 128)", "",
         "def view_twice_probe(pair: Lazy.Game & Image, index: U32) -> U32:",
-        "  (game, img) = pair", "  (again, image2) = RENDER.view(game)",
-        "  GUI.snapshot(again, index)", "",
+        "  (game, img) = pair", "  view_probe(RENDER.view(game), index)", "",
     ]
     for i, (_, expr, expected) in enumerate(cases):
         lines += [f"def check_{i}() -> U32:", f"  equal({expr}, {expected})", ""]
@@ -150,6 +149,8 @@ def preflight():
     extended_source, extended_count = harness(True)
     assert extended_count == 6
     assert extended_source.count("def main() -> U32:") == 1
+    assert "  view_probe(RENDER.view(game), index)" in extended_source
+    assert "(again, image2) = RENDER.view(game)" not in extended_source
     assert oracle(10, 10, SEED, ((0, 0, 0), (319, 319, 1)), 99) == 1
     assert oracle(10, 10, SEED, ((0, 0, 0), (319, 319, 1), (319, 319, 1)), 99) == 0
     assert source.index("def one_if_true(") < source.index("def equal(")
