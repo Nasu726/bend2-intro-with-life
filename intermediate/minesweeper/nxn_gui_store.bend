@@ -127,17 +127,6 @@ def finish_write(model: History.Model,
         Unit <- File.close(file)
         return model
 
-def save_if_valid(valid: Bool, model: History.Model, text: String) ->
-  IO(History.Model):
-  match valid:
-    case False{}:
-      IO.pure(History.Model, model)
-    case True{}:
-      do IO<History.Model>:
-        opened: Result<&1, &1, U32 & String, File> <-
-          File.open("minesweeper_nxn_save.txt", "w")
-        finish_open_write(model, text, opened)
-
 def finish_open_write(model: History.Model, text: String,
                       opened: Result<&1, &1, U32 & String, File>) ->
   IO(History.Model):
@@ -149,6 +138,18 @@ def finish_open_write(model: History.Model, text: String,
         result: File & Result<&1, &1, U32 & String, Unit> <-
           File.write(file, text)
         finish_write(model, result)
+
+
+def save_if_valid(valid: Bool, model: History.Model, text: String) ->
+  IO(History.Model):
+  match valid:
+    case False{}:
+      IO.pure(History.Model, model)
+    case True{}:
+      do IO<History.Model>:
+        opened: Result<&1, &1, U32 & String, File> <-
+          File.open("minesweeper_nxn_save.txt", "w")
+        finish_open_write(model, text, opened)
 
 # An invalid history never opens/truncates the existing save. An I/O error
 # retains the live game, but is not displayed in the GUI yet.
