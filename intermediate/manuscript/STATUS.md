@@ -1,3 +1,11 @@
+## 2026-10-30：10×10 GUIのファイル不在と書込み不能の非致命的処理（検証候補）
+
+- 正本は `cf50e6c5`（Draft）、直前のGUI S/L・再起動復元はX11検証済み。既存の保存先ファイル不在時のLキー操作・書込み不能時のSキー操作は`IO.try`由来でGUI終了の危険があった。
+- `nxn_gui_store.bend`のFile.open/read/write失敗を非致命的なResult分岐に変更し、失敗時の元Model保持、読込み時のCorrupt、close、512件超による保存拒否を明示。Bendテストに未作成ファイル、書込先ディレクトリ、読込先ディレクトリを追加。X11で初回L、書込不能S、従来の正しいS/Lと再起動復元を検査。第21章補稿と同期。**候補のBend・X11・全文CIは未確認、正本に統合しない。**
+- 読書用TeX・PDF・ZIPは今回不変更、保存対応GUIの配布版同期と失敗UX表示は未完成。表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` を保護。第7章Byte/File、第8章IO.now/IO.sleepは回帰CI対象。
+
+---
+
 ## 2026-10-30：10×10 GUIのS/Lキーと再起動復元（検証PR候補）
 
 - 正本PR #4先端 `76c8af50` のIntermediate textbook／Tests／Reader bundles／PDF layout／X11の5ワークフローはすべて成功。第7章Byte/File・第8章IO.now/IO.sleepの回帰を含む。採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は不変更。

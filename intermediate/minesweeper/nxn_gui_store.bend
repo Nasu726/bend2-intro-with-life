@@ -1,5 +1,5 @@
 # Versioned on-disk replay of the 10x10 GUI's PUBLIC input history.
-# This is the file-IO boundary; App.run S/L key wiring is a separate step.
+# Open/read/write failures leave the live game running; successful saves use the same format.
 # Filename (relative to current directory): minesweeper_nxn_save.txt
 # Canonical format: BEND2-GUI-1|<seed>|<code>|...|END
 # A code is 2*cell+button, within 0..199; no mine truth is serialized.
@@ -125,21 +125,33 @@ def finish_write(model: History.Model,
     case Fail{error}:
       do IO<History.Model>:
         Unit <- File.close(file)
-        IO.die(History.Model, 1, "Could not write GUI save")
+        return model
 
 def save_if_valid(valid: Bool, model: History.Model, text: String) ->
   IO(History.Model):
   match valid:
     case False{}:
-      IO.die(History.Model, 1, "GUI history exceeds 512 valid actions")
+      IO.pure(History.Model, model)
     case True{}:
       do IO<History.Model>:
-        file: File <- IO.try(File, File.open("minesweeper_nxn_save.txt", "w"))
+        opened: Result<&1, &1, U32 & String, File> <-
+          File.open("minesweeper_nxn_save.txt", "w")
+        finish_open_write(model, text, opened)
+
+def finish_open_write(model: History.Model, text: String,
+                      opened: Result<&1, &1, U32 & String, File>) ->
+  IO(History.Model):
+  match opened:
+    case Fail{error}:
+      IO.pure(History.Model, model)
+    case Done{file}:
+      do IO<History.Model>:
         result: File & Result<&1, &1, U32 & String, Unit> <-
           File.write(file, text)
         finish_write(model, result)
 
-# A failed save does not truncate an existing file: validation is first.
+# An invalid history never opens/truncates the existing save. An I/O error
+# retains the live game, but is not displayed in the GUI yet.
 # The non-copyable game survives the write without serializing mine truth.
 def save(model: History.Model) -> IO(History.Model):
   match model:
@@ -162,14 +174,25 @@ def finish_read(result: File & Result<&1, &1, U32 & String, String>) ->
     case Fail{error}:
       do IO<History.Recovery>:
         Unit <- File.close(file)
-        IO.die(History.Recovery, 1, "Could not read GUI save")
+        return History.Corrupt{}
 
+def finish_open_read(opened: Result<&1, &1, U32 & String, File>) ->
+  IO(History.Recovery):
+  match opened:
+    case Fail{error}:
+      IO.pure(History.Recovery, History.Corrupt{})
+    case Done{file}:
+      do IO<History.Recovery>:
+        result: File & Result<&1, &1, U32 & String, String> <-
+          File.read(file, 4097)
+        finish_read(result)
+
+# A missing/unreadable save returns Corrupt, so App.run keeps the live model.
 def load() -> IO(History.Recovery):
   do IO<History.Recovery>:
-    file: File <- IO.try(File, File.open("minesweeper_nxn_save.txt", "r"))
-    result: File & Result<&1, &1, U32 & String, String> <-
-      File.read(file, 4097)
-    finish_read(result)
+    opened: Result<&1, &1, U32 & String, File> <-
+      File.open("minesweeper_nxn_save.txt", "r")
+    finish_open_read(opened)
 
 # A pure parse smoke; real file I/O is exercised by the Python harness.
 def main() -> U32:

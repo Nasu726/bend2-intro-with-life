@@ -145,6 +145,14 @@ def main():
             try:
                 wid = find_window(process)
                 fresh = shot(wid, output / "00_fresh.png")
+                # L on first launch must preserve Fresh and keep the process alive.
+                assert not (Path(tmp) / "minesweeper_nxn_save.txt").exists()
+                press(wid, "l")
+                time.sleep(0.3)
+                if process.poll() is not None:
+                    raise AssertionError("Missing save file terminated GUI")
+                if distinct(fresh, shot(wid, output / "00_missing_file_ignored.png")):
+                    raise AssertionError("Missing save changed the GUI")
                 click(wid, 400, 400, 1)  # padding: must not open any cell
                 click(wid, 16, 16, 3)   # first right click: must not generate mines
                 time.sleep(0.8)
@@ -186,6 +194,19 @@ def main():
                 press(wid, "l")
                 await_screen(wid, fresh, output / "07_corrupt_ignored.png", False)
                 print("PASS corrupt transcript leaves current GUI untouched", flush=True)
+                # A directory at the save path prevents overwrite. S must
+                # leave the current game alive, with no partial file.
+                save.unlink()
+                save.mkdir()
+                press(wid, "s")
+                time.sleep(0.3)
+                if process.poll() is not None:
+                    raise AssertionError("Failed save terminated GUI")
+                if not save.is_dir() or list(save.iterdir()):
+                    raise AssertionError("Failed save modified directory")
+                if distinct(fresh, shot(wid, output / "07_write_failed_ignored.png")):
+                    raise AssertionError("Failed save altered current board")
+                save.rmdir()
                 save.write_text(expected)
                 press(wid, "Escape")
                 process.wait(timeout=15)
