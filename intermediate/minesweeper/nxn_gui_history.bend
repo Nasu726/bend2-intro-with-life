@@ -68,7 +68,7 @@ def valid_entries(entries: List<&2, U32>) -> Bool:
     case entry <> rest:
       Bool.and(U32.is_lt(entry, 20000), valid_entries(rest))
 
-def on_valid(valid: Bool, entries: List<&2, U32>, seed: U32) -> Recovery:
+def on_valid(valid: Bool, +entries: List<&2, U32>, +seed: U32) -> Recovery:
   match valid:
     case False{}:
       Corrupt{}

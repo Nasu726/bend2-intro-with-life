@@ -1,5 +1,12 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-30：GUI履歴のアフィン消費エラーを修正（PR #101）
+
+- 検証PR #101先端 `6fc165ff` のCI #40983428237 は、Reader bundles・X11仮想デスクトップ・Tests・XeLaTeX・N×N公開情報推論が成功したが、Intermediate Bend examples の新規 `Verify 10x10 GUI replay history in Bend` で失敗。ログは `on_valid` の `seed (consumed more than once)`。Bendコードの `GUI.reset_gui(seed)` と `Model{..., seed}` が同じアフィン引数を二度消費していた。
+- `on_valid` の `seed` と、再生と逆順履歴生成に両方使うデータ種の `entries` を明示的な複製可能バインダ `+seed`・`+entries` に修正。CIのBend型検査・14実行照合は修正後未検証。**正本PR #4へは統合しない**。表紙、PDF、読者ZIP、第7・8章、既存GUI App.run は不変更。
+
+---
+
 ## 2026-10-30：10×10 GUIの操作履歴・復元基盤（検証候補）
 
 - 正本Draft PR #4先端 `0515bc5e`、mainとの差533コミット先行・遅れ0。X11 GUI・Tests・Reader bundles・PDF layoutは成功し、Intermediate textbookの総合Bend CIは確認時点で実行中。採用表紙 `intermediate/cover_art.tex` blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は不変。配布125ページPDF・96エントリZIP、第7章Byte/File、第8章IO.now/IO.sleepにも変更なし。
