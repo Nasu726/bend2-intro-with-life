@@ -150,8 +150,14 @@ def await_status(wid, former, timeout=15):
     raise AssertionError("GUI did not render a distinct S/L result marker")
 
 def verify_status_app(tmp, output):
-    # Earlier GUI smoke intentionally leaves a valid save in tmp.
-    # This acceptance uses an isolated cwd to test first-launch L.
+    # Verify the *meaning* of all four colors, not just four distinct pixels.
+    # Each S/L outcome must leave the playable 10x10 image unchanged.
+    colors = {
+        "load-failed": (255, 165, 0),  # amber
+        "save-ok": (0, 255, 0),        # green
+        "load-ok": (0, 0, 255),        # blue
+        "save-failed": (255, 0, 0),    # red
+    }
     work = Path(tmp) / "status-run"
     work.mkdir()
     binary = work / "nxn_status_gui"
@@ -164,32 +170,59 @@ def verify_status_app(tmp, output):
         try:
             wid = find_window(process)
             initial = status_pixel(wid)
+            assert initial == (0, 0, 0), f"Fresh gutter is not blank: {initial}"
+            fresh_board = shot(wid, output / "status_00_fresh.png")
+
+            def check_board(label):
+                current = shot(wid, output / f"status_{label}.png")
+                if distinct(current, fresh_board):
+                    raise AssertionError(f"{label}: S/L notification modified game cells")
+
             press(wid, "l")
             failed_load = await_status(wid, initial)
-            assert process.poll() is None
-            # Clearing a marker on an ignored pre-first-click right press.
+            assert failed_load == colors["load-failed"], failed_load
+            assert not save.exists() and process.poll() is None
+            check_board("01_missing_load")
+
+            # A right press before the first left click is a public no-op.
+            # It clears the notification without generating any mine layout.
             click(wid, 16, 16, 3)
             cleared = await_status(wid, failed_load)
             assert cleared == initial, "Mouse press did not clear notice"
+            check_board("02_cleared")
+
             press(wid, "s")
             saved = await_status(wid, cleared)
+            assert saved == colors["save-ok"], saved
             assert save.is_file()
-            assert saved not in (initial, failed_load)
+            assert save.read_text(encoding="utf-8") == (
+                f"BEND2-GUI-1|{SEED}|1|END"
+            ), "S wrote an unexpected public history"
+            check_board("03_saved")
+
             press(wid, "l")
             loaded = await_status(wid, saved)
-            assert loaded not in (initial, failed_load, saved)
+            assert loaded == colors["load-ok"], loaded
+            check_board("04_loaded")
+
             press(wid, "r")
             assert await_status(wid, loaded) == initial
+            check_board("05_reset")
+
             save.unlink()
             save.mkdir()
             press(wid, "s")
             failed_save = await_status(wid, initial)
-            assert failed_save not in (initial, failed_load, saved, loaded)
+            assert failed_save == colors["save-failed"], failed_save
             assert process.poll() is None and save.is_dir()
+            assert not list(save.iterdir()), "Failed save modified the directory"
+            check_board("06_failed_save")
+
             press(wid, "Escape")
             process.wait(timeout=15)
             assert process.returncode == 0
-            print("PASS visible native X11 S/L success/error markers and nonfatal failures", flush=True)
+            print("PASS X11 S/L exact amber/green/blue/red pixels, "
+                  "unchanged board and nonfatal File failures", flush=True)
         finally:
             if process.poll() is None:
                 process.terminate()
