@@ -54,6 +54,11 @@ def target_for_flag():
 
 
 def preflight():
+    prototype = STATUS_APP.read_text(encoding="utf-8")
+    assert "App.run(~State" in prototype
+    assert "Feedback.save_report(model)" in prototype
+    assert "after_load(model, recovery)" in prototype
+    assert "mark1(img, color)" in prototype
     source = APP.read_text(encoding="utf-8")
     assert TITLE in source
     assert "History.Model" in source and "Store.save(model)" in source
@@ -120,6 +125,75 @@ def press(wid, key):
     run("xdotool", "windowfocus", wid)
     run("xdotool", "key", "--clearmodifiers", key)
 
+
+
+# Verification-only visible S/L outcome: assert an actual gutter pixel changes.
+STATUS_APP = ROOT / "minesweeper" / "nxn_gui_status_app.bend"
+
+def status_pixel(wid):
+    p = subprocess.run(("import", "-window", wid, "png:-"),
+                       capture_output=True, timeout=20)
+    if p.returncode:
+        raise AssertionError(p.stderr.decode(errors="replace"))
+    image = Image.open(BytesIO(p.stdout)).convert("RGB")
+    image.load()
+    assert image.width >= 416 and image.height >= 32
+    return image.getpixel((400, 16))
+
+def await_status(wid, former, timeout=15):
+    limit = time.monotonic() + timeout
+    while time.monotonic() < limit:
+        latest = status_pixel(wid)
+        if latest != former:
+            return latest
+        time.sleep(0.2)
+    raise AssertionError("GUI did not render a distinct S/L result marker")
+
+def verify_status_app(tmp, output):
+    # Earlier GUI smoke intentionally leaves a valid save in tmp.
+    # This acceptance uses an isolated cwd to test first-launch L.
+    work = Path(tmp) / "status-run"
+    work.mkdir()
+    binary = work / "nxn_status_gui"
+    run("bend", str(STATUS_APP), "-o", str(binary), timeout=240)
+    save = work / "minesweeper_nxn_save.txt"
+    assert not save.exists()
+    with (output / "status_stdout.log").open("wb") as logfile:
+        process = subprocess.Popen((str(binary),), cwd=work,
+                                   stdout=logfile, stderr=subprocess.STDOUT)
+        try:
+            wid = find_window(process)
+            initial = status_pixel(wid)
+            press(wid, "l")
+            failed_load = await_status(wid, initial)
+            assert process.poll() is None
+            # Clearing a marker on an ignored pre-first-click right press.
+            click(wid, 16, 16, 3)
+            cleared = await_status(wid, failed_load)
+            assert cleared == initial, "Mouse press did not clear notice"
+            press(wid, "s")
+            saved = await_status(wid, cleared)
+            assert save.is_file()
+            assert saved not in (initial, failed_load)
+            press(wid, "l")
+            loaded = await_status(wid, saved)
+            assert loaded not in (initial, failed_load, saved)
+            press(wid, "r")
+            assert await_status(wid, loaded) == initial
+            save.unlink()
+            save.mkdir()
+            press(wid, "s")
+            failed_save = await_status(wid, initial)
+            assert failed_save not in (initial, failed_load, saved, loaded)
+            assert process.poll() is None and save.is_dir()
+            press(wid, "Escape")
+            process.wait(timeout=15)
+            assert process.returncode == 0
+            print("PASS visible native X11 S/L success/error markers and nonfatal failures", flush=True)
+        finally:
+            if process.poll() is None:
+                process.terminate()
+                process.wait(timeout=5)
 
 def main():
     preflight()
@@ -241,6 +315,8 @@ def main():
                     except subprocess.TimeoutExpired:
                         process.kill()
                         process.wait(timeout=3)
+
+        verify_status_app(tmp, output)
 
 
 if __name__ == "__main__":
