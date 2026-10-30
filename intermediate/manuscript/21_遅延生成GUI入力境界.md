@@ -363,7 +363,7 @@ def after_save(pair: History.Model & Bool) -> State:
       State{model, 3}
 ```
 
-`Store.save_report`は従来の`Store.save`と同じ最大512操作・有効コード検査を行い、元の`History.Model`に保存結果の`Bool`を添えて返します。ファイルを開く・書く・閉じる過程では、元のゲーム状態を複製しません。
+`Feedback.save_report`は従来の`Store.save`と同じ最大512操作・有効コード検査を行い、元の`History.Model`に保存結果の`Bool`を添えて返します。ファイルを開く・書く・閉じる過程では、元のゲーム状態を複製しません。
 
 ### 実行結果と検証範囲
 
