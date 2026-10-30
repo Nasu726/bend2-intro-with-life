@@ -92,6 +92,8 @@ def static():
     assert "512n" in src and "4096n" in src
     assert "History.Model{game, +newest_first, +seed}" in src
     assert "File.close(file)" in src
+    assert "IO.try(File, File.open" not in src and "IO.die(" not in src
+    assert "finish_open_read(opened)" in src and "finish_open_write(model, text, opened)" in src
     assert "Words.has(" not in src and "mines:" not in src
     assert len(PURE)==18 and len(set(x[0] for x in PURE))==18
     assert PURE[0][2]==1 and PURE[1][2]==300 and PURE[11][2]==600
@@ -138,13 +140,22 @@ def main():
             path=work/f"gui_store_pure_{start}.bend"
             path.write_text(pure_source(batch),encoding="utf-8")
             bend_run(path,len(batch),work)
-        writer=work/"gui_store_write.bend"
-        writer.write_text(WRITE,encoding="utf-8")
-        bend_run(writer,1,work)
         target=work/SAVE
-        assert target.read_bytes()==FORMAT.encode("ascii")
         reader=work/"gui_store_read.bend"
         reader.write_text(READ,encoding="utf-8")
+        # A fresh directory contains no saved game: L must not terminate.
+        assert not target.exists()
+        bend_run(reader,600,work)
+        writer=work/"gui_store_write.bend"
+        writer.write_text(WRITE,encoding="utf-8")
+        # A directory at the save path makes File.open("w") fail. The game
+        # survives and the directory must remain untouched.
+        target.mkdir()
+        bend_run(writer,1,work)
+        assert target.is_dir() and not list(target.iterdir())
+        target.rmdir()
+        bend_run(writer,1,work)
+        assert target.read_bytes()==FORMAT.encode("ascii")
         bend_run(reader,1,work)
         for label,payload in [
             ("range",f"BEND2-GUI-1|{SEED}|200|END"),
@@ -154,7 +165,12 @@ def main():
         ]:
             target.write_text(payload,encoding="ascii")
             bend_run(reader,600,work)
-        print("PASS 18 Bend format cases, real File write/read, 4 corrupt-file reloads",flush=True)
+        # File.read() of a directory can fail even when opening succeeds.
+        target.unlink()
+        target.mkdir()
+        bend_run(reader,600,work)
+        assert target.is_dir()
+        print("PASS 18 Bend format cases, File I/O, missing save, denied write, 4 corrupt reloads, directory read",flush=True)
 
 if __name__=="__main__":
     main()
