@@ -72,6 +72,15 @@ class ChapterFlowTest(unittest.TestCase):
         self.assertNotIn("完成したGUIの検証はまだ済んでいません", chapter)
         self.assertNotIn("追加されましたが、0の連鎖公開についても", chapter)
 
+    def test_chapter21_status_gui_is_taught_with_scope(self):
+        chapter = self.chapters[20][1]
+        for phrase in ("nxn_gui_status_app.bend", "nxn_gui_feedback_store.bend",
+                       "保存成功", "読込成功", "保存失敗", "読込失敗",
+                       "色だけ", "原子的な保存", "X11仮想デスクトップ"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, chapter)
+        self.assertIn(r"\exercise{", chapter)
+
     def test_reader_samples_match_bend_verified_fixtures(self):
         for name, fixture in (
             ("54_binary_chunks.bend", "binary_chunks.bend"),
