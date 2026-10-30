@@ -118,6 +118,95 @@ def press(wid, key):
     run("xdotool", "key", "--clearmodifiers", key)
 
 
+
+# The session app remains verification-only until packaged sources are synced.
+SESSION_APP = ROOT / "minesweeper" / "nxn_gui_session_app.bend"
+SESSION_SAVE = "minesweeper_nxn_save.txt"
+
+
+def until_payload(path, expected, timeout=15):
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if path.exists() and path.read_text(encoding="ascii") == expected:
+            return
+        time.sleep(0.2)
+    raise AssertionError("S key did not write expected public GUI replay")
+
+
+def await_equal(wid, expected, filename, timeout=35):
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        current = shot(wid, filename)
+        if not distinct(current, expected):
+            return
+        time.sleep(0.4)
+    raise AssertionError("GUI did not restore expected saved pixels")
+
+
+def close_gui(process):
+    if process.poll() is None:
+        process.terminate()
+        try:
+            process.wait(timeout=3)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=3)
+
+
+def verify_session_native(output, work):
+    """Exercise actual X11 S/L keys, disk replay, restart and corruption fallback."""
+    binary = work / "nxn_gui_session"
+    run("bend", str(SESSION_APP), "-o", str(binary), timeout=240)
+    if not binary.is_file() or not os.access(binary, os.X_OK):
+        raise AssertionError("Bend did not create executable session GUI")
+    save = work / SESSION_SAVE
+    assert not save.exists()
+    index = target_for_flag()
+    expected_text = f"BEND2-GUI-1|{SEED}|0|{2 * index + 1}|END"
+    with (output / "session_native_stdout.log").open("wb") as logfile:
+        process = subprocess.Popen((str(binary),), cwd=work,
+                                   stdout=logfile, stderr=subprocess.STDOUT)
+        try:
+            wid = find_window(process)
+            fresh = shot(wid, output / "10_session_fresh.png")
+            click(wid, 16, 16, 1)
+            opened = await_screen(wid, fresh, output / "11_session_open.png", True)
+            click(wid, (index % 10) * 32 + 16, (index // 10) * 32 + 16, 3)
+            flagged = await_screen(wid, opened, output / "12_session_flag.png", True)
+            press(wid, "s")
+            until_payload(save, expected_text)
+            press(wid, "r")
+            await_equal(wid, fresh, output / "13_session_reset.png")
+            press(wid, "l")
+            await_equal(wid, flagged, output / "14_session_loaded.png")
+            press(wid, "Escape")
+            process.wait(timeout=15)
+            assert process.returncode == 0, "Session GUI did not exit after Esc"
+        finally:
+            close_gui(process)
+    with (output / "session_restart_stdout.log").open("wb") as logfile:
+        process = subprocess.Popen((str(binary),), cwd=work,
+                                   stdout=logfile, stderr=subprocess.STDOUT)
+        try:
+            wid = find_window(process)
+            await_equal(wid, fresh, output / "15_session_restarted.png")
+            press(wid, "l")
+            await_equal(wid, flagged, output / "16_session_restart_loaded.png")
+            press(wid, "r")
+            await_equal(wid, fresh, output / "17_session_restart_reset.png")
+            save.write_text(f"BEND2-GUI-2|{SEED}|0|END", encoding="ascii")
+            press(wid, "l")
+            time.sleep(0.6)
+            await_equal(wid, fresh, output / "18_session_corrupt_rejected.png")
+            assert process.poll() is None, "Corrupt save closed the GUI"
+            press(wid, "Escape")
+            process.wait(timeout=15)
+            assert process.returncode == 0, "Session GUI restart did not exit"
+        finally:
+            close_gui(process)
+    print("PASS native X11 S/L File replay, reset, restart, corrupt rejection", flush=True)
+
+
 def main():
     preflight()
     if sys.argv[1:] == ["--static-only"]:
@@ -170,6 +259,8 @@ def main():
                     except subprocess.TimeoutExpired:
                         process.kill()
                         process.wait(timeout=3)
+
+        verify_session_native(output, Path(tmp))
 
 
 if __name__ == "__main__":
