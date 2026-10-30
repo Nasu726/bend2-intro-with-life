@@ -42,6 +42,8 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_gui_events.py --static-only
       - name: Validate 10x10 GUI replay history before Bend install
         run: python3 intermediate/scripts/test_nxn_gui_history.py --static-only
+      - name: Validate versioned 10x10 GUI File payloads
+        run: python3 intermediate/scripts/test_nxn_gui_store.py --static-only
       - name: Validate GUI Image view and App.run structure before Bend install
         run: python3 intermediate/scripts/test_nxn_gui_render.py --static-only
       - name: Audit constructive N x N no-guess evidence without Bend
@@ -87,6 +89,8 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_gui_events.py
       - name: Verify 10x10 GUI replay history in Bend
         run: python3 intermediate/scripts/test_nxn_gui_history.py
+      - name: Verify versioned 10x10 GUI save and reload using Bend File API
+        run: python3 intermediate/scripts/test_nxn_gui_store.py
       - name: Verify headless 10x10 GUI Image and typecheck App.run
         run: python3 intermediate/scripts/test_nxn_gui_render.py
       - name: Verify constructive N x N no-guess Bend board and replay
