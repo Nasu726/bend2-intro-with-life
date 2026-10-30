@@ -120,7 +120,7 @@ def main() -> IO(Unit):
 def static():
     src = STORE.read_text(encoding="utf-8")
     session = (GAME / "nxn_gui_session.bend").read_text(encoding="utf-8")
-    app = (GAME / "nxn_gui_app.bend").read_text(encoding="utf-8")
+    app = (GAME / "nxn_gui_session_app.bend").read_text(encoding="utf-8")
     assert "App.run(~History.Model" in app
     assert "Session.view, Session.tick" in app
     assert "Store.save(model)" in session and "Store.load()" in session
@@ -196,6 +196,11 @@ def main():
         ]:
             target.write_text(payload,encoding="ascii")
             bend_run(reader,600,work)
+        candidate = work / "nxn_gui_session_app.bend"
+        checked = subprocess.run(("bend", str(candidate), "--check-only"), cwd=work,
+                                 capture_output=True, text=True, timeout=240,
+                                 env=dict(os.environ, BEND_NO_TELEMETRY="1"))
+        assert checked.returncode == 0, checked.stdout + checked.stderr
         session_writer = work / "gui_session_write.bend"
         session_writer.write_text(SESSION_WRITE, encoding="utf-8")
         bend_run(session_writer, 1, work)

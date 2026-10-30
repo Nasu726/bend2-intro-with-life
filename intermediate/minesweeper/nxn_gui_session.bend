@@ -58,14 +58,6 @@ def event(e: Event, model: History.Model) -> IO(Maybe<History.Model>):
     case _:
       IO.pure(Maybe<History.Model>, Some{model})
 
-def follow(rest: List<Event>, current: Maybe<History.Model>) ->
-  IO(Maybe<History.Model>):
-  match current:
-    case None{}:
-      IO.pure(Maybe<History.Model>, None{})
-    case Some{model}:
-      tick(rest, model)
-
 def tick(events: List<Event>, model: History.Model) -> IO(Maybe<History.Model>):
   match events:
     case Nil{}:
@@ -73,7 +65,11 @@ def tick(events: List<Event>, model: History.Model) -> IO(Maybe<History.Model>):
     case e <> rest:
       do IO<Maybe<History.Model>>:
         current: Maybe<History.Model> <- event(e, model)
-        follow(rest, current)
+        match current:
+          case None{}:
+            return None{}
+          case Some{next}:
+            tick(rest, next)
 
 def main() -> U32:
   History.snapshot(History.new(20261029), 0)

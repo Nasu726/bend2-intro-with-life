@@ -3,7 +3,7 @@
 ## 2026-10-30：GUI S/Lイベント接続（検証候補）
 
 - 正本先端76c8af50、前回との差分0、Draft継続。正本CIはTests／Reader／X11／PDF layout成功、Intermediate textbookは確認時点で実行中。第7章Byte/Fileと第8章IO.now/IO.sleepは前回の検証結果を保持。
-- 10×10 GUIのApp.run状態をHistory.Modelへ移し、S/s保存、L/l復元、R/r履歴破棄、公開操作記録をnxn_gui_session.bendで接続。Bend File経由のS/Lイベント試験とApp.run型検査を既存Python検査へ追加。**Bend実行・X11・全CIは検証前。正本へは統合しない。**
+- 10×10 GUIの検証用別入口nxn_gui_session_app.bendでApp.run状態をHistory.Modelへ移し、S/s保存、L/l復元、R/r履歴破棄、公開操作記録をnxn_gui_session.bendで接続。既存配布入口は変更しない。Bend File経由のS/Lイベント試験とApp.run型検査を既存Python検査へ追加。**初回検証CIで配布ZIPと既存Appの不整合、およびBendの前方参照による型エラーを検出。配布済み入口を維持して検証用別入口に分離し、tickの相互再帰を単一関数へ修正。修正後のBend実行・全CIは未確認。正本へは統合しない。**
 - 承認済み表紙blob ba9b5c4cb296e3adfd119ace6b55abc419c6faf1、TeX、125ページPDF、96エントリ読者ZIPは不変更。File不在/IO失敗時の非致命的表示、X11再起動保存復元、長方形運ゲー無し生成、全23章校閲は未完成。
 
 ---
