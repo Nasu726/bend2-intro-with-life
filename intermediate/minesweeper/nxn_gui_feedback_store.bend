@@ -1,5 +1,5 @@
-# Verification-only structured outcome for GUI S/L. This is not yet
-# distributed in the learner ZIP. Keep the shipped Store module unmodified.
+# Structured File outcome for the learner-facing S/L notification example.
+# Keep the original Store.save API unchanged for the simpler GUI.
 import Base
 import ./nxn_gui_history.bend as History
 import ./nxn_gui_store.bend as Store

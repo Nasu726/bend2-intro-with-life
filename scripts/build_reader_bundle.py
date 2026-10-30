@@ -99,6 +99,9 @@ INTERMEDIATE_GAME_FILES = (
     "nxn_gui_history.bend",
     "nxn_gui_store.bend",
     "nxn_gui_app_store.bend",
+    # Chapter 21: opt-in visible GUI File success/failure indicator.
+    "nxn_gui_feedback_store.bend",
+    "nxn_gui_status_app.bend",
 )
 
 def readme(track: str) -> str:
@@ -124,8 +127,8 @@ https://github.com/Nasu726/bend2-intro-with-life/tree/main/src
 PDFを読み、examples/ 内のコードを実行してください。
 初稿は執筆途中です。GUI、操作列の保存・復元、4×4・地雷2個限定の
 「運ゲー無し」盤面生成を含みます。
-10×10 GUIのS/Lによる保存・復元はLinux X11仮想画面で有限検証済みです。
-物理GPU・他OS、エラー表示、原子的保存、対話CLI、任意サイズの盤面生成は未完成です。
+10×10 GUIのS/Lによる保存・復元・成否通知はLinux X11仮想画面で有限検証済みです。
+物理GPU・他OS、原子的保存、色以外の通知、対話CLI、任意サイズの盤面生成は未完成です。
 
 公式ガイド: https://github.com/bendlang/bend/blob/main/guide/GUIDE.md
 
@@ -179,6 +182,12 @@ bend examples/minesweeper/nxn_public_three_fixpoint.bend
 bend examples/minesweeper/nxn_public_pair_gap.bend
 期待結果: 203（既知安全2マス、差集合で追加安全3マス）
 これは未知近傍を手で渡す有限教材で、一般N×Nの完全連立推論ではありません。
+
+10×10保存・読込の成否を画面右端のタイルで表示するGUI（任意で選択）:
+bend examples/minesweeper/nxn_gui_status_app.bend -o minesweeper10status
+./minesweeper10status
+S成功は緑、L成功は青、S失敗は赤、L失敗は橙。色だけの表示です。
+保存データはminesweeper_nxn_save.txt。旧版nxn_gui_app_store.bendも残します。
 
 4×4マインスイーパーのGUIをネイティブビルドして起動:
 bend examples/minesweeper/gui.bend -o minesweeper

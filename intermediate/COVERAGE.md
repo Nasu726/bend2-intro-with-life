@@ -1,3 +1,11 @@
+## 2026-10-31：第21章GUI成否通知の読者配布（検証候補）
+
+- 保存・読込成功／失敗を画面右端に4色で示す`nxn_gui_status_app.bend`と、`History.Model & Bool`を返す`nxn_gui_feedback_store.bend`を学習者ZIPへ追加。第21章の必要性→起動コード→色の結果→実装の仕組み→演習と同期する。
+- 既存`nxn_gui_app_store.bend`および純粋な盤面計算は維持する。通知付きGUIはLinux X11仮想環境で有限検証済み。色だけの表示、物理GPU/他OS、原子的保存は未完成である。
+- **検証ブランチでPDFとZIPを再生成・照合し、Bend/X11/Reader/Testsの全CI成功後だけ正本へ反映する。**
+
+---
+
 ## 2026-10-30：保存対応10×10 GUIの第21章配布候補
 
 - `nxn_gui_app_store.bend`、`nxn_gui_history.bend`、`nxn_gui_store.bend` を既存の10×10 GUI依存ファイルとともに読者ZIPの許可リストへ追加する。S/L/R/Esc、公開履歴のFile保存、復元、破損拒否、失敗時の盤面維持を第21章TeXとREADMEへ同期する。

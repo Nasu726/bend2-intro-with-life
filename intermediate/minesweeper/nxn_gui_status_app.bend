@@ -1,4 +1,4 @@
-# Verification-only 10x10 GUI with an observable S/L outcome.
+# Learner-facing 10x10 GUI with an observable S/L outcome.
 # The 32x32 square at x=384..415, y=0..31 is outside the playable board.
 # Green: S succeeded; blue: L succeeded; red: S failed; amber: L failed.
 # A mouse press or reset clears the marker; all public game cells are unchanged.

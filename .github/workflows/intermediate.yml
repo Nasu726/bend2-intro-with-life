@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   bend-examples:
@@ -155,6 +155,25 @@ jobs:
           fi
       - name: Build intermediate learner ZIP
         run: python3 scripts/build_reader_bundle.py intermediate
+      # TEMPORARY for this verification PR only, restore before canonical.
+      - name: Stage GUI status PDF and learner ZIP on verification branch
+        if: github.event_name == 'pull_request' && github.head_ref == 'verify/gui-save-status-20261030'
+        env:
+          TARGET_BRANCH: ${{ github.head_ref }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 'intermediate/Bend2を使いこなす_プレビュー.pdf' 'reader-packages/bend2-intermediate-reader-preview.zip'
+          if git diff --cached --quiet; then
+            echo 'Generated materials already match'
+          elif git log -4 --format=%s | grep -Fxq 'Stage GUI status PDF and ZIP for verification'; then
+            echo 'Generated materials already staged'
+          else
+            git commit -m 'Stage GUI status PDF and ZIP for verification'
+            git push origin "HEAD:refs/heads/$TARGET_BRANCH"
+          fi
       - name: Ensure ZIP contains only permitted learner materials
         run: python3 -m unittest discover -s tests -p 'test_reader_bundle.py' -v
       - uses: actions/upload-artifact@v4

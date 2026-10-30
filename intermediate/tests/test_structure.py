@@ -187,6 +187,8 @@ class BookStructure(unittest.TestCase):
         self.assertIn("37条件", text)
         self.assertIn("X11仮想デスクトップ", text)
         self.assertIn("nxn_gui_app_store.bend", text)
+        self.assertIn("nxn_gui_status_app.bend", text)
+        self.assertIn("nxn_gui_feedback_store.bend", INTERMEDIATE_GAME_FILES)
         self.assertIn("BEND2-GUI-1|20261029|0|199|END", text)
         self.assertIn("nxn_gui_app.bend", readme)
         app = (ROOT / "minesweeper" / "nxn_gui_app.bend").read_text(encoding="utf-8")
@@ -198,7 +200,7 @@ class BookStructure(unittest.TestCase):
         for name in ("nxn_lazy_game.bend", "nxn_gui_adapter.bend",
                      "nxn_gui_events.bend", "nxn_gui_render.bend", "nxn_gui_app.bend"):
             self.assertIn(name, INTERMEDIATE_GAME_FILES)
-        self.assertIn("ZIPは**99エントリ**", plan)
+        self.assertIn("ZIPは**101エントリ**", plan)
 
     def test_gui_coordinate_reference_boundaries(self):
         # Independent arithmetic oracle for the chapter's 4x4 / 64px mapping.
