@@ -629,6 +629,10 @@ def main():
             raise AssertionError("A well-typed regression incorrectly passed the proof gate:\n" + output)
         print("PASS mutation: invalid flagging implementation rejected by proofs", flush=True)
 
+    # Independently execute chapters 15/16 proof exercises in temporary copies.
+    from test_proof_exercises import verify as verify_proof_exercises
+    verify_proof_exercises()
+
     nat_verdict = run("bend", str(SAMPLES / "33_nat_induction.bend"), "--verdict")
     if "ALL PROOFS CHECK" not in nat_verdict:
         raise AssertionError(f"Natural-number induction proof failed:\\n{nat_verdict}")
