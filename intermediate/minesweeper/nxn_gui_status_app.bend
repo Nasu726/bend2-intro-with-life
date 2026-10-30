@@ -6,6 +6,7 @@ import Base
 import ./nxn_gui_history.bend as History
 import ./nxn_gui_render.bend as Render
 import ./nxn_gui_store.bend as Store
+import ./nxn_gui_feedback_store.bend as Feedback
 import ./nxn_lazy_game.bend as Lazy
 
 type State is Type:
@@ -86,38 +87,59 @@ def after_load(model: History.Model, result: History.Recovery) -> State:
     case History.Restored{restored}:
       State{restored, 2}
 
-def event(e: Event, state: State) -> IO(Maybe<State>):
+# Match Event before unpacking the State: Bend 2 does not permit a
+# later binder match beneath an earlier binder match.
+def reset_state(state: State) -> State:
   match state:
     case State{model, notice}:
-      match e:
-        case Close{}:
-          IO.pure(Maybe<State>, None{})
-        case Key{27, True{}}:
-          IO.pure(Maybe<State>, None{})
-        case Key{114, True{}}:
-          IO.pure(Maybe<State>, Some{State{History.reset(model), 0}})
-        case Key{82, True{}}:
-          IO.pure(Maybe<State>, Some{State{History.reset(model), 0}})
-        case Key{115, True{}}:
-          do IO<Maybe<State>>:
-            outcome: History.Model & Bool <- Store.save_report(model)
-            return Some{after_save(outcome)}
-        case Key{83, True{}}:
-          do IO<Maybe<State>>:
-            outcome: History.Model & Bool <- Store.save_report(model)
-            return Some{after_save(outcome)}
-        case Key{108, True{}}:
-          do IO<Maybe<State>>:
-            recovery: History.Recovery <- Store.load()
-            return Some{after_load(model, recovery)}
-        case Key{76, True{}}:
-          do IO<Maybe<State>>:
-            recovery: History.Recovery <- Store.load()
-            return Some{after_load(model, recovery)}
-        case Mouse{x, y, button, True{}}:
-          IO.pure(Maybe<State>, Some{State{History.pointer(model, x, y, button), 0}})
-        case _:
-          IO.pure(Maybe<State>, Some{State{model, notice}})
+      State{History.reset(model), 0}
+
+def pointer_state(state: State, x: U32, y: U32, button: U32) -> State:
+  match state:
+    case State{model, notice}:
+      State{History.pointer(model, x, y, button), 0}
+
+def save_state(state: State) -> IO(State):
+  match state:
+    case State{model, notice}:
+      do IO<State>:
+        outcome: History.Model & Bool <- Feedback.save_report(model)
+        return after_save(outcome)
+
+def load_state(state: State) -> IO(State):
+  match state:
+    case State{model, notice}:
+      do IO<State>:
+        recovery: History.Recovery <- Store.load()
+        return after_load(model, recovery)
+
+def resume_io(action: IO(State)) -> IO(Maybe<State>):
+  do IO<Maybe<State>>:
+    next: State <- action
+    return Some{next}
+
+def event(e: Event, state: State) -> IO(Maybe<State>):
+  match e:
+    case Close{}:
+      IO.pure(Maybe<State>, None{})
+    case Key{27, True{}}:
+      IO.pure(Maybe<State>, None{})
+    case Key{114, True{}}:
+      IO.pure(Maybe<State>, Some{reset_state(state)})
+    case Key{82, True{}}:
+      IO.pure(Maybe<State>, Some{reset_state(state)})
+    case Key{115, True{}}:
+      resume_io(save_state(state))
+    case Key{83, True{}}:
+      resume_io(save_state(state))
+    case Key{108, True{}}:
+      resume_io(load_state(state))
+    case Key{76, True{}}:
+      resume_io(load_state(state))
+    case Mouse{x, y, button, True{}}:
+      IO.pure(Maybe<State>, Some{pointer_state(state, x, y, button)})
+    case _:
+      IO.pure(Maybe<State>, Some{state})
 
 def apply_event(prev: Maybe<State>, e: Event) -> IO(Maybe<State>):
   match prev:
