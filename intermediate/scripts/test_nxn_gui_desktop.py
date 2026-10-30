@@ -150,12 +150,16 @@ def await_status(wid, former, timeout=15):
     raise AssertionError("GUI did not render a distinct S/L result marker")
 
 def verify_status_app(tmp, output):
-    binary = Path(tmp) / "nxn_status_gui"
+    # Earlier GUI smoke intentionally leaves a valid save in tmp.
+    # This acceptance uses an isolated cwd to test first-launch L.
+    work = Path(tmp) / "status-run"
+    work.mkdir()
+    binary = work / "nxn_status_gui"
     run("bend", str(STATUS_APP), "-o", str(binary), timeout=240)
-    save = Path(tmp) / "minesweeper_nxn_save.txt"
+    save = work / "minesweeper_nxn_save.txt"
     assert not save.exists()
     with (output / "status_stdout.log").open("wb") as logfile:
-        process = subprocess.Popen((str(binary),), cwd=tmp,
+        process = subprocess.Popen((str(binary),), cwd=work,
                                    stdout=logfile, stderr=subprocess.STDOUT)
         try:
             wid = find_window(process)
