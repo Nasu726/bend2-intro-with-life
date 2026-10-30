@@ -19,7 +19,9 @@ PURE = [
     ("normal", FORMAT, 1),
     ("fresh", f"BEND2-GUI-1|{SEED}|END", 300),
     ("first", f"BEND2-GUI-1|{SEED}|0|END",
-     oracle(10,10,SEED,((0,0,0),),0)),
+     oracle(10,10,SEED,((0,0,0),),99)),
+    ("first-opened-zero", f"BEND2-GUI-1|{SEED}|0|END",
+     oracle(10,10,SEED,((0,0,0),),0), 0),
     ("flag-toggle", f"BEND2-GUI-1|{SEED}|0|199|199|END", 0),
     ("before-first-flag", f"BEND2-GUI-1|{SEED}|199|0|END", 0),
     ("bad-header", f"BEND2-GUI-0|{SEED}|0|199|END", 600),
@@ -33,6 +35,7 @@ PURE = [
     ("empty-code", f"BEND2-GUI-1|{SEED}|0||199|END", 600),
     ("trailing-data", FORMAT+"|junk", 600),
     ("too-long", FORMAT+"X"*4097, 600),
+    ("too-many-commands", f"BEND2-GUI-1|{SEED}|"+"0|"*513+"END", 600),
 ]
 
 def quote_bend(s):
@@ -51,10 +54,12 @@ def pure_source(batch):
         "      0",
         "",
     ]
-    for i, (_,data,want) in enumerate(batch):
+    for i, item in enumerate(batch):
+        _,data,want,*probe = item
+        cell = probe[0] if probe else 99
         out += [
             f"def test_{i}() -> U32:",
-            f"  bool_u32(U32.is_eq(History.recovered_snapshot(Store.deserialize({quote_bend(data)}), 99), {want}))",
+            f"  bool_u32(U32.is_eq(History.recovered_snapshot(Store.deserialize({quote_bend(data)}), {cell}), {want}))",
             ""
         ]
     out += ["def main() -> U32:", "  ("+" + ".join(f"test_{i}()" for i in range(len(batch)))+" : U32)"]
@@ -88,7 +93,7 @@ def static():
     assert "History.Model{game, +newest_first, +seed}" in src
     assert "File.close(file)" in src
     assert "Words.has(" not in src and "mines:" not in src
-    assert len(PURE)==16 and len(set(x[0] for x in PURE))==16
+    assert len(PURE)==18 and len(set(x[0] for x in PURE))==18
     assert PURE[0][2]==1 and PURE[1][2]==300 and PURE[11][2]==600
     # Independent canonical parser verifies every allowed 0..199.
     def reference(text):
@@ -101,11 +106,11 @@ def static():
             seed=int(parts[1])
         except ValueError:
             return False
-        return (0<=seed<2**32 and
+        return (0<=seed<2**32 and len(parts[2:-1])<=512 and
                 all(s.isdecimal() and 0<=int(s)<200 for s in parts[2:-1]))
-    for label,data,want in PURE:
+    for label,data,want,*probe in PURE:
         assert reference(data)==(want!=600),label
-    print("PASS 16 canonical and rejected GUI File payloads",flush=True)
+    print("PASS 18 canonical and rejected GUI File payloads",flush=True)
 
 def bend_run(source_path, expected, cwd):
     env=dict(os.environ,BEND_NO_TELEMETRY="1")
@@ -149,7 +154,7 @@ def main():
         ]:
             target.write_text(payload,encoding="ascii")
             bend_run(reader,600,work)
-        print("PASS 16 Bend format cases, real File write/read, 4 corrupt-file reloads",flush=True)
+        print("PASS 18 Bend format cases, real File write/read, 4 corrupt-file reloads",flush=True)
 
 if __name__=="__main__":
     main()

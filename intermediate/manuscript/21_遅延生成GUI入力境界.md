@@ -260,7 +260,7 @@ python3 intermediate/scripts/test_nxn_gui_store.py --static-only
 python3 intermediate/scripts/test_nxn_gui_store.py
 ~~~
 
-静的検査と、Bendでの実ファイル書込・読込・破損入力の結果はそれぞれ別の検証段階です。**検証用PRのCIが成功するまではBend実行済みとは記しません。**
+18件の公開状態・保存形式のテストを用意し、初手で公開されるセル0と未公開のままのセル99を別々に照合します。また、512件を超える操作列を拒否する条件を追加しました。静的検査と、Bendでの実ファイル書込・読込・破損入力の結果はそれぞれ別の検証段階です。**検証用PRのCIが成功するまではBend実行済みとは記しません。**
 
 ### 仕組み
 

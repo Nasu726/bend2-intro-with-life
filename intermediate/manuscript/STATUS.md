@@ -4,7 +4,7 @@
 
 - 正本PR #4は検証PR #101先端db575fb0のIntermediate textbook（Bend履歴16条件、N×N推論、XeLaTeX）、Tests、Reader bundles、X11 GUIの全4ワークフロー成功を確認。3コミットの同一Git treeを1コミット 1d59a7b1 に集約し、期待SHAを指定して非強制fast-forward統合。検証PR #101は閉鎖。統合後はReader/X11/Tests/PDF layoutが成功し、Intermediate総合は再検証中。
 - 新規nxn_gui_store.bendは、シード・公開操作列のみをBEND2-GUI-1|seed|...|ENDのバージョン付きテキストで保存/復元するBend File APIの独立実装候補。0〜199コード、512操作、4096文字、版番号・END検査により不正入力をCorruptとして拒否。4097バイト読み込みで長すぎるファイルの有効プレフィックス受理を防ぐ。書込み成功時は元のアフィンなHistory.Modelを呼出側へ返す。
-- 新規test_nxn_gui_store.pyは独立Python形式オラクル16件、Bendの純粋復元16件、Bend File書込/読込、破損ファイル4件のロード拒否を検査候補として追加。第21章補稿とCIゲートを同期。**新規File機能のBend型検査・実行と全CIはまだ未確認。成功まで正本に統合しない。**
+- 新規test_nxn_gui_store.pyは独立Python形式オラクル18件、Bendの純粋復元18件、Bend File書込/読込、破損ファイル4件。さらに初手後のセル0とセル99の期待表示値を明確に分離し、512件超の操作拒否を監査のロード拒否を検査候補として追加。第21章補稿とCIゲートを同期。**新規File機能のBend型検査・実行と全CIはまだ未確認。成功まで正本に統合しない。**
 - 表紙 intermediate/cover_art.tex blob ba9b5c4cb296e3adfd119ace6b55abc419c6faf1 と既存125ページPDF・96エントリ読者ZIP・第7章Byte/File・第8章IO.now/IO.sleepを不変更。App.runのS/Lキー、X11再起動後のファイル復元、ファイル不在時のGUI内でのエラー表示、長方形・多様な盤面、23章最終校閲は未完成。
 
 ---
