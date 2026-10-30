@@ -84,8 +84,50 @@ def main() -> IO(Unit):
     IO.print(U32.show(History.recovered_snapshot(recovery,99)))
 """
 
+SESSION_WRITE = """import Base
+import ./nxn_gui_session.bend as Session
+import ./nxn_gui_history.bend as History
+def output(value: Maybe<History.Model>) -> U32:
+  match value:
+    case None{}:
+      600
+    case Some{model}:
+      History.snapshot(model, 99)
+def main() -> IO(Unit):
+  do IO<Unit>:
+    result: Maybe<History.Model> <- Session.tick(
+      [Mouse{0, 0, 0, True{}}, Mouse{319, 319, 1, True{}},
+       Key{115, True{}}], History.new(20261029))
+    IO.print(U32.show(output(result)))
+"""
+
+SESSION_LOAD = """import Base
+import ./nxn_gui_session.bend as Session
+import ./nxn_gui_history.bend as History
+def output(value: Maybe<History.Model>) -> U32:
+  match value:
+    case None{}:
+      600
+    case Some{model}:
+      History.snapshot(model, 99)
+def main() -> IO(Unit):
+  do IO<Unit>:
+    result: Maybe<History.Model> <- Session.tick(
+      [Key{108, True{}}], History.new(20261029))
+    IO.print(U32.show(output(result)))
+"""
+
 def static():
     src = STORE.read_text(encoding="utf-8")
+    session = (GAME / "nxn_gui_session.bend").read_text(encoding="utf-8")
+    app = (GAME / "nxn_gui_app.bend").read_text(encoding="utf-8")
+    assert "App.run(~History.Model" in app
+    assert "Session.view, Session.tick" in app
+    assert "Store.save(model)" in session and "Store.load()" in session
+    assert "History.pointer(model, x, y, button)" in session
+    assert "History.reset(model)" in session
+    for key in (115, 83, 108, 76):
+        assert f"Key{{{key}, True{{}}}}" in session
     assert "BEND2-GUI-1|" in src
     assert "File.write(file, text)" in src and "File.read(file, 4097)" in src
     assert "History.valid_entries(chronological)" in src
@@ -154,7 +196,16 @@ def main():
         ]:
             target.write_text(payload,encoding="ascii")
             bend_run(reader,600,work)
-        print("PASS 18 Bend format cases, real File write/read, 4 corrupt-file reloads",flush=True)
+        session_writer = work / "gui_session_write.bend"
+        session_writer.write_text(SESSION_WRITE, encoding="utf-8")
+        bend_run(session_writer, 1, work)
+        assert target.read_bytes() == FORMAT.encode("ascii")
+        session_reader = work / "gui_session_load.bend"
+        session_reader.write_text(SESSION_LOAD, encoding="utf-8")
+        bend_run(session_reader, 1, work)
+        target.write_text(f"BEND2-GUI-1|{SEED}|200|END", encoding="ascii")
+        bend_run(session_reader, 0, work)
+        print("PASS 18 Bend format cases, File I/O, 4 corrupt reloads, GUI S/L event wiring",flush=True)
 
 if __name__=="__main__":
     main()

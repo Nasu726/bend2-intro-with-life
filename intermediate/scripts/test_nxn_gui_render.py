@@ -140,9 +140,10 @@ def preflight():
     assert "Words.has(" not in renderer and "Lazy.generate(" not in renderer
     assert "App.run(" not in renderer
     assert "pixel_at(fresh_picture(), 1, 1, 128)" in renderer
-    assert "App.run(~Lazy.Game" in app
-    assert "512, 512, GUI.reset_gui(20261029)" in app
-    assert "Events.tick(events, game, 20261029)" in app
+    assert "App.run(~History.Model" in app
+    assert "Session.view, Session.tick" in app
+    assert "512, 512, History.new(20261029)" in app
+    assert "import ./nxn_gui_session.bend as Session" in app
     assert "GUI.pointer" not in renderer
     assert first_clue() in range(4)
     source, count = harness()
@@ -183,7 +184,8 @@ def main():
         directory = Path(tmp)
         for name in FILES:
             (directory / name).write_bytes((GAME / name).read_bytes())
-        for path in (ADAPTER, EVENTS, RENDER, APP):
+        for path in (ADAPTER, EVENTS, RENDER, APP, GAME / "nxn_gui_history.bend",
+                     GAME / "nxn_gui_store.bend", GAME / "nxn_gui_session.bend"):
             (directory / path.name).write_bytes(path.read_bytes())
         source, count = harness()
         path = directory / "check_gui_image.bend"

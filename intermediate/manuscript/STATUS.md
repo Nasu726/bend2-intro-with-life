@@ -1,5 +1,14 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-30：GUI S/Lイベント接続（検証候補）
+
+- 正本先端76c8af50、前回との差分0、Draft継続。正本CIはTests／Reader／X11／PDF layout成功、Intermediate textbookは確認時点で実行中。第7章Byte/Fileと第8章IO.now/IO.sleepは前回の検証結果を保持。
+- 10×10 GUIのApp.run状態をHistory.Modelへ移し、S/s保存、L/l復元、R/r履歴破棄、公開操作記録をnxn_gui_session.bendで接続。Bend File経由のS/Lイベント試験とApp.run型検査を既存Python検査へ追加。**Bend実行・X11・全CIは検証前。正本へは統合しない。**
+- 承認済み表紙blob ba9b5c4cb296e3adfd119ace6b55abc419c6faf1、TeX、125ページPDF、96エントリ読者ZIPは不変更。File不在/IO失敗時の非致命的表示、X11再起動保存復元、長方形運ゲー無し生成、全23章校閲は未完成。
+
+---
+
+
 ## 2026-10-30：10×10 GUIのFile保存・読込（検証候補）
 
 - 正本PR #4は検証PR #101先端db575fb0のIntermediate textbook（Bend履歴16条件、N×N推論、XeLaTeX）、Tests、Reader bundles、X11 GUIの全4ワークフロー成功を確認。3コミットの同一Git treeを1コミット 1d59a7b1 に集約し、期待SHAを指定して非強制fast-forward統合。検証PR #101は閉鎖。統合後はReader/X11/Tests/PDF layoutが成功し、Intermediate総合は再検証中。

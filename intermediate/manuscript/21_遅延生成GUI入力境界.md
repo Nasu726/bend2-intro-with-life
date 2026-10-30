@@ -271,3 +271,37 @@ Bendは所有権を持つHistory.Modelを直接複製できません。ファイ
 初手前で保存するとENDまでの操作列は空になります。保存ファイルを調べ、復元してもFreshのままか確かめてみましょう。続いて旗を2度操作した履歴と、順序を逆にした履歴の違いを確認してみましょう。末尾のENDを削除し、復元が拒否されるか試してみましょう。
 
 **残る接続：** これは10×10 GUIのFile保存エンジンであって、まだGUIのS/LキーやApp.run状態に配線したものではありません。実際のウィンドウで保存→終了→再起動→ロードまで確認する必要があります。既存の配布PDF・ZIPにもこの補稿は未統合です。
+
+## 2026-10-30：GUIのS/Lキーを保存エンジンへ接続する（検証候補）
+
+### 必要性
+
+File APIで保存と復元ができても、GUIが`Lazy.Game`だけを保持していると操作履歴を記録できません。そこで`App.run`の状態を`History.Model`へ変更し、クリック・R・S・Lを同じイベント処理に集約します。
+
+### 具体的なBendコード
+
+`nxn_gui_session.bend`でイベントを分岐します。S/sは`Store.save`へ、L/lは`Store.load`へ渡します。復元された履歴は`History.restore`を通して初期シードから公開操作だけを再生します。
+
+~~~bend
+def save_event(model: History.Model) -> IO(Maybe<History.Model>):
+  do IO<Maybe<History.Model>>:
+    saved: History.Model <- Store.save(model)
+    return Some{saved}
+
+def load_event(model: History.Model) -> IO(Maybe<History.Model>):
+  do IO<Maybe<History.Model>>:
+    result: History.Recovery <- Store.load()
+    return Some{recovered(result, model)}
+~~~
+
+### 実行結果と仕組み
+
+シード20261029で左上セルを開き、右下セルへ旗を立ててSを押すと、`BEND2-GUI-1|20261029|0|199|END`が保存されるはずです。別プロセスでLを押した後、セル99の可視コードは`1`になります。破損形式は読み込み時に`Corrupt`となり、直前の画面状態を保持します。新規`test_nxn_gui_store.py`のS/Lイベント経由のBend型検査・実行と、`test_nxn_gui_render.py`のApp入口型検査で確かめます。**検証CIが成功するまでは期待値であり、実機検収済みとは記しません。**
+
+GUI表示の`view`は`History.Model`をいったん分解し、`Render.view`から返されたゲームを元の履歴と組み直します。これにより描画によって履歴が消えません。Rはゲームと履歴を同時にリセットします。
+
+### 演習
+
+左クリック→右クリック→S→アプリ終了→再起動→Lを試してみましょう。次に、Rの直後にSを押して保存ファイルの操作列が空になることを確かめてみましょう。壊れた保存ファイルをLで読み込んでも現在の画面が変化しないか比べてみましょう。
+
+**残る検収：** ファイルが存在しない場合やOSによる読込・書込エラーは現行`Store.load`／`Store.save`がプロセスを終了させます。エラーのGUI内表示と、X11での実際のS/L入力・再起動復元は未検証です。検証成功後も、これらを解消するまでGUI保存機能の完成とはしません。
