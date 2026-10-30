@@ -59,7 +59,9 @@ class TestReaderBundle(unittest.TestCase):
 
     def test_nxn_gui_is_complete_learner_material(self):
         """Ship the validated lazy GUI with all relative-import dependencies."""
-        expected = ["nxn_lazy_game.bend","nxn_gui_adapter.bend","nxn_gui_events.bend","nxn_gui_render.bend","nxn_gui_app.bend"]
+        expected = ["nxn_lazy_game.bend", "nxn_gui_adapter.bend", "nxn_gui_events.bend",
+                    "nxn_gui_render.bend", "nxn_gui_app.bend", "nxn_gui_history.bend",
+                    "nxn_gui_store.bend", "nxn_gui_app_store.bend"]
         for filename in expected:
             self.assertIn(filename, INTERMEDIATE_GAME_FILES)
         with zipfile.ZipFile(ROOT / "reader-packages/bend2-intermediate-reader-preview.zip") as z:
@@ -67,6 +69,22 @@ class TestReaderBundle(unittest.TestCase):
                 name = "bend2-intermediate-reader/examples/minesweeper/" + filename
                 self.assertEqual(z.read(name),
                                  (ROOT / "intermediate/minesweeper" / filename).read_bytes())
+
+    def test_gui_save_lesson_is_replay_only(self):
+        """The shipped GUI records public actions and no internal mine truth."""
+        game = ROOT / "intermediate/minesweeper"
+        app = (game / "nxn_gui_app_store.bend").read_text(encoding="utf-8")
+        history = (game / "nxn_gui_history.bend").read_text(encoding="utf-8")
+        store = (game / "nxn_gui_store.bend").read_text(encoding="utf-8")
+        self.assertIn("Store.save(model)", app)
+        self.assertIn("Store.load()", app)
+        self.assertIn("History.pointer(model", app)
+        self.assertIn("2*cell", history)
+        self.assertIn("BEND2-GUI-1|", store)
+        self.assertIn("File.read(file, 4097)", store)
+        self.assertNotIn("mines:", store)
+        self.assertIn("Sで保存", readme("intermediate"))
+        self.assertIn("失敗の画面通知", readme("intermediate"))
 
     def test_public_three_step_is_learner_material(self):
         with zipfile.ZipFile(ROOT / "reader-packages/bend2-intermediate-reader-preview.zip") as z:
