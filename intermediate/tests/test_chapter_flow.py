@@ -60,7 +60,7 @@ class ChapterFlowTest(unittest.TestCase):
                        "原子的な保存ではありません", "X11仮想デスクトップ"):
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, chapter)
-        self.assertIn(r"\\exercise{", chapter)
+        self.assertIn(r"\exercise{", chapter)
 
     def test_reader_samples_match_bend_verified_fixtures(self):
         for name, fixture in (
