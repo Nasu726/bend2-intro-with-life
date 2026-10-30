@@ -56,6 +56,12 @@
 
 `nxn_gui_adapter.bend` の座標18件・ラッパー3件・操作列13件（CI #40781258079）と、`nxn_gui_events.bend` のイベント列16件（CI #40795728371）は型検査・Bend実行成功済み。補稿 `manuscript/21_遅延生成GUI入力境界.md` の検収契約に反映した。旧4×4 GUIの描画実装を10×10版の実機成功と混同しない。**10×10のImage描画37条件、App.run型検査、X11仮想デスクトップ操作・保存再開、TeX/PDF/ZIPへの配布統合は2026-10-30に検証済み**。物理GPU・他OS、保存失敗通知・原子的保存は未完成。
 
+## 2026-10-30：第18章のGUI検証範囲・法則の記述を配布版で修正（検証候補）
+
+[Issue #113](https://github.com/Nasu726/bend2-intro-with-life/issues/113)の指摘について、`Intermediate_Textbook.tex`第18章の「実際のマウス操作は未検証」を、10×10 GUIの**Linux X11仮想デスクトップでの有限操作・S/L保存復元・再起動復元は検証済み**に更新する候補を用意した。物理GPU・他OS、保存失敗の画面通知、原子的保存の未達は区別した。同時に初手安全と0連鎖の重複した文を整理し、演習に検証範囲の比較を追加。`tests/test_chapter_flow.py`に回帰検査を設ける。
+
+**TeX/PDF/読者ZIPの再生成と全ページ/全文/ZIP一致、5ワークフロー成功は検証PRの結果待ち。** 校閲完了や完成GUIの全環境保証を主張しない。今回のPDF/ZIP生成専用の一時ワークフロー変更は正本へ持ち込まない。表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は必ず維持する。
+
 ## 2026-10-30：第10章のネットワーク演習をコード実行で検証する
 
 第10章では既存のTCP/UDPループバック実行（`B`／`BEND-UDP`）と区切り例`44_message_boundary.bend`が配布済みです。一回の`recv`を送信全体と混同しない演習を確認するため、`scripts/test_examples.py`へ**配布コードの一時変種5件**（TCP 2件、UDP 1件、String.split 2件）のBend型検査・実行照合を追加しました。受入は検証PRのIntermediate textbook CIで判定します。環境依存の失敗やTCPの部分送信まで解消したものではありません。

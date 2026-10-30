@@ -62,6 +62,16 @@ class ChapterFlowTest(unittest.TestCase):
                 self.assertIn(phrase, chapter)
         self.assertIn(r"\exercise{", chapter)
 
+    def test_chapter18_gui_claim_matches_verified_platform_scope(self):
+        chapter = self.chapters[17][1]
+        for phrase in ("Linux X11仮想デスクトップ", "S/Lキー", "物理GPU",
+                       "他OS", "原子的な更新", "有限"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, chapter)
+        self.assertNotIn("実際のマウス操作は未検証です", chapter)
+        self.assertNotIn("完成したGUIの検証はまだ済んでいません", chapter)
+        self.assertNotIn("追加されましたが、0の連鎖公開についても", chapter)
+
     def test_reader_samples_match_bend_verified_fixtures(self):
         for name, fixture in (
             ("54_binary_chunks.bend", "binary_chunks.bend"),
