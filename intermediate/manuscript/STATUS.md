@@ -1,5 +1,29 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-30：GUI履歴の境界値と順序依存の検証を補強（PR #101）
+
+- PR #101の修正先端 `d93ab998` は Intermediate textbook、Tests、Reader bundles、X11 GUI の全4ワークフロー成功。新規14条件のBend型検査・実行は成功したが、正本統合前の監査で `valid_entries` が `entry < 20000` としており、10×10の正しい有効範囲 `0..199` を超えるコード `200..19999` を誤って受理する論理バグを発見。従来の不正値20000だけでは境界を検査できていなかった。
+- 有効コードを `entry < 200` に修正し、不正コード200と201の拒否、順序依存 `[0,199]` と `[199,0]`、リセット後の空履歴を含む計16条件へ拡張。従来の可換な和による履歴検査を順序依存の257進ダイジェストに変更。第21章補稿を実装と同期。
+- **今回の修正後のBend型検査・実行・全CIはまだ未確認**。検証PRで成功してから正本へ1コミットにまとめて統合する。表紙・TeX/PDF/ZIP・第7章Byte/File・第8章IO.now/IO.sleepは変更しない。GUI File保存・App.runキー入力接続・再起動復元は未実装。
+
+---
+
+## 2026-10-30：GUI履歴のアフィン消費エラーを修正（PR #101）
+
+- 検証PR #101先端 `6fc165ff` のCI #40983428237 は、Reader bundles・X11仮想デスクトップ・Tests・XeLaTeX・N×N公開情報推論が成功したが、Intermediate Bend examples の新規 `Verify 10x10 GUI replay history in Bend` で失敗。ログは `on_valid` の `seed (consumed more than once)`。Bendコードの `GUI.reset_gui(seed)` と `Model{..., seed}` が同じアフィン引数を二度消費していた。
+- `on_valid` の `seed` と、再生と逆順履歴生成に両方使うデータ種の `entries` を明示的な複製可能バインダ `+seed`・`+entries` に修正。CIのBend型検査・14実行照合は修正後未検証。**正本PR #4へは統合しない**。表紙、PDF、読者ZIP、第7・8章、既存GUI App.run は不変更。
+
+---
+
+## 2026-10-30：10×10 GUIの操作履歴・復元基盤（検証候補）
+
+- 正本Draft PR #4先端 `0515bc5e`、mainとの差533コミット先行・遅れ0。X11 GUI・Tests・Reader bundles・PDF layoutは成功し、Intermediate textbookの総合Bend CIは確認時点で実行中。採用表紙 `intermediate/cover_art.tex` blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は不変。配布125ページPDF・96エントリZIP、第7章Byte/File、第8章IO.now/IO.sleepにも変更なし。
+- GUI保存/復元に向け、`nxn_gui_history.bend` を追加。ゲームの地雷真値を直接保存せず、Seedと公開クリック履歴を保持する`Model`、時系列の`2*index+button`記録、無効な画面外/ボタン入力の無視、リセットで履歴破棄、有界512操作の検査を含む`restore`を実装候補として用意。
+- `test_nxn_gui_history.py` で独立Pythonの初手期待値を参照し、Fresh、画面外、中ボタン、旗のオン/オフ、復元、リセット、不正コード拒否、履歴順など14条件をBend型検査・実行するCIゲートを追加。第21章補稿を必要性→実コード→期待結果→仕組み→演習で同期。**新規14条件のBend実行・全CIはまだ未検証で、成功まで正本には統合しない。**
+- 現段階では**GUI App.runと履歴Modelの接続・File保存/読込・S/Lキー・GUI再起動後のX11復元は未実装**。この中間成果をGUI保存機能の完成と記載しない。表紙や既存配布物を触らず、検証後に次段階へ進む。
+
+---
+
 ## 2026-10-30：第21章GUI読者配布を正本統合・X11検収を最新正本へ再調停
 
 - GUI教材検証PR #97の合成先端 442513af は Intermediate textbook #40966993000、Tests #40966993014、Reader download bundles #40966993004 の全成功。検証済みtree edab3a352366b114da1ea37a43e23eccec043ff7を、正本 c846716b 上へ単一コミット 57db76b5 として期待SHA付き非強制fast-forward統合。第21章TeX、125ページPDF、96エントリZIP、学習用GUI5モジュール、配布・構造テストを同期。検証PR #97は統合済みとして閉鎖。表紙blob ba9b5c4cb296e3adfd119ace6b55abc419c6faf1 不変更。第7章Byte/Fileと第8章IO.now/IO.sleepの検証も保持。
