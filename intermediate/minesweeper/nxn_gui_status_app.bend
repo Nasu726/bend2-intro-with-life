@@ -52,18 +52,24 @@ def mark_if(show: Bool, img: Image, color: U32) -> Image:
     case True{}:
       mark1(img, color)
 
-def attach_view(pair: History.Model & Image, notice: U32) -> State & Image:
+def attach_view(pair: History.Model & Image, +notice: U32) -> State & Image:
   (model, img) = pair
   (State{model, notice},
    mark_if(U32.is_ne(notice, 0), img, notice_color(notice)))
+
+# Destructure the Render.view result in a function parameter. Directly
+# destructuring a computed result in a branch is not accepted by Bend 2.0.39.
+def with_rendered_game(pair: Lazy.Game & Image, newest_first: List<&2, U32>,
+                       seed: U32, notice: U32) -> State & Image:
+  (game, img) = pair
+  attach_view((History.Model{game, newest_first, seed}, img), notice)
 
 def view(state: State) -> State & Image:
   match state:
     case State{model, notice}:
       match model:
         case History.Model{game, newest_first, seed}:
-          (next_game, img) = Render.view(game)
-          attach_view((History.Model{next_game, newest_first, seed}, img), notice)
+          with_rendered_game(Render.view(game), newest_first, seed, notice)
 
 def after_save(pair: History.Model & Bool) -> State:
   (model, ok) = pair

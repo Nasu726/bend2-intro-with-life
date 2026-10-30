@@ -54,6 +54,11 @@ def target_for_flag():
 
 
 def preflight():
+    prototype = STATUS_APP.read_text(encoding="utf-8")
+    assert "App.run(~State" in prototype
+    assert "Store.save_report(model)" in prototype
+    assert "after_load(model, recovery)" in prototype
+    assert "mark1(img, color)" in prototype
     source = APP.read_text(encoding="utf-8")
     assert TITLE in source
     assert "History.Model" in source and "Store.save(model)" in source
