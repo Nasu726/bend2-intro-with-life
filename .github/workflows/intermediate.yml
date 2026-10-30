@@ -168,8 +168,8 @@ jobs:
           git add 'intermediate/Bend2を使いこなす_プレビュー.pdf' 'reader-packages/bend2-intermediate-reader-preview.zip'
           if git diff --cached --quiet; then
             echo 'No changed generated materials'
-          elif test "$(git log -1 --format=%s)" = 'Stage GUI reader PDF and ZIP for verification'; then
-            echo 'Generated materials already staged in the previous commit'
+          elif git log -4 --format=%s | grep -Fxq 'Stage GUI reader PDF and ZIP for verification'; then
+            echo 'Generated materials were already staged in an ancestor commit'
           else
             git commit -m 'Stage GUI reader PDF and ZIP for verification'
             git push origin "HEAD:refs/heads/$TARGET_BRANCH"
