@@ -58,18 +58,23 @@ def event(e: Event, model: History.Model) -> IO(Maybe<History.Model>):
     case _:
       IO.pure(Maybe<History.Model>, Some{model})
 
+# A do-block cannot contain a match term in Bend 2.0.39.
+# Fold IO actions in input order; after Close/Esc, skip subsequent events.
+def continue_event(e: Event, current: Maybe<History.Model>) -> IO(Maybe<History.Model>):
+  match current:
+    case None{}:
+      IO.pure(Maybe<History.Model>, None{})
+    case Some{model}:
+      event(e, model)
+
+def step(acc: IO(Maybe<History.Model>), e: Event) -> IO(Maybe<History.Model>):
+  do IO<Maybe<History.Model>>:
+    current: Maybe<History.Model> <- acc
+    continue_event(e, current)
+
 def tick(events: List<Event>, model: History.Model) -> IO(Maybe<History.Model>):
-  match events:
-    case Nil{}:
-      IO.pure(Maybe<History.Model>, Some{model})
-    case e <> rest:
-      do IO<Maybe<History.Model>>:
-        current: Maybe<History.Model> <- event(e, model)
-        match current:
-          case None{}:
-            return None{}
-          case Some{next}:
-            tick(rest, next)
+  List.foldl(~&2, ~Event, ~IO(Maybe<History.Model>), ~step,
+             events, IO.pure(Maybe<History.Model>, Some{model}))
 
 def main() -> U32:
   History.snapshot(History.new(20261029), 0)
