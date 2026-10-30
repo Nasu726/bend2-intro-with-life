@@ -124,6 +124,8 @@ def static():
     assert "App.run(~History.Model" in app
     assert "Session.view, Session.tick" in app
     assert "Store.save(model)" in session and "Store.load()" in session
+    # The App.tick callback receives affine List<&1, Event>, not copyable &2.
+    assert "List.foldl(~&1, ~Event" in session
     assert "History.pointer(model, x, y, button)" in session
     assert "History.reset(model)" in session
     for key in (115, 83, 108, 76):

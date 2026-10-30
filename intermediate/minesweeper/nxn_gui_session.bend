@@ -59,6 +59,7 @@ def event(e: Event, model: History.Model) -> IO(Maybe<History.Model>):
       IO.pure(Maybe<History.Model>, Some{model})
 
 # A do-block cannot contain a match term in Bend 2.0.39.
+# App.run delivers an affine List<&1, Event>; fold must use &1, not &2.
 # Fold IO actions in input order; after Close/Esc, skip subsequent events.
 def continue_event(e: Event, current: Maybe<History.Model>) -> IO(Maybe<History.Model>):
   match current:
@@ -73,7 +74,7 @@ def step(acc: IO(Maybe<History.Model>), e: Event) -> IO(Maybe<History.Model>):
     continue_event(e, current)
 
 def tick(events: List<Event>, model: History.Model) -> IO(Maybe<History.Model>):
-  List.foldl(~&2, ~Event, ~IO(Maybe<History.Model>), ~step,
+  List.foldl(~&1, ~Event, ~IO(Maybe<History.Model>), ~step,
              events, IO.pure(Maybe<History.Model>, Some{model}))
 
 def main() -> U32:
