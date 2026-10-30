@@ -35,13 +35,19 @@ def permit_code(ok: Bool, code: U32, tail: List<&2, U32>) ->
     case False{}:
       None{}
 
+# The parsed scalar is tested and then retained in the replay list.
+# Declare the helper's code duplicable to satisfy Bend's affine checker.
+def bounded_code(+code: U32, tail: List<&2, U32>) ->
+  Maybe<&2, Parsed>:
+  permit_code(U32.is_lt(code, 200), code, tail)
+
 def parsed_code(value: Maybe<&2, U32>, tail: List<&2, U32>) ->
   Maybe<&2, Parsed>:
   match value:
     case None{}:
       None{}
     case Some{code}:
-      permit_code(U32.is_lt(code, 200), code, tail)
+      bounded_code(code, tail)
 
 def merge_token(+token: String, suffix: Maybe<&2, Parsed>) ->
   Maybe<&2, Parsed>:
