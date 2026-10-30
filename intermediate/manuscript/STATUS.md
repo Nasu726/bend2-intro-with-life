@@ -1,5 +1,13 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-30：第21章GUI読者配布を正本統合・X11検収を最新正本へ再調停
+
+- GUI教材検証PR #97の合成先端 442513af は Intermediate textbook #40966993000、Tests #40966993014、Reader download bundles #40966993004 の全成功。検証済みtree edab3a352366b114da1ea37a43e23eccec043ff7を、正本 c846716b 上へ単一コミット 57db76b5 として期待SHA付き非強制fast-forward統合。第21章TeX、125ページPDF、96エントリZIP、学習用GUI5モジュール、配布・構造テストを同期。検証PR #97は統合済みとして閉鎖。表紙blob ba9b5c4cb296e3adfd119ace6b55abc419c6faf1 不変更。第7章Byte/Fileと第8章IO.now/IO.sleepの検証も保持。
+- 旧検証PR #91はネイティブGUIをXvfb上で実際に起動し、マウス左/右クリック、初手前無効操作、リセット、Esc終了、スクリーンショット差分を検査済み。旧先端 1754a950 の4ワークフローは成功（X11 #40847446993）。旧基準が古いためそのまま正本に統合せず、**現在の正本treeへ4ファイルのみ再調停**し、既存の検証ブランチで改めてCI実行する。GUIアプリ本体と独立Python盤面オラクルのblobが旧検証版と同一であることを確認。
+- X11補稿の古い「読者PDF/ZIPに未収録」「CI未確認」は更新し、旧CI成功と今回の再検証待ちを区別。新しい検証版が全成功するまでは正本へ統合しない。物理モニター/GPU、保存復元、長方形・多様な運ゲー無し盤面、23章の最終校閲は未完成。
+
+---
+
 ## 2026-10-30：第21章10×10初手生成GUIを読者PDF・ZIPへ配布同期（検証候補）
 
 - 正本Draft PR #4先端 c846716b の4ワークフロー（Intermediate textbook / Tests / Reader download bundles / PDF layout）は全成功。第7章Byte/Fileの24内容・順序ケースと257進指紋65,793列の検査、第8章IO.now/IO.sleepを保持。第21章のGUI Image 31+6 headless検査とApp.run入口型検査も正本CIで成功。承認表紙blob ba9b5c4cb296e3adfd119ace6b55abc419c6faf1 は不変更。
