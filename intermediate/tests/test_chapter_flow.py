@@ -53,6 +53,15 @@ class ChapterFlowTest(unittest.TestCase):
                 self.assertIn("有限", chapter)
                 self.assertIn(r"\exercise{", chapter)
 
+    def test_chapter21_gui_save_explains_verified_boundary(self):
+        chapter = self.chapters[20][1]
+        for phrase in ("nxn_gui_app_store.bend", "nxn_gui_history.bend",
+                       "nxn_gui_store.bend", "BEND2-GUI-1|20261029|0|199|END",
+                       "原子的な保存ではありません", "X11仮想デスクトップ"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, chapter)
+        self.assertIn(r"\\exercise{", chapter)
+
     def test_reader_samples_match_bend_verified_fixtures(self):
         for name, fixture in (
             ("54_binary_chunks.bend", "binary_chunks.bend"),

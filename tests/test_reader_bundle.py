@@ -84,7 +84,7 @@ class TestReaderBundle(unittest.TestCase):
         self.assertIn("File.read(file, 4097)", store)
         self.assertNotIn("mines:", store)
         self.assertIn("Sで保存", readme("intermediate"))
-        self.assertIn("エラーの画面通知", readme("intermediate"))
+        self.assertIn("失敗の画面通知", readme("intermediate"))
 
     def test_public_three_step_is_learner_material(self):
         with zipfile.ZipFile(ROOT / "reader-packages/bend2-intermediate-reader-preview.zip") as z:
