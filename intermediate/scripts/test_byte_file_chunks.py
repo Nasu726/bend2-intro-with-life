@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Real Bend File.read_bytes chunk/EOF/content regression for chapter 7.
 
-Four bounded reads include a final empty EOF read for 0..5 byte files.
+Four bounded reads observe EOF for 0..6-byte files; 7..9-byte inputs
+show why four reads alone do not establish that the file ended.
 For each chunk, an injective base-257 digest checks the ACTUAL returned bytes
 and order, rather than just checking lengths or the untouched source file.
 These are local regular files, not a short-read guarantee for all streams.
@@ -91,14 +92,15 @@ def main() -> int:
         print("PASS byte content fixture typecheck", flush=True)
         file = cwd / "sample_bytes.bin"
         families = (
-            bytes([0, 10, 13, 255, 42]),
-            bytes([42, 255, 13, 10, 0]),
-            bytes([255] * 5),
-            bytes([1, 2, 3, 4, 5]),
+            bytes([0, 10, 13, 255, 42, 0, 7, 8, 9]),
+            bytes([42, 255, 13, 10, 0, 7, 8, 9, 10]),
+            bytes([255] * 9),
+            bytes([1, 2, 3, 4, 5, 6, 7, 8, 9]),
         )
         cases = 0
         for family in families:
-            for length in range(6):
+            prefix_observations = {}
+            for length in range(10):
                 payload = family[:length]
                 file.write_bytes(payload)
                 got = run(CONTENT_FIXTURE, cwd)
@@ -119,9 +121,12 @@ def main() -> int:
                 expected = [str(value) for chunk in chunks
                             for value in (len(chunk), digest(chunk))]
                 observed = got.stdout.strip().splitlines()
-                # The fourth read must return an empty list, including for length=5.
-                if chunks[-1] != b"":
-                    raise AssertionError(f"length={length}: test did not reach EOF")
+                # The fourth read is EOF for 0..6 bytes, but not for 7..9.
+                # In particular, reading eight bytes from a nine-byte file
+                # cannot tell us that one unread byte remains.
+                if (len(chunks[-1]) == 0) != (length <= 6):
+                    raise AssertionError(
+                        f"length={length}: fourth-read EOF expectation is wrong")
                 if got.returncode or observed != expected:
                     raise AssertionError(
                         f"length={length}, payload={payload.hex()}: "
@@ -131,9 +136,17 @@ def main() -> int:
                 if file.read_bytes() != payload:
                     raise AssertionError(f"length={length}: read unexpectedly modified the file")
                 cases += 1
+                if length in (8, 9):
+                    prefix_observations[length] = observed
                 print(f"PASS byte content length={length} payload={payload.hex()} "
                       f"digests={expected[1::2]}", flush=True)
-        assert cases == 24
+            if prefix_observations[8] != prefix_observations[9]:
+                raise AssertionError(
+                    "Four bounded reads should not distinguish 8 from 9 bytes "
+                    "when the first eight bytes are identical")
+        assert cases == 40
+        print("PASS 40 byte-content cases; fourth read is EOF only for 0..6 bytes",
+              flush=True)
         file.unlink()
         missing = run(FIXTURE, cwd)
         if missing.returncode == 0:
