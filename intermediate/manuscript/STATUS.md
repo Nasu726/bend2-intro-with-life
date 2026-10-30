@@ -1,3 +1,11 @@
+## 2026-10-30：第21章GUI保存対応の配布版同期（検証ブランチ）
+
+- 正本PR #4先端 `7dc84f66` のReader・X11・Tests・PDF layout・Intermediate textbook 5ワークフローは全成功。前回のGUI File非致命的処理の正本統合を確認。採用済み表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は不変更。
+- 保存対応GUIの3モジュールを読者ZIP許可リストへ追加し、TeX第21章、読者README、パッケージREADME、配布テスト、本台帳を一体更新。保存なしGUIも残す。第7章Byte/Fileと第8章IO.now/IO.sleepは不変更。
+- **TeX・生成PDF・ZIP・Bend・X11全CIはこの検証候補について未確認。** 検証ブランチでPDF/ZIPを再生成・検収し、すべて成功した後だけ、正本先端を再確認して1コミットで反映する。原子的保存・GUIエラー表示・一般N×N運ゲー無し・全23章最終校閲は未完成。
+
+---
+
 ## 2026-10-30：PR #107の初回X11型エラーを修正（検証中）
 
 - 初回CI X11 #41023109692 はBend 2.0.39の `expected a filled definition`、`finish_open_write` を `save_if_valid` の後に定義した前方参照で停止。導入した関数を呼出側より前へ移動し、定義の依存順を整えた。**修正後の全CIは未確認で、正本へは反映しない。**

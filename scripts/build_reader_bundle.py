@@ -95,6 +95,10 @@ INTERMEDIATE_GAME_FILES = (
     "nxn_gui_events.bend",
     "nxn_gui_render.bend",
     "nxn_gui_app.bend",
+    # Chapter 21: replayable public history and File-backed S/L GUI.
+    "nxn_gui_history.bend",
+    "nxn_gui_store.bend",
+    "nxn_gui_app_store.bend",
 )
 
 def readme(track: str) -> str:
@@ -120,7 +124,8 @@ https://github.com/Nasu726/bend2-intro-with-life/tree/main/src
 PDFを読み、examples/ 内のコードを実行してください。
 初稿は執筆途中です。GUI、操作列の保存・復元、4×4・地雷2個限定の
 「運ゲー無し」盤面生成を含みます。
-ただしGUI実機確認、GUI保存、対話CLI、任意サイズの盤面生成は未完成です。
+10×10 GUIのS/Lによる保存・復元はLinux X11仮想画面で有限検証済みです。
+物理GPU・他OS、エラー表示、原子的保存、対話CLI、任意サイズの盤面生成は未完成です。
 
 公式ガイド: https://github.com/bendlang/bend/blob/main/guide/GUIDE.md
 
@@ -183,7 +188,7 @@ Linuxではlibx11-dev等の環境依存ライブラリが必要です。
 GUIのBend型検査・ネイティブコンパイル・純粋な座標処理はCI検査済みですが、
 実際のデスクトップ環境でのウィンドウ操作・見た目は別途確認してください。
 
-10×10の初手生成GUI（型検査はheadlessで検証済み、OS実機操作は未検証）:
+10×10の初手生成GUI（headless検査とLinux X11仮想画面での操作を検証済み）:
 bend examples/minesweeper/nxn_gui_render.bend
 期待結果: 8689825（初手前の左上マスの内部色。画面の描画ではありません）
 bend examples/minesweeper/nxn_gui_app.bend --check-only
@@ -191,7 +196,19 @@ bend examples/minesweeper/nxn_gui_app.bend --check-only
 bend examples/minesweeper/nxn_gui_app.bend -o minesweeper10
 ./minesweeper10
 10×10の有効範囲は左上320×320画素、ウィンドウ全体は512×512画素です。
-37件のheadless描画・旗テストは、OSでのウィンドウ操作を保証しません。
+37件のheadless描画・旗テストは、一般のOS環境での動作を保証しません。
+
+保存対応GUIを起動し、公開操作履歴をSで保存、Rでリセット、Lで復元:
+bend examples/minesweeper/nxn_gui_app_store.bend --check-only
+bend examples/minesweeper/nxn_gui_app_store.bend -o minesweeper10save
+./minesweeper10save
+保存先: 起動したディレクトリのminesweeper_nxn_save.txt
+形式: BEND2-GUI-1|seed|操作コード...|END
+操作コード=2*セル番号+ボタン（左0・右1）。0..199、最大512操作。
+初回L・破損ファイル・書込不能時にもGUIを継続しますが、
+失敗の画面通知と原子的な上書き保存は未実装です。
+X11仮想画面での操作と再起動後復元は検証済みです。
+物理GPU・他OSの実機保証ではありません。
 
 07_gui_hello.bend はウィンドウ表示が可能な環境が必要です。
 証明例: bend examples/04_flag_laws.bend --verdict
