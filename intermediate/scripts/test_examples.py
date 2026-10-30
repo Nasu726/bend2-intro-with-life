@@ -524,6 +524,38 @@ def main():
             raise AssertionError(f"{sample} expected {expected!r}; got {got!r}")
         print(f"PASS localhost networking {sample} = {got}", flush=True)
 
+    # Chapter 10 exercise variants are compiled and executed in isolated copies.
+    # This checks a real changed Bend program, not an expected-value-only oracle.
+    variants = (
+        ("47_tcp_loopback.bend", 'TCP.send(client, "B")',
+         'TCP.send(client, "7")', "7"),
+        ("47_tcp_loopback.bend", 'TCP.send(client, "B")',
+         'TCP.send(client, "BEND")', "B"),
+        ("48_udp_loopback.bend",
+         'UDP.send_to(socket, "127.0.0.1", port, "BEND-UDP")',
+         'UDP.send_to(socket, "127.0.0.1", port, "HELLO")', "HELLO"),
+        ("44_message_boundary.bend", 'String.split("ABC|DEF", Chr{124})',
+         'String.split("ABCDEF", Chr{124})', "1n"),
+        ("44_message_boundary.bend", 'String.split("ABC|DEF", Chr{124})',
+         'String.split("A|B|C", Chr{124})', "3n"),
+    )
+    with tempfile.TemporaryDirectory() as td:
+        for index, (name, before, after, expected) in enumerate(variants):
+            source = (SAMPLES / name).read_text(encoding="utf-8")
+            if source.count(before) != 1:
+                raise AssertionError(f"Exercise substitution is not unique: {name}, {before!r}")
+            copy = pathlib.Path(td) / f"chapter10_{index}.bend"
+            copy.write_text(source.replace(before, after, 1), encoding="utf-8")
+            run("bend", str(copy), "--check-only")
+            actual = run("bend", str(copy))
+            if actual != expected:
+                raise AssertionError(
+                    f"Chapter 10 exercise {index} ({name}): "
+                    f"expected {expected!r}, observed {actual!r}"
+                )
+            print(f"PASS Chapter 10 Bend exercise {index + 1}/5: "
+                  f"{name} -> {actual!r}", flush=True)
+
     # The game requirements are NOT sample-local examples: import every claim,
     # and check the independent PROOF.bend with Bend's small verified kernel.
     game = ROOT / "minesweeper"
