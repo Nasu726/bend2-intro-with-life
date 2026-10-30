@@ -60,7 +60,11 @@
 
 [Issue #113](https://github.com/Nasu726/bend2-intro-with-life/issues/113)の指摘について、`Intermediate_Textbook.tex`第18章の「実際のマウス操作は未検証」を、10×10 GUIの**Linux X11仮想デスクトップでの有限操作・S/L保存復元・再起動復元は検証済み**に更新する候補を用意した。物理GPU・他OS、保存失敗の画面通知、原子的保存の未達は区別した。同時に初手安全と0連鎖の重複した文を整理し、演習に検証範囲の比較を追加。`tests/test_chapter_flow.py`に回帰検査を設ける。
 
-**TeX/PDF/読者ZIPの再生成と全ページ/全文/ZIP一致、5ワークフロー成功は検証PRの結果待ち。** 校閲完了や完成GUIの全環境保証を主張しない。今回のPDF/ZIP生成専用の一時ワークフロー変更は正本へ持ち込まない。表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は必ず維持する。
+**検証PR #115 の a6bf99e8 で生成PDF・ZIPと組版の検収に成功。統合候補の最新CIは再検査中。** 校閲完了や完成GUIの全環境保証を主張しない。今回のPDF/ZIP生成専用の一時ワークフロー変更は正本へ持ち込まない。表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は必ず維持する。
+
+## 2026-10-30：第15・16章の証明演習の実行照合候補
+
+第15章では`hidden_is_marked`を追加した一時コピーが証明成功し、意図的に誤った`Hidden{}`分岐が証明不合格となるかを検査する。第16章では`main`の値だけを変えても法則証明が変わらないこと、帰納法の仮定行を除くと検証不能になることを別々に確認する。新規`scripts/test_proof_exercises.py`の4条件を既存`scripts/test_examples.py`へ接続する。**検証PR #114 の Intermediate textbook #41061053532・Tests #41061053905・Reader #41061053552 が全成功し、正本へ 6e4151fe として統合済み**。詳細は`manuscript/15_16_証明演習照合.md`。採用表紙・配布TeX・PDF・ZIP・配布Bendコードは不変更。
 
 ## 2026-10-30：第10章のネットワーク演習をコード実行で検証する
 
