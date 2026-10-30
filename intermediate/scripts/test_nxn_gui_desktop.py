@@ -149,6 +149,19 @@ def await_status(wid, former, timeout=15):
         time.sleep(0.2)
     raise AssertionError("GUI did not render a distinct S/L result marker")
 
+def await_status_color(wid, expected, timeout=15):
+    # Mouse clicks can clear the marker before the next key event is handled.
+    # Wait for the exact target RGB, not merely a change from a stale color.
+    until = time.monotonic() + timeout
+    last = None
+    while time.monotonic() < until:
+        last = status_pixel(wid)
+        if last == expected:
+            return last
+        time.sleep(0.2)
+    raise AssertionError(f"GUI marker never reached {expected}: last={last}")
+
+
 def verify_status_app(tmp, output):
     # Verify the *meaning* of all four colors, not just four distinct pixels.
     # Each S/L outcome must leave the playable 10x10 image unchanged.
@@ -218,11 +231,55 @@ def verify_status_app(tmp, output):
             assert not list(save.iterdir()), "Failed save modified the directory"
             check_board("06_failed_save")
 
+            # A blank board would not detect an accidental reset. Exercise
+            # failed S/L again after opening a real cell, then verify that a
+            # successful save and reload restores that same revealed board.
+            click(wid, 16, 16, 1)
+            opened_board = await_screen(
+                wid, fresh_board, output / "status_07_opened.png", True
+            )
+            await_status_color(wid, initial)
+
+            def check_opened_board(label):
+                current = shot(wid, output / f"status_{label}.png")
+                if distinct(current, opened_board):
+                    raise AssertionError(f"{label}: S/L changed revealed cells")
+
+            press(wid, "l")  # directory at the save path: read failure
+            await_status_color(wid, colors["load-failed"])
+            assert process.poll() is None and save.is_dir()
+            check_opened_board("08_failed_load_revealed")
+
+            press(wid, "s")  # same directory: write failure
+            await_status_color(wid, colors["save-failed"])
+            assert process.poll() is None and save.is_dir()
+            assert not list(save.iterdir())
+            check_opened_board("09_failed_save_revealed")
+
+            save.rmdir()
+            press(wid, "s")
+            await_status_color(wid, colors["save-ok"])
+            # The earlier R discarded the pre-first-click right press (1).
+            # This save must contain only the subsequent left press (0).
+            observed_history = save.read_text(encoding="utf-8")
+            assert observed_history == f"BEND2-GUI-1|{SEED}|0|END", (
+                f"Reset failed to discard old inputs: {observed_history!r}"
+            )
+            check_opened_board("10_saved_revealed")
+
+            press(wid, "r")
+            await_status_color(wid, initial)
+            check_board("11_reset_after_reveal")
+            press(wid, "l")
+            await_status_color(wid, colors["load-ok"])
+            check_opened_board("12_restored_revealed")
+
             press(wid, "Escape")
             process.wait(timeout=15)
             assert process.returncode == 0
             print("PASS X11 S/L exact amber/green/blue/red pixels, "
-                  "unchanged board and nonfatal File failures", flush=True)
+                  "fresh/revealed board preservation, directory failures "
+                  "and public-history restore", flush=True)
         finally:
             if process.poll() is None:
                 process.terminate()
