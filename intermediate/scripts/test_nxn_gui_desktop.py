@@ -17,7 +17,7 @@ from PIL import Image, ImageChops
 from test_nxn_lazy_game import placed
 
 ROOT = Path(__file__).resolve().parents[1]
-APP = ROOT / "minesweeper" / "nxn_gui_app.bend"
+APP = ROOT / "minesweeper" / "nxn_gui_app_store.bend"
 SEED = 20261029
 TITLE = "Minesweeper 10x10"
 
@@ -54,7 +54,10 @@ def target_for_flag():
 
 
 def preflight():
-    assert TITLE in APP.read_text(encoding="utf-8")
+    source = APP.read_text(encoding="utf-8")
+    assert TITLE in source
+    assert "History.Model" in source and "Store.save(model)" in source
+    assert "Store.load()" in source and "History.pointer(model" in source
     for n in (2, 3, 10):
         for first in (0, n * n - 1):
             for count in (0, n * n - 1):
@@ -137,7 +140,7 @@ def main():
         output = Path(os.environ.get("GUI_SMOKE_SCREENSHOTS", tmp))
         output.mkdir(parents=True, exist_ok=True)
         with (output / "native_stdout.log").open("wb") as logfile:
-            process = subprocess.Popen((str(binary),), cwd=ROOT.parent,
+            process = subprocess.Popen((str(binary),), cwd=tmp,
                                        stdout=logfile, stderr=subprocess.STDOUT)
             try:
                 wid = find_window(process)
@@ -152,16 +155,63 @@ def main():
                 print("PASS left-click visibly reveals a safe first cell", flush=True)
                 index = target_for_flag()
                 click(wid, (index % 10) * 32 + 16, (index // 10) * 32 + 16, 3)
-                await_screen(wid, opened, output / "03_flagged.png", True)
+                flagged = await_screen(wid, opened, output / "03_flagged.png", True)
                 print("PASS right-click visibly flags a hidden tile", flush=True)
+                press(wid, "s")
+                save = Path(tmp) / "minesweeper_nxn_save.txt"
+                # The pre-first right click is a valid public no-op, retained in history.
+                expected = f"BEND2-GUI-1|{SEED}|1|0|{2 * index + 1}|END"
+                until = time.monotonic() + 15
+                observed = None
+                while time.monotonic() < until:
+                    if save.is_file():
+                        observed = save.read_text()
+                        if observed == expected:
+                            break
+                    if process.poll() is not None:
+                        raise AssertionError("GUI exited while saving history")
+                    time.sleep(0.1)
+                if observed != expected:
+                    raise AssertionError(
+                        f"S key save mismatch: expected={expected!r}, observed={observed!r}")
                 press(wid, "r")
                 await_screen(wid, fresh, output / "04_reset.png", False)
                 print("PASS reset restores initial screen", flush=True)
+                press(wid, "l")
+                await_screen(wid, flagged, output / "05_loaded.png", False)
+                print("PASS L key restores identical visible game", flush=True)
+                press(wid, "r")
+                await_screen(wid, fresh, output / "06_reset_again.png", False)
+                save.write_text("BEND2-GUI-1|20261029|200|END")
+                press(wid, "l")
+                await_screen(wid, fresh, output / "07_corrupt_ignored.png", False)
+                print("PASS corrupt transcript leaves current GUI untouched", flush=True)
+                save.write_text(expected)
                 press(wid, "Escape")
                 process.wait(timeout=15)
                 if process.returncode != 0:
                     raise AssertionError(f"Escape exit code: {process.returncode}")
                 print("PASS Escape exits the native X11 application", flush=True)
+                # Restart in the same working directory: only the on-disk
+                # public replay may carry state across processes.
+                second = subprocess.Popen((str(binary),), cwd=tmp,
+                                          stdout=logfile, stderr=subprocess.STDOUT)
+                try:
+                    wid2 = find_window(second)
+                    second_fresh = shot(wid2, output / "08_restart_fresh.png")
+                    if distinct(second_fresh, fresh):
+                        raise AssertionError("Restart should begin Fresh before L")
+                    press(wid2, "l")
+                    await_screen(wid2, flagged, output / "09_restart_loaded.png", False)
+                    press(wid2, "Escape")
+                    second.wait(timeout=15)
+                    if second.returncode != 0:
+                        raise AssertionError(f"Restart exit code: {second.returncode}")
+                    print("PASS X11 restart + L replays saved public inputs", flush=True)
+                finally:
+                    if second.poll() is None:
+                        second.terminate()
+                        second.wait(timeout=5)
             finally:
                 if process.poll() is None:
                     process.terminate()
