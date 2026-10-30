@@ -28,10 +28,12 @@ def cases():
         ("restore-first", f"H.recovered_snapshot(H.restore({SEED}, [0]), 0)",
          oracle(10,10,SEED,((0,0,0),),0)),
         ("restore-fresh", f"H.recovered_snapshot(H.restore({SEED}, Nil{{}}), 0)", 300),
-        ("reject-outside", f"H.recovered_snapshot(H.restore({SEED}, [20000]), 0)", 600),
-        ("reject-outside-middle", f"H.recovered_snapshot(H.restore({SEED}, [0, 20001]), 0)", 600),
+        ("reject-outside", f"H.recovered_snapshot(H.restore({SEED}, [200]), 0)", 600),
+        ("reject-outside-middle", f"H.recovered_snapshot(H.restore({SEED}, [0, 201]), 0)", 600),
         ("reset-clears", f"H.snapshot(H.reset({flagged}), 0)", 300),
-        ("history-order", f"sum_codes(H.history({flagged}))", 199),
+        ("history-order", f"ordered_digest(H.history({flagged}), 0)", 457),
+        ("restore-order", f"H.recovered_snapshot(H.restore({SEED}, [199, 0]), 99)", 0),
+        ("reset-history", f"ordered_digest(H.history(H.reset({flagged})), 0)", 0),
     ]
 
 
@@ -50,12 +52,12 @@ def generated(batch):
         "def equals(a: U32, b: U32) -> U32:",
         "  bit(U32.is_eq(a, b))",
         "",
-        "def sum_codes(xs: List<&2, U32>) -> U32:",
+        "def ordered_digest(xs: List<&2, U32>, acc: U32) -> U32:",
         "  match xs:",
         "    case Nil{}:",
-        "      0",
+        "      acc",
         "    case x <> rest:",
-        "      (x + sum_codes(rest) : U32)",
+        "      ordered_digest(rest, (acc * 257 + x + 1 : U32))",
         "",
     ]
     for i, (_, expression, expected) in enumerate(batch):
@@ -71,15 +73,17 @@ def static_checks():
     assert "type Model is Type:" in source
     assert "newest_first: List<&2, U32>" in source
     assert "def restore(" in source and "def history(" in source
-    assert "U32.is_lt(entry, 20000)" in source
+    assert "U32.is_lt(entry, 200)" in source
     assert "512n" in source
     assert "Lazy.generate(" not in source
     assert "Words.has(" not in source and "mines:" not in source
-    assert len(cases()) == 14
-    assert len({label for label, *_ in cases()}) == 14
+    assert len(cases()) == 16
+    assert len({label for label, *_ in cases()}) == 16
     assert cases()[4][2] != 300
     assert cases()[6][2] == 1 and cases()[7][2] == 0
-    print("PASS 14 independent GUI history expectations and static guard", flush=True)
+    assert cases()[13][2] == 457 and cases()[14][2] == 0
+    assert cases()[10][2] == 600 and cases()[11][2] == 600
+    print("PASS 16 independent GUI history expectations and static guard", flush=True)
 
 
 def run(path, expected):
@@ -110,7 +114,7 @@ def main():
             sample = directory / f"gui_history_{start}.bend"
             sample.write_text(generated(group), encoding="utf-8")
             run(sample, len(group))
-    print("PASS 14 GUI history Bend replay checks (no disk I/O or OS window)", flush=True)
+    print("PASS 16 GUI history Bend replay checks (no disk I/O or OS window)", flush=True)
 
 
 if __name__ == "__main__":

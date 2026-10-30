@@ -66,7 +66,7 @@ def valid_entries(entries: List<&2, U32>) -> Bool:
     case Nil{}:
       True{}
     case entry <> rest:
-      Bool.and(U32.is_lt(entry, 20000), valid_entries(rest))
+      Bool.and(U32.is_lt(entry, 200), valid_entries(rest))
 
 def on_valid(valid: Bool, +entries: List<&2, U32>, +seed: U32) -> Recovery:
   match valid:
@@ -76,6 +76,7 @@ def on_valid(valid: Bool, +entries: List<&2, U32>, +seed: U32) -> Recovery:
       Restored{Model{replay(entries, GUI.reset_gui(seed)),
                      List.reverse(&2, U32, entries), seed}}
 
+# Valid codes are 0..199: 100 cells times two buttons. Reject 200 and above.
 # Serialized data is chronological. Maximum 512 input actions per save.
 # A rejected transcript never gets partially applied.
 def restore(+seed: U32, +entries: List<&2, U32>) -> Recovery:

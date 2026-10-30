@@ -1,5 +1,13 @@
 # 中級書の執筆監査・統合計画（2026-10-16）
 
+## 2026-10-30：GUI履歴の境界値と順序依存の検証を補強（PR #101）
+
+- PR #101の修正先端 `d93ab998` は Intermediate textbook、Tests、Reader bundles、X11 GUI の全4ワークフロー成功。新規14条件のBend型検査・実行は成功したが、正本統合前の監査で `valid_entries` が `entry < 20000` としており、10×10の正しい有効範囲 `0..199` を超えるコード `200..19999` を誤って受理する論理バグを発見。従来の不正値20000だけでは境界を検査できていなかった。
+- 有効コードを `entry < 200` に修正し、不正コード200と201の拒否、順序依存 `[0,199]` と `[199,0]`、リセット後の空履歴を含む計16条件へ拡張。従来の可換な和による履歴検査を順序依存の257進ダイジェストに変更。第21章補稿を実装と同期。
+- **今回の修正後のBend型検査・実行・全CIはまだ未確認**。検証PRで成功してから正本へ1コミットにまとめて統合する。表紙・TeX/PDF/ZIP・第7章Byte/File・第8章IO.now/IO.sleepは変更しない。GUI File保存・App.runキー入力接続・再起動復元は未実装。
+
+---
+
 ## 2026-10-30：GUI履歴のアフィン消費エラーを修正（PR #101）
 
 - 検証PR #101先端 `6fc165ff` のCI #40983428237 は、Reader bundles・X11仮想デスクトップ・Tests・XeLaTeX・N×N公開情報推論が成功したが、Intermediate Bend examples の新規 `Verify 10x10 GUI replay history in Bend` で失敗。ログは `on_valid` の `seed (consumed more than once)`。Bendコードの `GUI.reset_gui(seed)` と `Model{..., seed}` が同じアフィン引数を二度消費していた。
