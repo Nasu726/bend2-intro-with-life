@@ -33,6 +33,29 @@ def digest(chunk: bytes) -> int:
     return value
 
 
+def validate_chunk_output(payload: bytes, lines: list[str], *, reads: int = 6) -> None:
+    """Compare bounded File.read_bytes output with an independent byte oracle.
+
+    Each read reports two canonical decimal lines: actual length, base-257
+    fingerprint. This finite oracle assumes a regular file read in 2-byte
+    chunks, as exercised by the chapter-7 Bend fixture; it is not a stream
+    short-read guarantee.
+    """
+    if reads < 1:
+        raise ValueError("reads must be positive")
+    if len(lines) != 2 * reads or any(
+        not line.isascii() or not line.isdecimal() or len(line) > 5
+        or (len(line) > 1 and line[0] == "0")
+        for line in lines
+    ):
+        raise AssertionError(f"Expected {2 * reads} canonical decimal lines, got {lines!r}")
+    chunks = [payload[offset:offset + 2] for offset in range(0, 2 * reads, 2)]
+    expected = [value for chunk in chunks for value in (len(chunk), digest(chunk))]
+    observed = [int(line) for line in lines]
+    if observed != expected:
+        raise AssertionError(f"Expected {expected}, got {observed}")
+
+
 def length_from_digest(value: int) -> int:
     """Independent oracle for the <=2-byte digest length intervals."""
     if value == 0:
@@ -121,7 +144,7 @@ def main() -> int:
                         raise AssertionError("Fingerprint cannot recover bounded chunk length")
                 expected = [str(value) for chunk in chunks
                             for value in (len(chunk), digest(chunk))]
-                observed = got.stdout.strip().splitlines()
+                observed = got.stdout.splitlines()
                 # A zero-length read, not a fixed number of calls, observes EOF.
                 # Four/five/six calls can consume at most 8/10/12 bytes.
                 if (len(chunks[3]) == 0) != (length <= 6):
@@ -133,12 +156,18 @@ def main() -> int:
                 if (len(chunks[5]) == 0) != (length <= 10):
                     raise AssertionError(
                         f"length={length}: sixth-read EOF expectation is wrong")
-                if got.returncode or observed != expected:
+                if got.returncode:
                     raise AssertionError(
                         f"length={length}, payload={payload.hex()}: "
-                        f"expected {expected}, got {observed}; "
-                        f"exit={got.returncode}, stderr={got.stderr!r}"
+                        f"Bend exited {got.returncode}; stderr={got.stderr!r}"
                     )
+                try:
+                    validate_chunk_output(payload, observed)
+                except AssertionError as exc:
+                    raise AssertionError(
+                        f"length={length}, payload={payload.hex()}: {exc}; "
+                        f"stderr={got.stderr!r}"
+                    ) from exc
                 if file.read_bytes() != payload:
                     raise AssertionError(f"length={length}: read unexpectedly modified the file")
                 cases += 1
