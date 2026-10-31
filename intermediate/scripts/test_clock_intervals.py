@@ -3,6 +3,7 @@
 
 These are finite observations on the CI host, not a timing precision proof.
 We verify monotonic timestamps and loose minimum waits, not exact 20/100 ms.
+The pure validator is separately regression-tested without Bend.
 """
 from pathlib import Path
 import os
@@ -29,6 +30,33 @@ def run(*args: str) -> tuple[subprocess.CompletedProcess[str], float]:
     return result, wall_ms
 
 
+def validate_readings(lines: list[str], wall_ms: float, trial: int) -> list[int]:
+    """Validate six raw Bend timestamps against a monotonic process clock.
+
+    The lower bounds are deliberately loose and specific to the finite CI
+    acceptance test. They are not OS-independent sleep guarantees.
+    """
+    if len(lines) != 6 or not all(s.isascii() and s.isdecimal() for s in lines):
+        raise AssertionError(
+            f"trial={trial}: expected six ASCII Nat clock readings, got {lines!r}"
+        )
+    stamps = [int(s) for s in lines]
+    if any(left > right for left, right in zip(stamps, stamps[1:])):
+        raise AssertionError(f"trial={trial}: clock moved backwards: {stamps}")
+    elapsed = [stamps[1] - stamps[0], stamps[3] - stamps[2],
+               stamps[5] - stamps[4]]
+    # The zero-wait observation has no minimum. In particular, do not require
+    # exact equality for any of the three requested sleep durations.
+    if elapsed[1] < 10 or elapsed[2] < 50:
+        raise AssertionError(f"trial={trial}: sleep appears ignored: {elapsed}")
+    if not (0 <= wall_ms < float("inf")) or sum(elapsed) > wall_ms + 1000:
+        raise AssertionError(
+            f"trial={trial}: Bend durations {elapsed} incompatible with "
+            f"process wall time {wall_ms:.1f}ms"
+        )
+    return elapsed
+
+
 def main() -> int:
     if not shutil.which("bend"):
         raise AssertionError("Bend 2 is required for clock verification")
@@ -43,26 +71,12 @@ def main() -> int:
     for trial in range(3):
         result, wall_ms = run()
         lines = result.stdout.strip().splitlines()
-        if result.returncode or len(lines) != 6 or not all(s.isascii() and s.isdecimal() for s in lines):
+        if result.returncode:
             raise AssertionError(
-                f"trial={trial}: expected six Nat clock readings, "
-                f"got {lines!r}; exit={result.returncode}; stderr={result.stderr!r}"
+                f"trial={trial}: Bend exited {result.returncode}; "
+                f"stdout={result.stdout!r}; stderr={result.stderr!r}"
             )
-        stamps = [int(s) for s in lines]
-        if any(left > right for left, right in zip(stamps, stamps[1:])):
-            raise AssertionError(f"trial={trial}: clock moved backwards: {stamps}")
-        elapsed = [stamps[1] - stamps[0], stamps[3] - stamps[2],
-                   stamps[5] - stamps[4]]
-        # Allow substantial scheduling/clock-resolution variation. A request
-        # to wait is not an exact-time guarantee; these loose bounds detect
-        # a completely ignored sleep in the observed Linux run.
-        if elapsed[1] < 10 or elapsed[2] < 50:
-            raise AssertionError(f"trial={trial}: sleep appears ignored: {elapsed}")
-        if sum(elapsed) > wall_ms + 1000:
-            raise AssertionError(
-                f"trial={trial}: Bend durations {elapsed} exceed "
-                f"process wall time {wall_ms:.1f}ms"
-            )
+        elapsed = validate_readings(lines, wall_ms, trial)
         print(f"PASS clock trial={trial} waits=0/20/100ms observed={elapsed}", flush=True)
     return 0
 
