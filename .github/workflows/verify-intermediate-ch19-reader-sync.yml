@@ -5,6 +5,7 @@ on:
     paths:
       - 'intermediate/Intermediate_Textbook.tex'
       - '.github/workflows/verify-intermediate-ch19-reader-sync.yml'
+      - 'intermediate/COMPLETION_PLAN.md'
 permissions:
   contents: write
 jobs:
