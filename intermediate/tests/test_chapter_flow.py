@@ -109,10 +109,20 @@ class ChapterFlowTest(unittest.TestCase):
         self.assertNotIn("これは色だけの通知", readme)
         self.assertNotIn("失敗の画面通知、原子的", readme)
 
+    def test_chapter19_two_cell_lesson_is_runnable(self):
+        chapter = self.chapters[18][1]
+        for phrase in ("56_atomic_two_cells.bend", "Array.atomic.add(array, 1, 7)",
+                       "順次実行の観測", "物理GPU", "二回目の更新先を1番から0番"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, chapter)
+        self.assertIn(r"\sample{56_atomic_two_cells.bend}", chapter)
+        self.assertIn(r"\exercise{", chapter)
+
     def test_reader_samples_match_bend_verified_fixtures(self):
         for name, fixture in (
             ("54_binary_chunks.bend", "binary_chunks.bend"),
             ("55_clock_intervals.bend", "clock_intervals.bend"),
+            ("56_atomic_two_cells.bend", "atomic_two_cells.bend"),
         ):
             with self.subTest(sample=name):
                 self.assertEqual(

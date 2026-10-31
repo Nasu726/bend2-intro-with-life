@@ -131,6 +131,9 @@ def main() -> None:
     source = SOURCE.read_text(encoding="utf-8")
     verify_static(source)
     pair_source = PAIR_SOURCE.read_text(encoding="utf-8")
+    distributed_pair = ROOT / "src" / "56_atomic_two_cells.bend"
+    if distributed_pair.read_bytes() != PAIR_SOURCE.read_bytes():
+        raise AssertionError("Distributed chapter 19 sample must equal Bend-verified two-cell fixture")
     verify_pair_static(pair_source)
     if sys.argv[1:] == ["--static-only"]:
         return

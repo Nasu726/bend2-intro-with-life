@@ -43,6 +43,7 @@ EXPECTED = {
     "42_module_board.bend": "11",
     "44_message_boundary.bend": "2n",
     "51_atomic_counter.bend": "8",
+    "56_atomic_two_cells.bend": "12",
     "52_pair_exists.bend": "5",
     "49_map_update_delete.bend": "9",
     "50_set_from_list.bend": "2n",
@@ -430,6 +431,10 @@ def main():
     if atomic_output.splitlines() != ["5", "8"]:
         raise AssertionError(f"Array.atomic.add old/new mismatch: {atomic_output!r}")
     print("PASS Array.atomic.add returns previous value 5, then Array.get returns 8", flush=True)
+    two_cell_output = run("bend", str(SAMPLES / "56_atomic_two_cells.bend"))
+    if two_cell_output.splitlines() != ["5", "5", "8", "12"]:
+        raise AssertionError(f"Two-cell atomic.add returned unexpected four lines: {two_cell_output!r}")
+    print("PASS two-cell atomic.add old values 5/5 and final cells 8/12", flush=True)
 
     with tempfile.TemporaryDirectory() as td:
         # An existing longer save must be replaced, not merely overwritten

@@ -57,6 +57,7 @@ INTERMEDIATE_EXAMPLES = (
     "51_atomic_counter.bend", "52_pair_exists.bend",
     "53_chan_poll.bend",
     "54_binary_chunks.bend", "55_clock_intervals.bend",
+    "56_atomic_two_cells.bend",
 )
 
 # Runnable 4x4 replay lesson and its exact relative-import dependencies.
@@ -128,7 +129,7 @@ PDFを読み、examples/ 内のコードを実行してください。
 初稿は執筆途中です。GUI、操作列の保存・復元、4×4・地雷2個限定の
 「運ゲー無し」盤面生成を含みます。
 10×10 GUIのS/Lによる保存・復元・成否通知はLinux X11仮想画面で有限検証済みです。
-物理GPU・他OS、原子的保存、色以外の通知、対話CLI、任意サイズの盤面生成は未完成です。
+物理GPU・他OS、原子的保存、スクリーンリーダー通知、対話CLI、任意サイズの盤面生成は未完成です。
 
 公式ガイド: https://github.com/bendlang/bend/blob/main/guide/GUIDE.md
 
@@ -140,6 +141,9 @@ bend examples/54_binary_chunks.bend
 時計の生の値と0/20/100ms待機を比較:
 bend examples/55_clock_intervals.bend
 期待結果: 6行の自然数。時刻そのものは毎回変わります。
+順次atomic.addで二つのセルの更新前と更新後を確かめる:
+bend examples/56_atomic_two_cells.bend
+期待結果: 5、5、8、12（4行）。GPUや並列競合を検証した例ではありません。
 4×4盤面のCLIリプレイ実習（対話入力ではなく引数を一括指定）:
 bend examples/minesweeper/cli_replay.bend c0 f1 c1
 操作 c番号=左クリック、f番号=旗、r=リセット。
@@ -186,7 +190,7 @@ bend examples/minesweeper/nxn_public_pair_gap.bend
 10×10保存・読込の成否を画面右端のタイルで表示するGUI（任意で選択）:
 bend examples/minesweeper/nxn_gui_status_app.bend -o minesweeper10status
 ./minesweeper10status
-S成功は緑、L成功は青、S失敗は赤、L失敗は橙。色だけの表示です。
+S成功は緑1個、L成功は青2個、S失敗は赤3個、L失敗は橙4個の四角で表示します。
 保存データはminesweeper_nxn_save.txt。旧版nxn_gui_app_store.bendも残します。
 
 4×4マインスイーパーのGUIをネイティブビルドして起動:
