@@ -1,9 +1,10 @@
 import Base
 
 # This test fixture checks each bounded read's length AND byte order.
-# Five bounded reads distinguish EOF from an unobserved suffix.
-# A fifth read distinguishes 8 from 9 bytes; even five reads cannot
-# distinguish 10 from 11 bytes with an identical first ten bytes.
+# Six bounded reads distinguish EOF from an unobserved suffix.
+# The fifth distinguishes 8 from 9 bytes, and the sixth distinguishes
+# 10 from 11. Even six reads cannot distinguish 12 from 13 bytes
+# when the first twelve bytes are identical.
 # A two-byte chunk has an injective base-257 fingerprint when each
 # byte is encoded as byte+1. The length is printed separately.
 # Maximum value: 256*257+256 = 66048, safely within U32.
@@ -33,13 +34,27 @@ def report_chunk(bytes: List<&2, U32>) -> IO(Unit):
     Unit <- IO.print(U32.show(length))
     IO.print(U32.show(digest))
 
-def after_fifth(result: File & Result<&1, &1, U32 & String, List<&2, U32>>) -> IO(Unit):
+def after_sixth(result: File & Result<&1, &1, U32 & String, List<&2, U32>>) -> IO(Unit):
   (file, status) = result
   match status:
     case Done{bytes}:
       do IO<Unit>:
         Unit <- File.close(file)
         report_chunk(bytes)
+    case Fail{error}:
+      do IO<Unit>:
+        Unit <- File.close(file)
+        IO.die(Unit, 1, "sixth byte read failed")
+
+def after_fifth(result: File & Result<&1, &1, U32 & String, List<&2, U32>>) -> IO(Unit):
+  (file, status) = result
+  match status:
+    case Done{bytes}:
+      do IO<Unit>:
+        Unit <- report_chunk(bytes)
+        sixth: File & Result<&1, &1, U32 & String, List<&2, U32>> <-
+          File.read_bytes(file, 2)
+        after_sixth(sixth)
     case Fail{error}:
       do IO<Unit>:
         Unit <- File.close(file)

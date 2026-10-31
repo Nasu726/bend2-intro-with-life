@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Real Bend File.read_bytes chunk/EOF/content regression for chapter 7.
 
-Four reads observe EOF for 0..6-byte regular files; five reads do so for
-0..8 bytes. Equal observed prefixes (8/9 and 10/11) show why neither
-fixed read count establishes EOF for arbitrary file sizes.
+Four reads observe EOF for 0..6-byte regular files; five for 0..8 and
+six for 0..10. Equal prefixes (8/9, 10/11, 12/13) show why no fixed
+read count establishes EOF for arbitrary file sizes.
 For each chunk, an injective base-257 digest checks the ACTUAL returned bytes
 and order, rather than just checking lengths or the untouched source file.
 These are local regular files, not a short-read guarantee for all streams.
@@ -67,7 +67,7 @@ def main() -> int:
     verify_fingerprint()
     fixture_source = CONTENT_FIXTURE.read_text(encoding="utf-8")
     chunk_body = fixture_source.split("def report_chunk(", 1)[1].split(
-        "\ndef after_fifth(", 1
+        "\ndef after_sixth(", 1
     )[0]
     # Bend IO/do expects monadic patterns. Pure shared lets must precede it.
     if not (chunk_body.index("+digest =") < chunk_body.index("+length =")
@@ -93,19 +93,19 @@ def main() -> int:
         print("PASS byte content fixture typecheck", flush=True)
         file = cwd / "sample_bytes.bin"
         families = (
-            bytes([0, 10, 13, 255, 42, 0, 7, 8, 9, 10, 11]),
-            bytes([42, 255, 13, 10, 0, 7, 8, 9, 10, 11, 12]),
-            bytes([255] * 11),
-            bytes(range(1, 12)),
+            bytes([0, 10, 13, 255, 42, 0, 7, 8, 9, 10, 11, 12, 13]),
+            bytes([42, 255, 13, 10, 0, 7, 8, 9, 10, 11, 12, 13, 14]),
+            bytes([255] * 13),
+            bytes(range(1, 14)),
         )
         cases = 0
         for family in families:
             prefix_observations = {}
-            for length in range(12):
+            for length in range(14):
                 payload = family[:length]
                 file.write_bytes(payload)
                 got = run(CONTENT_FIXTURE, cwd)
-                chunks = [payload[offset:offset + 2] for offset in (0, 2, 4, 6, 8)]
+                chunks = [payload[offset:offset + 2] for offset in (0, 2, 4, 6, 8, 10)]
                 if family == families[0]:
                     # The distributed chapter-7 sample must still behave exactly
                     # like the original four-length reader, unchanged in the ZIP.
@@ -123,13 +123,16 @@ def main() -> int:
                             for value in (len(chunk), digest(chunk))]
                 observed = got.stdout.strip().splitlines()
                 # A zero-length read, not a fixed number of calls, observes EOF.
-                # Four calls can consume at most eight bytes; five at most ten.
+                # Four/five/six calls can consume at most 8/10/12 bytes.
                 if (len(chunks[3]) == 0) != (length <= 6):
                     raise AssertionError(
                         f"length={length}: fourth-read EOF expectation is wrong")
                 if (len(chunks[4]) == 0) != (length <= 8):
                     raise AssertionError(
                         f"length={length}: fifth-read EOF expectation is wrong")
+                if (len(chunks[5]) == 0) != (length <= 10):
+                    raise AssertionError(
+                        f"length={length}: sixth-read EOF expectation is wrong")
                 if got.returncode or observed != expected:
                     raise AssertionError(
                         f"length={length}, payload={payload.hex()}: "
@@ -139,7 +142,7 @@ def main() -> int:
                 if file.read_bytes() != payload:
                     raise AssertionError(f"length={length}: read unexpectedly modified the file")
                 cases += 1
-                if length in (8, 9, 10, 11):
+                if length in (8, 9, 10, 11, 12, 13):
                     prefix_observations[length] = observed
                 print(f"PASS byte content length={length} payload={payload.hex()} "
                       f"digests={expected[1::2]}", flush=True)
@@ -150,13 +153,20 @@ def main() -> int:
             if prefix_observations[8] == prefix_observations[9]:
                 raise AssertionError(
                     "Fifth read must distinguish 8 from 9 bytes by observing EOF")
-            if prefix_observations[10] != prefix_observations[11]:
+            if prefix_observations[10][:10] != prefix_observations[11][:10]:
                 raise AssertionError(
                     "Five bounded reads must not distinguish 10 from 11 bytes "
                     "when the first ten bytes are identical")
-        assert cases == 48
-        print("PASS 48 byte-content cases; fourth-read EOF for 0..6, "
-              "fifth-read EOF for 0..8", flush=True)
+            if prefix_observations[10] == prefix_observations[11]:
+                raise AssertionError(
+                    "Sixth read must distinguish 10 from 11 bytes by observing EOF")
+            if prefix_observations[12] != prefix_observations[13]:
+                raise AssertionError(
+                    "Six bounded reads must not distinguish 12 from 13 bytes "
+                    "when the first twelve bytes are identical")
+        assert cases == 56
+        print("PASS 56 byte-content cases; fourth-read EOF for 0..6, "
+              "fifth-read EOF for 0..8, sixth-read EOF for 0..10", flush=True)
         file.unlink()
         missing = run(FIXTURE, cwd)
         if missing.returncode == 0:
