@@ -1,8 +1,8 @@
-## 2026-10-31：第21章GUI成否通知の読者配布（検証候補）
+## 2026-10-31：第21章GUI成否通知の読者配布（検証済み）
 
-- 保存・読込成功／失敗を画面右端に4色で示す`nxn_gui_status_app.bend`と、`History.Model & Bool`を返す`nxn_gui_feedback_store.bend`を学習者ZIPへ追加。第21章の必要性→起動コード→色の結果→実装の仕組み→演習と同期する。
-- 既存`nxn_gui_app_store.bend`および純粋な盤面計算は維持する。通知付きGUIはLinux X11仮想環境で有限検証済み。色だけの表示、物理GPU/他OS、原子的保存は未完成である。
-- **検証ブランチでPDFとZIPを再生成・照合し、Bend/X11/Reader/Testsの全CI成功後だけ正本へ反映する。**
+- S/L成功／失敗を画面右端に**4色と32×32四角1〜4個の個数**で示す`nxn_gui_status_app.bend`と、`History.Model & Bool`を返す`nxn_gui_feedback_store.bend`は101エントリの学習者ZIPへ収録済み。第21章の必要性→起動コード→観察結果→仕組み→演習に対応する。
+- 既存`nxn_gui_app_store.bend`と純粋な盤面計算は維持する。通知付きGUIの**色と個数**はLinux X11仮想デスクトップで有限検証済み。ただし色に依存しない図形の手掛かりは音声読み上げを意味せず、スクリーンリーダー、物理GPU・他OS、原子的保存は未検証／未実装である。
+- **検証済み**：PR #119 のBend／X11／Reader／Tests 4ワークフローとPDF/ZIP一致が成功し、同一treeを正本コミット [`3fefecbf`](https://github.com/Nasu726/bend2-intro-with-life/commit/3fefecbf60d2c8f21a58a70f9c47989e3306f513) に統合。以下の古い行の「未検証」は当時の記録であり、現在地はこの項目で判断する。
 
 ---
 
@@ -37,14 +37,14 @@
 | `Pair`, `Sigma`, `Exists`, `Or` | 第5・第16章 | `52_pair_exists.bend` | PairとExistsの構築・値の取り出しを実習。`n=2`の証拠は一般全称証明ではない。`Or`と複雑な依存型の演習は今後 |
 | `Kind`, `Quant`, 消去引数 | 第5・第16章 | 追加実習 | 型エラーとの対比 |
 | `IO`, `IO.try`, `IO.die` | 第6章＋[詳細補稿](manuscript/06_IOと失敗を読む.md)（PDFに一部反映、残りは補稿） | `08_args.bend` | 失敗時の終了コード |
-| `File`（文字列・バイト） | 第7章と第21章（保存・復元） | `12_file_write.bend`、`13_file_read.bend`、`45_binary_file.bend`、`minesweeper/cli_save.bend` | 文字列・バイト列の保存と閉鎖、実ファイルの `00 0A 0D FF` 照合。大容量の反復読取・GUI保存は未完成 |
+| `File`（文字列・バイト） | 第7章と第21章（保存・復元） | `12_file_write.bend`、`13_file_read.bend`、`45_binary_file.bend`、`minesweeper/cli_save.bend` | 文字列・バイト列の保存と閉鎖、実ファイルの `00 0A 0D FF` 照合。10×10 GUIのS/L保存・再読込はX11有限検証済み。大容量の反復読取・原子的保存は未完了 |
 | 引数・環境変数・乱数・時刻 | 第8章 | `08_args.bend`、`11_random_io.bend`、`19_environment.bend`、`46_elapsed_clock.bend` | IO.now/sleepの実行検証。経過時間を固定せず数値形式を照合 |
 | `Process.run` | 第8章 | `20_process_run.bend` | Linuxでの終了コード実行例。stderr・失敗は今後 |
 | `IO.fork/join`, `Chan` | 第9章 | `21_io_fork.bend`、`28_chan_roundtrip.bend`、`53_chan_poll.bend` | fork/join、送受信・close、空の受信/送信後のPollを実行照合。閉鎖後の受信・送信待機・取消は今後 |
 | `IO.within`, `Poll` | 第9章（時間切れ・仕事の非取消・Ready/Waitを型に沿って解説） | `29_io_within.bend`、`53_chan_poll.bend` | withinのSome/None処理は型検査済み。Pollは空のWaitと9のReady{Some}を実行照合済み。閉鎖後のReady{None}、try_sendの待機、時間の競合は未検証 |
 | TCP/UDP/Socket/Listener | 第10章（TCPとUDPのローカル送受信実習を追加） | `27_tcp_connect.bend`、`47_tcp_loopback.bend`、`48_udp_loopback.bend` | 127.0.0.1でlisten/connect/accept/send/recv、UDP.bind/send_to/recv_fromとcloseを実行検査。長文フレーミング、外部ネットワーク、UDP損失の実機検査は今後 |
 | `Image`, `Pix`, `Qua` | 第11章を改稿（図・最小コード・出力・演習） | `31_image_quadrants.bend`、`07_gui_hello.bend` | 四分木の左上色を実行検査。ウィンドウ実機表示は別検査 |
-| `App`, `Event`, `Window` | 第12章で8×8座標から4×4 GUIへ、第21章で初手生成10×10 GUIのview/tickと公開情報Imageへ接続 | `07_gui_hello.bend`、`23_cell_hit_test.bend`、`32_mouse_events.bend`、`minesweeper/gui.bend`、`nxn_gui_adapter.bend`、`nxn_gui_events.bend`、`nxn_gui_render.bend`、`nxn_gui_app.bend` | 4×4 GUIの型検査・Linuxネイティブビルド・13件のheadless入力、10×10 GUIの描画31条件＋旗6条件とApp.run入口型検査は成功。10×10ネイティブビルド・OS実機操作・GUI保存は未検収 |
+| `App`, `Event`, `Window` | 第12章で8×8座標から4×4 GUIへ、第21章で初手生成10×10 GUIのview/tickと公開情報Imageへ接続 | `07_gui_hello.bend`、`23_cell_hit_test.bend`、`32_mouse_events.bend`、`minesweeper/gui.bend`、`nxn_gui_adapter.bend`、`nxn_gui_events.bend`、`nxn_gui_render.bend`、`nxn_gui_app.bend` | 4×4 GUIの型検査・Linuxネイティブビルド・13件のheadless入力、10×10 GUIの描画31条件＋旗6条件とApp.run入口型検査は成功。10×10ネイティブビルドとLinux X11仮想デスクトップでの入力・S/L保存・再読込・色と個数通知を有限検証済み。物理GPU・他OS・音声通知は未検証 |
 | `Audio` | 第20章 | `26_audio_open.bend` | open/write/closeの型検査。実機での再生確認は今後 |
 | `law`, `Equal`, 帰納法 | 第15〜18章を再構成（入門的な法則→Boolの全称証明→Nat帰納法→盤面不変条件） | `04_flag_laws.bend`、`14_local_inference.bend`、`22_result_and_game.bend`、`24_bool_proofs.bend`、`33_nat_induction.bend` | Natについての帰納法を `--verdict` で新たに検査。依存型・一般の補題は今後 |
 | `@unsafe`, 外部信頼境界 | 第18・20章 | 追加実習 | 証明検査の境界 |
