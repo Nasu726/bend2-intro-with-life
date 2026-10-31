@@ -59,12 +59,12 @@
 | 16マスArray・地雷マスク・隣接地雷数・境界検査 | `minesweeper/LESSON.md`に解説草稿（第13・17章に一部統合） | `minesweeper/board4.bend`、`LAWS.bend`、`PROOF.bend` | 地雷マスク不変・空盤面の数字・具体的な数字・配列外操作の8法則を証明。Python独立オラクルで154ケースを実行。一般の隣接数の全称証明、公開時の安全判定は未完成 |
 | 旗の基本操作・局所法則 | 第13・15・17章 | `09_minesweeper_status.bend`, `04_flag_laws.bend`, `34_mine_mask_law.bend` | 最小の地雷マスク不変と旗ビット変更を `--verdict` で検査。全盤面の他条件は別途 |
 | クリック・旗・敗北・勝利の純粋ゲーム進行（G-02/G-03部分） | `minesweeper/LESSON.md`に追記（第17・21章に一部統合） | `minesweeper/session.bend`・`LAWS.bend`・`PROOF.bend` | 7法則を証明。初手と0領域の処理を別モジュールへ追加。43法則を先行宣言し、Bend検査と独立オラクルを利用。GUIの実機動作は未検証 |
-| 通常版マインスイーパー（GUI統合） | 第21章に固定4×4 GUIと初手生成10×10 GUIの責任分離・起動方法・公開情報Image・Array.clone・演習を収録 | `minesweeper/start.bend`、`cli_replay.bend`、`gui.bend`、`nxn_lazy_game.bend`、`nxn_gui_app.bend`（10×10関連5モジュールを読者ZIPに収録） | 4×4 GUIの13件の純粋入力検査とLinuxネイティブビルド、10×10 GUIのheadless描画37条件とApp.run型検査が成功。OS上の10×10クリック試験・GUI保存復元は未了。固定CLI操作履歴保存は別途検証済み |
+| 通常版マインスイーパー（GUI統合） | 第21章に固定4×4 GUIと初手生成10×10 GUIの責任分離・起動方法・公開情報Image・Array.clone・演習を収録 | `minesweeper/start.bend`、`cli_replay.bend`、`gui.bend`、`nxn_lazy_game.bend`、`nxn_gui_app.bend`（10×10関連5モジュールを読者ZIPに収録） | 4×4 GUIの13件の純粋入力検査とLinuxネイティブビルド、10×10 GUIのheadless描画37条件とApp.run型検査が成功。Linux X11仮想デスクトップで10×10のクリック・旗・リセット・S/L保存復元・再起動後復元・色＋四角個数の通知を有限検証済み。物理GPU・他OS・スクリーンリーダーは未検証、原子的保存は未実装。固定CLI操作履歴保存も別途検証済み |
 | 運ゲー無し版 | 第22章に公開モデル120候補、実際に勝利まで追う限定版生成を収録 | `14_local_inference.bend`、`minesweeper/public_solver.bend`、`minesweeper/noguess_generator.bend`、`solutions/noguess_reference.py` | 公開情報だけを使うBendソルバーは独立13ケース照合、限定版生成はBendゲームで勝利しPython別実装でも `40960 / 0,12,14` を検証。Python参考検証器を全120配置・1,680件の0連鎖で独立照合し、不正公開情報と探索上限も検査。これはBendの全称証明ではない。一般サイズ・GUIへの導入は未了 |
 
 ## CIの判定範囲
 
-`intermediate.yml`は、上記の**存在する**Bendコードを型検査し、純粋関数のサンプルについて期待値を照合し、`law`の判定を確認します。GUIコードは型検査に限定します。XeLaTeXで原稿を組版しPDFを成果物としてアップロードします。
+`intermediate.yml`は、上記の**存在する**Bendコードを型検査し、純粋関数のサンプルについて期待値を照合し、`law`の判定を確認します。GUIコードの型検査に加え、Linux X11仮想デスクトップで10×10ウィンドウのクリック・旗・S/L保存復元・通知を有限の入力列で実機検査します。物理GPU・他OS・スクリーンリーダーは対象外で、原子的保存は未実装です。XeLaTeXで原稿を組版しPDFを成果物としてアップロードします。
 
 **未実装項目をCIの合格だけで実装済みと見なしてはいけません。** 最終的には、すべての機能群に独立して実行できる学習サンプルとテストを追加する方針です。
 
