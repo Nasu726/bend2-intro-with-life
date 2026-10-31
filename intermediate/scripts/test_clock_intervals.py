@@ -36,9 +36,13 @@ def validate_readings(lines: list[str], wall_ms: float, trial: int) -> list[int]
     The lower bounds are deliberately loose and specific to the finite CI
     acceptance test. They are not OS-independent sleep guarantees.
     """
-    if len(lines) != 6 or not all(s.isascii() and s.isdecimal() for s in lines):
+    if len(lines) != 6 or not all(
+        isinstance(s, str) and 1 <= len(s) <= 128 and s.isascii()
+        and s.isdecimal() and (len(s) == 1 or s[0] != "0")
+        for s in lines
+    ):
         raise AssertionError(
-            f"trial={trial}: expected six ASCII Nat clock readings, got {lines!r}"
+            f"trial={trial}: expected six canonical ASCII Nat clock readings, got {lines!r}"
         )
     stamps = [int(s) for s in lines]
     if any(left > right for left, right in zip(stamps, stamps[1:])):
@@ -49,10 +53,12 @@ def validate_readings(lines: list[str], wall_ms: float, trial: int) -> list[int]
     # exact equality for any of the three requested sleep durations.
     if elapsed[1] < 10 or elapsed[2] < 50:
         raise AssertionError(f"trial={trial}: sleep appears ignored: {elapsed}")
-    if not (0 <= wall_ms < float("inf")) or sum(elapsed) > wall_ms + 1000:
+    # Include gaps between measurement pairs. Checking only sum(elapsed)
+    # misses an impossible jump between two otherwise valid sleep intervals.
+    if not (0 <= wall_ms < float("inf")) or stamps[-1] - stamps[0] > wall_ms + 1000:
         raise AssertionError(
-            f"trial={trial}: Bend durations {elapsed} incompatible with "
-            f"process wall time {wall_ms:.1f}ms"
+            f"trial={trial}: Bend clock span {stamps[-1] - stamps[0]} "
+            f"incompatible with process wall time {wall_ms:.1f}ms"
         )
     return elapsed
 

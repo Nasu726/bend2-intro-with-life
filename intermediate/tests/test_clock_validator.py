@@ -57,6 +57,20 @@ class ClockValidatorTest(unittest.TestCase):
             with self.subTest(wall=wall), self.assertRaisesRegex(AssertionError, "incompatible"):
                 clock.validate_readings(valid, wall, 8)
 
+    def test_rejects_unmeasured_gap_between_pairs(self):
+        # The three sleep intervals total 120 ms, but the first-to-last
+        # timestamp span is 100120 ms: the old sum-only test accepted it.
+        with self.assertRaisesRegex(AssertionError, "incompatible"):
+            clock.validate_readings(["0", "0", "100000", "100020", "100020", "100120"], 200, 9)
+
+    def test_rejects_noncanonical_or_oversized_nat_output(self):
+        valid = ["0", "0", "0", "20", "20", "120"]
+        for bad in ("00", "020", " ", "+0", "9" * 129, None, 20):
+            corrupted = valid.copy()
+            corrupted[3] = bad
+            with self.subTest(bad=repr(bad)[:32]), self.assertRaises(AssertionError):
+                clock.validate_readings(corrupted, 500, 10)
+
 
 if __name__ == "__main__":
     unittest.main()
