@@ -1,0 +1,224 @@
+name: Intermediate textbook
+on:
+  pull_request:
+    paths:
+      - 'intermediate/**'
+      - 'scripts/build_reader_bundle.py'
+      - 'tests/test_reader_bundle.py'
+      - '.github/workflows/intermediate.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'intermediate/**'
+      - '.github/workflows/intermediate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bend-examples:
+    name: Intermediate Bend examples
+    runs-on: ubuntu-24.04
+    # The full legacy Bend/proof/oracle gate exceeded 25 minutes on GitHub Actions.
+    # Keep every check; allow the full finite regression suite to finish.
+    timeout-minutes: 55
+    env:
+      BEND_NO_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check structural coverage
+        run: python3 -m unittest discover -s intermediate/tests -v
+      - name: Validate chapter 3-4 exercise variants without Bend
+        run: python3 intermediate/scripts/test_collection_exercises.py --static-only
+      - name: Validate chapter 19 atomic.add exercise variants without Bend
+        run: python3 intermediate/scripts/test_atomic_exercises.py --static-only
+      - name: Validate lazy-placement Python invariants before Bend install
+        run: python3 intermediate/scripts/test_nxn_lazy_game.py --python-only
+      - name: Validate N x N GUI pixel routing before Bend install
+        run: python3 intermediate/scripts/test_nxn_gui_adapter.py --static-only
+      - name: Validate GUI event dispatch before Bend install
+        run: python3 intermediate/scripts/test_nxn_gui_events.py --static-only
+      - name: Validate 10x10 GUI replay history before Bend install
+        run: python3 intermediate/scripts/test_nxn_gui_history.py --static-only
+      - name: Validate versioned 10x10 GUI File payloads
+        run: python3 intermediate/scripts/test_nxn_gui_store.py --static-only
+      - name: Validate GUI Image view and App.run structure before Bend install
+        run: python3 intermediate/scripts/test_nxn_gui_render.py --static-only
+      - name: Audit constructive N x N no-guess evidence without Bend
+        run: python3 intermediate/scripts/test_nxn_noguess_constructive.py --static-only
+      - name: Audit quarter-density N x N no-guess evidence
+        run: python3 intermediate/scripts/test_nxn_noguess_density.py --static-only
+      - name: Install Bend 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://bend-lang.com/install.sh -o /tmp/install-bend.sh
+          sh /tmp/install-bend.sh
+          echo "$HOME/.bend/bin" >> "$GITHUB_PATH"
+      - name: Install Lean 4 proof kernel prerequisite
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o /tmp/elan-init.sh
+          sh /tmp/elan-init.sh -y --default-toolchain leanprover/lean4:v4.34.0 --no-modify-path
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+          "$HOME/.elan/bin/lean" --version
+      - name: Check Bend compiler version
+        run: bend version
+      - name: Verify N x N active click and flag transitions
+        run: python3 intermediate/scripts/test_nxn_step.py
+      - name: Verify N x N active-session victory predicate
+        run: python3 intermediate/scripts/test_nxn_victory.py
+      - name: Verify N x N terminal-state controller
+        run: python3 intermediate/scripts/test_nxn_terminal.py
+      - name: Verify N x N integrated first-click and terminal game
+        run: python3 intermediate/scripts/test_nxn_game.py
+      - name: Verify N x N bounded zero cascade (active session)
+        run: python3 intermediate/scripts/test_nxn_flood.py
+      - name: Verify N=10 two-region playthrough against independent BFS
+        run: python3 intermediate/scripts/test_nxn_playthrough.py
+      - name: Verify N x N full first-click, flood and terminal transitions
+        run: python3 intermediate/scripts/test_nxn_full_game.py
+      - name: Verify first-click-generated N x N play
+        run: python3 intermediate/scripts/test_nxn_lazy_game.py
+      - name: Verify lazy N x N GUI pixel and button controller
+        run: python3 intermediate/scripts/test_nxn_gui_adapter.py
+      - name: Verify N x N GUI event dispatch
+        run: python3 intermediate/scripts/test_nxn_gui_events.py
+      - name: Verify 10x10 GUI replay history in Bend
+        run: python3 intermediate/scripts/test_nxn_gui_history.py
+      - name: Verify versioned 10x10 GUI save and reload using Bend File API
+        run: python3 intermediate/scripts/test_nxn_gui_store.py
+      - name: Verify headless 10x10 GUI Image and typecheck App.run
+        run: python3 intermediate/scripts/test_nxn_gui_render.py
+      - name: Verify constructive N x N no-guess Bend board and replay
+        run: python3 intermediate/scripts/test_nxn_noguess_constructive.py
+      - name: Verify quarter-density N x N Bend generator
+        run: python3 intermediate/scripts/test_nxn_noguess_density.py
+      - name: Verify N x N first-click relocation
+        run: python3 intermediate/scripts/test_nxn_relocate.py
+      - name: Verify N x N non-wrapping ordered neighbor frontier
+        run: python3 intermediate/scripts/test_nxn_neighbors.py
+      - name: Verify N x N Fresh-to-Active first click
+        run: python3 intermediate/scripts/test_nxn_start.py
+      - name: Verify bounded binary File reads and EOF
+        run: python3 intermediate/scripts/test_byte_file_chunks.py
+      - name: Verify IO.now clock ordering and bounded sleeps
+        run: python3 intermediate/scripts/test_clock_intervals.py
+      - name: Typecheck, run and verify proof examples
+        run: python3 intermediate/scripts/test_examples.py
+      - name: Execute chapter 3-4 exercise variants in Bend
+        run: python3 intermediate/scripts/test_collection_exercises.py
+      - name: Typecheck and execute chapter 19 atomic.add exercise variants
+        run: python3 intermediate/scripts/test_atomic_exercises.py
+      - name: Verify N x N Bend clues against independent coordinates
+        run: python3 intermediate/scripts/test_nxn_clues.py
+      - name: Verify N x N Bend geometry against independent coordinates
+        run: python3 intermediate/scripts/test_nxn_geometry.py
+      - name: Compile native C and execute JavaScript target
+        run: python3 intermediate/scripts/test_targets.py
+
+  intermediate-pdf:
+    name: Intermediate XeLaTeX PDF
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+      - name: Compile the intermediate textbook
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: intermediate/Intermediate_Textbook.tex
+          latexmk_use_xelatex: true
+          texlive_version: '2025'
+          os: debian
+          extra_system_packages: fonts-noto-cjk fonts-noto-core
+      - name: Check TeX layout and font warnings
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOG='Intermediate_Textbook.log'
+          if test -s intermediate/Intermediate_Textbook.log; then LOG='intermediate/Intermediate_Textbook.log'; fi
+          test -s "$LOG"
+          if grep -nE 'Overfull|Underfull|LaTeX Font Warning|LaTeX Warning' "$LOG"; then
+            echo 'TeX layout/compatibility warnings detected' >&2
+            exit 1
+          fi
+      - name: Prepare intermediate PDF
+        shell: bash
+        run: |
+          if test -s Intermediate_Textbook.pdf; then
+            cp Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          else
+            cp intermediate/Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          fi
+      - name: Build intermediate learner ZIP
+        run: python3 scripts/build_reader_bundle.py intermediate
+      - name: Ensure ZIP contains only permitted learner materials
+        run: python3 -m unittest discover -s tests -p 'test_reader_bundle.py' -v
+      - uses: actions/upload-artifact@v4
+        with:
+          name: intermediate-reader-materials
+          path: |
+            intermediate/Bend2を使いこなす_プレビュー.pdf
+            reader-packages/bend2-intermediate-reader-preview.zip
+      - name: Install PDF text comparison utility
+        if: github.event_name == 'pull_request'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
+      - name: Verify committed PDF and learner ZIP match the sources
+        if: github.event_name == 'pull_request'
+        run: python3 intermediate/scripts/check_bundle_consistency.py
+
+  public-inference:
+    name: N x N public-information inference (Bend)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      BEND_NO_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Bend 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://bend-lang.com/install.sh -o /tmp/install-bend.sh
+          sh /tmp/install-bend.sh
+          echo "$HOME/.bend/bin" >> "$GITHUB_PATH"
+      - name: Check Bend compiler version
+        run: bend version
+      - name: Verify zero-clue public safe neighbors
+        run: python3 intermediate/scripts/test_nxn_zero_inference.py
+      - name: Verify certified single-clue public deductions
+        run: python3 intermediate/scripts/test_nxn_public_local.py
+      - name: Verify Python certificate steps with Bend local inference
+        run: python3 intermediate/scripts/test_nxn_single_clue_witness_bridge.py
+      - name: Verify three-clue Bend fixed-point propagation
+        run: python3 intermediate/scripts/test_nxn_public_three_fixpoint.py
+      - name: Verify four-clue Bend fixed-point propagation
+        run: python3 intermediate/scripts/test_nxn_public_four_fixpoint.py
+      - name: Verify variable-number Bend fixed-point propagation
+        run: python3 intermediate/scripts/test_nxn_public_many_fixpoint.py
+      - name: Verify two-clue public subset deductions
+        run: python3 intermediate/scripts/test_nxn_public_subset.py
+      - name: Verify real public-pair subset gap witnesses
+        run: python3 intermediate/scripts/test_nxn_public_pair_gap.py
+      - name: Verify arbitrary-overlap two-clue public deductions
+        run: python3 intermediate/scripts/test_nxn_public_overlap.py
+      - name: Verify bounded three-clue public deductions
+        run: python3 intermediate/scripts/test_nxn_public_three_small.py
+      - name: Verify N x N public-only unknown-neighbor extraction
+        run: python3 intermediate/scripts/test_nxn_public_neighbors.py
+      - name: Verify public unknown neighbors mapped to six-bit masks
+        run: python3 intermediate/scripts/test_nxn_public_six_mask.py
+      - name: Verify public three-clue masks and bounded Bend inference together
+        run: python3 intermediate/scripts/test_nxn_public_three_bridge.py

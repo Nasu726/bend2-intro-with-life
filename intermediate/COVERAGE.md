@@ -1,0 +1,188 @@
+## 2026-10-31：第21章GUI成否通知の読者配布（検証済み）
+
+- S/L成功／失敗を画面右端に**4色と32×32四角1〜4個の個数**で示す`nxn_gui_status_app.bend`と、`History.Model & Bool`を返す`nxn_gui_feedback_store.bend`は101エントリの学習者ZIPへ収録済み。第21章の必要性→起動コード→観察結果→仕組み→演習に対応する。
+- 既存`nxn_gui_app_store.bend`と純粋な盤面計算は維持する。通知付きGUIの**色と個数**はLinux X11仮想デスクトップで有限検証済み。ただし色に依存しない図形の手掛かりは音声読み上げを意味せず、スクリーンリーダー、物理GPU・他OS、原子的保存は未検証／未実装である。
+- **検証済み**：PR #119 のBend／X11／Reader／Tests 4ワークフローとPDF/ZIP一致が成功し、同一treeを正本コミット [`3fefecbf`](https://github.com/Nasu726/bend2-intro-with-life/commit/3fefecbf60d2c8f21a58a70f9c47989e3306f513) に統合。以下の古い行の「未検証」は当時の記録であり、現在地はこの項目で判断する。
+
+---
+
+## 2026-10-30：保存対応10×10 GUIの第21章配布候補
+
+- `nxn_gui_app_store.bend`、`nxn_gui_history.bend`、`nxn_gui_store.bend` を既存の10×10 GUI依存ファイルとともに読者ZIPの許可リストへ追加する。S/L/R/Esc、公開履歴のFile保存、復元、破損拒否、失敗時の盤面維持を第21章TeXとREADMEへ同期する。
+- 正本 `7dc84f66` でBend 2.0.39のファイル入出力とX11仮想デスクトップでの保存→リセット→復元、ファイル不在・書込不能、再起動後復元は検証済み。物理GPU・他OS、原子的保存、エラーの画面通知、一般N×N運ゲー無し版は未完成。
+- **この配布版のTeX組版、PDF/ZIP再生成、許可リスト、全CIは検証PRで確認するまで未検証。** 全成功まで正本へ統合しない。採用済み表紙は変更しない。
+
+---
+
+# 中級編 機能カバレッジと検証記録
+
+本書の最優先目標は、入門編で深く扱わなかったBend 2の機能を体系的に理解し、使えるようになることです。**マインスイーパーで使用しない機能も省きません。**
+
+この表は執筆・検証の管理記録です。単に本文に名前が出たこと、コードに掲載されたこと、型検査を通過したこと、実機動作したこと、形式的証明されたことは、それぞれ別です。
+
+- **説明**：本文で引数・返り値・制約・使用方法に触れています。
+- **例**：`intermediate/src/`にコードがあります。
+- **検証**：CIが型検査・実行照合などを行います。実機のGUI・音声・ネットワークは含めません。
+- **追加実習**：本の初稿ではまだAPI名と制約の説明が中心で、次の改訂で実例を補強する必要があります。
+
+| 機能群 | 本文 | コード | 追加すべき実習・検査 |
+|---|---|---|---|
+| `Nat`, `U32`, `F32`, `Word`, `Cmp` | 第2・23章を改稿（型を選ぶ必要性と変換を具体化） | `37_u32_dimension.bend` ほか | Nat→U32変換と大小比較を実行検査。F32/Wordの丸め・境界値は今後 |
+| `String`, `Char` | 第2章を改稿（設定行の分割・数値変換） | `15_string_parse.bend`、`35_string_fields.bend` | trim/U32.readとsplitの件数を実行照合。joinと文字境界は今後 |
+| `List`, 高階関数と畳み込み | 第3章を全面改稿（map/filter/sort/foldの目的と結果を比較） | `03_list.bend`、`17_list_pipeline.bend`、`38_list_sort.bend`、`40_list_map.bend` | map・sort・filter・foldを型検査と結果照合で確認。安定ソート・巨大入力性能は対象外 |
+| `Array` 操作、`fork/join/clone` | 第3章を改稿（更新・to_list・cloneの用途を比較） | `18_array_mutations.bend`、`30_array_clone.bend`、`39_array_to_list.bend` | new/set/get・clone・to_listの結果を照合。共有時の競合とfork/joinの実機検証は今後 |
+| `Map`（文字列キー） | 第4章を改稿（存在・既定値・上書き・削除を区別） | `02_map.bend`、`16_map_set_api.bend`、`36_map_missing.bend`、`49_map_update_delete.bend` | Map.has/get/set/del/sizeの組み合わせを実行照合。キー順と複雑な値型は今後 |
+| `Set` | 第4章（重複するListとの相互変換を追加） | `01_set.bend`、`05_marking.bend`、`16_map_set_api.bend`、`50_set_from_list.bend` | 追加・重複・削除・サイズ・from_list/to_listを照合。変換後のキー順は保証しない |
+| `Maybe`, `Result`, `Either` | 第5・第6章 | `15_string_parse.bend`、`22_result_and_game.bend`、`25_either_case.bend` | Maybe/Result/Eitherの独立例。失敗と二者択一を区別 |
+| `Pair`, `Sigma`, `Exists`, `Or` | 第5・第16章 | `52_pair_exists.bend` | PairとExistsの構築・値の取り出しを実習。`n=2`の証拠は一般全称証明ではない。`Or`と複雑な依存型の演習は今後 |
+| `Kind`, `Quant`, 消去引数 | 第5・第16章 | 追加実習 | 型エラーとの対比 |
+| `IO`, `IO.try`, `IO.die` | 第6章＋[詳細補稿](manuscript/06_IOと失敗を読む.md)（PDFに一部反映、残りは補稿） | `08_args.bend` | 失敗時の終了コード |
+| `File`（文字列・バイト） | 第7章と第21章（保存・復元） | `12_file_write.bend`、`13_file_read.bend`、`45_binary_file.bend`、`minesweeper/cli_save.bend` | 文字列・バイト列の保存と閉鎖、実ファイルの `00 0A 0D FF` 照合。10×10 GUIのS/L保存・再読込はX11有限検証済み。大容量の反復読取・原子的保存は未完了 |
+| 引数・環境変数・乱数・時刻 | 第8章 | `08_args.bend`、`11_random_io.bend`、`19_environment.bend`、`46_elapsed_clock.bend` | IO.now/sleepの実行検証。経過時間を固定せず数値形式を照合 |
+| `Process.run` | 第8章 | `20_process_run.bend` | Linuxでの終了コード実行例。stderr・失敗は今後 |
+| `IO.fork/join`, `Chan` | 第9章 | `21_io_fork.bend`、`28_chan_roundtrip.bend`、`53_chan_poll.bend` | fork/join、送受信・close、空の受信/送信後のPollを実行照合。閉鎖後の受信・送信待機・取消は今後 |
+| `IO.within`, `Poll` | 第9章（時間切れ・仕事の非取消・Ready/Waitを型に沿って解説） | `29_io_within.bend`、`53_chan_poll.bend` | withinのSome/None処理は型検査済み。Pollは空のWaitと9のReady{Some}を実行照合済み。閉鎖後のReady{None}、try_sendの待機、時間の競合は未検証 |
+| TCP/UDP/Socket/Listener | 第10章（TCPとUDPのローカル送受信実習を追加） | `27_tcp_connect.bend`、`47_tcp_loopback.bend`、`48_udp_loopback.bend` | 127.0.0.1でlisten/connect/accept/send/recv、UDP.bind/send_to/recv_fromとcloseを実行検査。長文フレーミング、外部ネットワーク、UDP損失の実機検査は今後 |
+| `Image`, `Pix`, `Qua` | 第11章を改稿（図・最小コード・出力・演習） | `31_image_quadrants.bend`、`07_gui_hello.bend` | 四分木の左上色を実行検査。ウィンドウ実機表示は別検査 |
+| `App`, `Event`, `Window` | 第12章で8×8座標から4×4 GUIへ、第21章で初手生成10×10 GUIのview/tickと公開情報Imageへ接続 | `07_gui_hello.bend`、`23_cell_hit_test.bend`、`32_mouse_events.bend`、`minesweeper/gui.bend`、`nxn_gui_adapter.bend`、`nxn_gui_events.bend`、`nxn_gui_render.bend`、`nxn_gui_app.bend` | 4×4 GUIの型検査・Linuxネイティブビルド・13件のheadless入力、10×10 GUIの描画31条件＋旗6条件とApp.run入口型検査は成功。10×10ネイティブビルドとLinux X11仮想デスクトップでの入力・S/L保存・再読込・色と個数通知を有限検証済み。物理GPU・他OS・音声通知は未検証 |
+| `Audio` | 第20章 | `26_audio_open.bend` | open/write/closeの型検査。実機での再生確認は今後 |
+| `law`, `Equal`, 帰納法 | 第15〜18章を再構成（入門的な法則→Boolの全称証明→Nat帰納法→盤面不変条件） | `04_flag_laws.bend`、`14_local_inference.bend`、`22_result_and_game.bend`、`24_bool_proofs.bend`、`33_nat_induction.bend` | Natについての帰納法を `--verdict` で新たに検査。依存型・一般の補題は今後 |
+| `@unsafe`, 外部信頼境界 | 第18・20章 | 追加実習 | 証明検査の境界 |
+| CPU並列、GPU指定 | 第19章を増補（CPU並列・GPU指定・IO並行の比較） | `06_parallel.bend`・`21_io_fork.bend` | CPU並列の実行確認、GPU・他ターゲットでの性能と実機挙動は未検証 |
+| `Array.atomic` | 第19章（APIの返り値と更新前後の違いを実行する） | `51_atomic_counter.bend` | `Array.atomic.add`の型検査、旧値5・新値8を独立出力照合。`Array.fork`で共有した場合の競合・GPU実機動作は未検証 |
+| C/JavaScriptと外部連携 | 第20章にC生成・ネイティブビルド・Node.js実行の一連の手順を追加 | `43_target_hello.bend` | CIでBend/C/JSの3実行結果42を確認。外部FFIの相互呼出し・GPU等は今後 |
+| モジュール・パッケージ | 第20章に二ファイルimport演習を追加 | `board_index.bend`、`42_module_board.bend` | モジュール読み込みと計算結果を照合。BendHubへの公開・外部パッケージ依存は実施せず |
+| 4×4盤面の近傍数 | 第13章 | `10_board_neighbors.bend` | 境界ケースと盤面全体の更新 |
+| 乱数IOの失敗処理 | 第8章 | `11_random_io.bend` | 実機での失敗・再現性確認 |
+| マインスイーパーの公開マス仕様 C-01〜C-07 | `intermediate/minesweeper/REQUIREMENTS.md`（第15章に一部統合） | `minesweeper/LAWS.bend`・`game.bend`・`PROOF.bend` | `--verdict`で7件の量化法則を証明。盤面・初手安全・GUIの証明ではない |
+| 盤面境界・局所不変性 B-01/B-02/B-03/B-05 | `minesweeper/REQUIREMENTS.md`（第13・17章に一部統合） | `minesweeper/LAWS.bend`・`board.bend`・`PROOF.bend` | 4×4非トーラス境界と単一セルの地雷値保持・公開状態維持について9件の法則を証明。独立オラクルで全256セル対も照合。盤面全体の扱いは次行、B-04の一般全称証明は未了 |
+| 16マスArray・地雷マスク・隣接地雷数・境界検査 | `minesweeper/LESSON.md`に解説草稿（第13・17章に一部統合） | `minesweeper/board4.bend`、`LAWS.bend`、`PROOF.bend` | 地雷マスク不変・空盤面の数字・具体的な数字・配列外操作の8法則を証明。Python独立オラクルで154ケースを実行。一般の隣接数の全称証明、公開時の安全判定は未完成 |
+| 旗の基本操作・局所法則 | 第13・15・17章 | `09_minesweeper_status.bend`, `04_flag_laws.bend`, `34_mine_mask_law.bend` | 最小の地雷マスク不変と旗ビット変更を `--verdict` で検査。全盤面の他条件は別途 |
+| クリック・旗・敗北・勝利の純粋ゲーム進行（G-02/G-03部分） | `minesweeper/LESSON.md`に追記（第17・21章に一部統合） | `minesweeper/session.bend`・`LAWS.bend`・`PROOF.bend` | 7法則を証明。初手と0領域の処理を別モジュールへ追加。43法則を先行宣言し、Bend検査と独立オラクルを利用。GUIの実機動作は未検証 |
+| 通常版マインスイーパー（GUI統合） | 第21章に固定4×4 GUIと初手生成10×10 GUIの責任分離・起動方法・公開情報Image・Array.clone・演習を収録 | `minesweeper/start.bend`、`cli_replay.bend`、`gui.bend`、`nxn_lazy_game.bend`、`nxn_gui_app.bend`（10×10関連5モジュールを読者ZIPに収録） | 4×4 GUIの13件の純粋入力検査とLinuxネイティブビルド、10×10 GUIのheadless描画37条件とApp.run型検査が成功。Linux X11仮想デスクトップで10×10のクリック・旗・リセット・S/L保存復元・再起動後復元・色＋四角個数の通知を有限検証済み。物理GPU・他OS・スクリーンリーダーは未検証、原子的保存は未実装。固定CLI操作履歴保存も別途検証済み |
+| 運ゲー無し版 | 第22章に公開モデル120候補、実際に勝利まで追う限定版生成を収録 | `14_local_inference.bend`、`minesweeper/public_solver.bend`、`minesweeper/noguess_generator.bend`、`solutions/noguess_reference.py` | 公開情報だけを使うBendソルバーは独立13ケース照合、限定版生成はBendゲームで勝利しPython別実装でも `40960 / 0,12,14` を検証。Python参考検証器を全120配置・1,680件の0連鎖で独立照合し、不正公開情報と探索上限も検査。これはBendの全称証明ではない。一般サイズ・GUIへの導入は未了 |
+
+## CIの判定範囲
+
+`intermediate.yml`は、上記の**存在する**Bendコードを型検査し、純粋関数のサンプルについて期待値を照合し、`law`の判定を確認します。GUIコードの型検査に加え、Linux X11仮想デスクトップで10×10ウィンドウのクリック・旗・S/L保存復元・通知を有限の入力列で実機検査します。物理GPU・他OS・スクリーンリーダーは対象外で、原子的保存は未実装です。XeLaTeXで原稿を組版しPDFを成果物としてアップロードします。
+
+**未実装項目をCIの合格だけで実装済みと見なしてはいけません。** 最終的には、すべての機能群に独立して実行できる学習サンプルとテストを追加する方針です。
+
+## 仕様の出典
+
+- [公式GUIDE](https://github.com/bendlang/bend/blob/main/guide/GUIDE.md)
+- [公式Base](https://github.com/bendlang/bend/blob/main/bend2/base.bend)
+- 現行リビジョンの固定と互換性確認は、原稿およびCIの検証環境で行います。
+
+初手安全 G-01：別モジュール `minesweeper/start.bend` で地雷配置済みの `Session.new` とプレイヤー入口を分離。先行コミットで仕様6法則を宣言した後、実装・証明。計37法則と初手178件の独立オラクルをCIで検証。一般の初手安全の全称証明やGUI上での入力は未検証。
+
+G-04（0の連鎖公開）：`flood.bend` を `session.bend` から呼び出す方式で実装。6法則（空盤面の勝利、境界数字、地雷／旗の保護、非0非連鎖）を先行定義し、独立Python BFSを追加。停止性は`Nat`燃料と探索済みマスクで管理。一般の全称定理・GUIの実機動作は未検証。
+
+## 2026-10-17 GUI・公開情報ソルバーの追加
+
+- GUIは既存の`Start`・`Session`を使い、`App.run`で操作を受け取ります。色・数字は`Image`四分木に描きます。Bendの型検査とLinuxネイティブビルド、座標・状態の12例を確認しました。
+- `public_solver.bend` は4×4・地雷2個の候補120通りを列挙します。入力は公開された`Number{index,clue}`のみで、真の地雷マスクは受け取りません。矛盾した公開状態を`None`にする設計で、独立オラクルをCIへ追加しました。
+- GUIの実際のウィンドウ操作、保存・復元、任意個数の地雷のソルバー、盤面自動生成は未完成です。
+
+## 2026-10-18：限定版生成とファイルIOの検証
+
+- 公開ソルバーだけでなく `noguess_generator.bend` で候補を列挙し、`Session.Won` を実際に確認できたものだけ返す。Python独立ゲームでマスク40960・クリック列0→12→14を照合。
+- `cli_save.bend` は固定マスク33のコマンド履歴を一度書き出し、別プロセスで再読込して盤面を復元。欠落ファイル、異なるバージョン、範囲外操作、終端改変、操作数超過などを拒否。
+- GUIの左・右以外のボタンは無効化し、ヘッドレス検査を13項目に拡充。ウィンドウ実機試験とGUI状態の保存は未完了。
+
+## Python参考検証器の入力契約（2026-10-18）
+
+`intermediate/solutions/noguess_reference.py` の `consistent_models`／`provably_safe` は公開情報だけを入力にし、候補の有無と確実な手を判定します。一方、`expose` と `verify_no_guess` は**真の地雷配置を持つゲーム・受入検査側**であり、ソルバー本体と混同しません。`expose` は公開済み数字の偽装・矛盾や盤外位置を拒否します。Pythonの境界・生成証明書テストは `tests/test_noguess_reference.py` と `tests/test_noguess_reference_input_contract.py` を参照。検査は固定の4×4・地雷2個の有限ケースが中心で、一般のBend証明ではありません。
+
+## 限定版生成証明書の独立検収（2026-10-18）
+
+`scripts/test_noguess_generator.py` は、Bendが出力した地雷マスク・クリック列を `scripts/independent_certificate.py` で検証します。検査器は `solutions/noguess_reference.py` をimportせず、各クリック直前の公開数字だけから全整合候補を再列挙し、推測クリックを拒否します。0連鎖は別のFIFO実装で再現し、全14安全マスの公開まで確認します。固定4×4・地雷2個・初手0限定の受入検査であり、任意サイズ・地雷数に関するBendの全称証明ではありません。
+## 第22章：二つの公開数字の最小例
+
+`examples/minesweeper/public_two_corners.bend` は、4×4・地雷2個に限定し `Number{0,0}` と `Number{15,0}` から安全ビット集合19506を計算します。単独数字0の50と比較できる実行教材です。独立Python列挙は49ケースへ拡充しました。この有限照合は一般サイズの全称証明ではありません。
+
+## 第9章のPoll実行教材（2026-10-19）
+
+`53_chan_poll.bend` は空の受信の `Wait` と9送信後の `Ready{Some{9}}` を二行の `0`・`9` で照合。TeX第9章へ必要性・コード・結果・説明・演習を統合。表示用0と実際の受信値0を混同しない。閉鎖後の `Ready{None}`、`try_send` の待機、時間競合は未検証。
+
+## 2026-10-19：N×N座標実装の独立検証
+
+`minesweeper/nxn_geometry.bend` と `scripts/test_nxn_geometry.py` により、
+有効な座標からの行優先添字、無効座標の拒否、N=10の100..127番の
+余剰スロット拒否、非トーラス近傍の有限照合を追加する。
+これは **座標層のみ** の検証であり、N×Nの地雷配置・連鎖公開・勝敗・
+GUI・運ゲー無し生成器のBend版が動作したことを意味しない。
+
+## 2026-10-20 N×N初手安全の参照モデル
+
+`solutions/nxn_word_storage.py` の `relocate_first_click` は
+Pythonの32ビット語列上で地雷を最小空きマスへ移す仕様です。
+2×2・3×3全4,659初手とN=4/10/17/100の有限照合を追加。
+BendのN×Nゲーム遷移・GUI・一般サイズの全称証明ではありません。
+
+## 2026-10-20：N×N地雷格納と状態遷移の接続検査
+
+`tests/test_nxn_oracle_bridge.py` は `solutions/nxn_word_storage.py` と
+`solutions/nxn_board_oracle.py` を独立に呼び、初手の地雷移動後の配置・
+公開数字・公開ビューの契約を有限照合する（2×2・3×3全4,659初手と
+N=4/10/17/100の境界・乱数例）。Python参照モデルの統合検査に限り、
+BendのN×Nエンジン、10×10 GUI、一般サイズの運ゲー無し版は未検証。
+
+## 2026-10-21：N×N満杯直前の初手境界
+
+`tests/test_nxn_near_full_first_click.py` は、N=2..100の全99サイズについて、残り1マスが空きの配置を使い、初手地雷の移動198件と初手安全99件を、独立したPython地雷語列・ゲーム状態モデル間で照合する。地雷数、初手公開、勝利状態、終局後の入力凍結、末尾32ビット語の余剰ビット、公開ビューの非漏洩を検査する。**Bendの型検査・実行・形式的証明ではない**。既存のTeX/PDF/読者ZIPと採用表紙は変更しない。
+
+## 2026-10-20：N×N地雷語列のBend格納層
+
+`minesweeper/nxn_mine_words.bend` はN=2..100の内部地雷集合を
+`Array<U32>` に保持し、`set_checked` と `has` で範囲外添字を拒否します。
+`scripts/test_nxn_mine_words.py` が独立Pythonモデルと
+N=2/3/4/10/17/100の有限差分照合を行います。
+Bend 2.0.38の型検査と306件の独立差分実行照合に成功。既存のN×N座標401件とも連続検証しています。Python参照モデルではN=2〜100の全サイズ境界を検査。内部地雷格納だけの有限照合であり、ゲーム全体の完成・全称証明ではありません。
+これは内部格納層のテストであり、初手安全・数字・連鎖公開・勝敗・GUI・
+一般サイズの運ゲー無し版のBend実装ではありません。
+教材本文は補稿段階で、プレビューPDFと読者ZIPには未統合です。
+
+
+## 2026-10-21：TCP送信APIと配布物同期
+
+Bend 2.0.38で`TCP.send`の失敗結果に含まれる未送信データ型は`List<&2, U32>`。`src/47_tcp_loopback.bend`の型注釈2箇所を修正し、型検査・ループバック送受信・ハンドル解放の既存回帰検査を通過した。TeXの`\sample`がソースを掲載するため、再生成PDFと読者ZIPを同期させた。採用済み表紙のソースは不変更、旧PDFの表紙との画素一致も検証した。
+
+## 2026-10-21：N×N近傍地雷数のPython参照モデル
+
+`solutions/nxn_word_storage.py::adjacent_count` と
+`tests/test_nxn_adjacent_count.py` で、N=2〜100の角・端・
+32ビット語境界と2×2・3×3全配置を独立集合オラクルで照合。
+公開済み数字だけを渡す推論器と、真の地雷語列を使う内部計算を分離する。
+**Bend実装・N×N GUI・形式的証明の検査ではない**。
+本編PDFへの統合前の補稿段階である。
+
+
+## 2026-10-21：N×N公開数字の遷移後照合（Pythonのみ）
+
+tests/test_nxn_clue_state_bridge.py は、2×2・3×3の非満杯配置について
+全初手と全2手目（計41,631組）を検査し、N=2..100の99サイズでも
+固定乱数操作列を照合する。公開済み数字をビット語列の
+adjacent_count と独立した座標集合計算で比較し、旗操作・
+0連鎖・地雷数・公開ビューの非漏洩を確認する。
+これは**二つのPython参照モデルの有限接続テスト**であり、
+BendのN×NエンジンやGUI・運ゲー無し一般化を検証したものではない。
+
+## 2026-10-25：N×N実装と読者配布の境界（再監査）
+
+| 対象 | 確認済みの範囲 | 本編・完成判定で残ること |
+| --- | --- | --- |
+| N×N盤面・通常ゲーム | `nxn_mine_words.bend`、`nxn_clues.bend`、`nxn_full_game.bend`、`nxn_playthrough.bend`。固定N=10の0→99二手勝利をBend実行照合 | 第13・14・21章への本編統合、10×10 GUI実機と状態保存、N=100全面連鎖の性能検収 |
+| Bendの公開情報推論 | `nxn_zero_inference.bend`（268ケース）、`nxn_public_local.bend`（163）、`nxn_public_subset.bend`（121）、`nxn_public_overlap.bend`（125）の有限照合 | 公開盤面からの一般制約抽出、三数字以上の連立推論、全frontier探索と第22章への本編統合 |
+| Python参照の一般N×N生成・再生 | `nxn_public_inference.py`、`nxn_candidate_generator.py`、`nxn_public_replay_bridge.py`。固定10×10は0→99で勝利、最小添字優先は探索上限18で`limit` | Bend版一般ソルバー・生成器と自動接続、GUI統合、全称証明。Pythonの有限照合をBendの保証と混同しない |
+| 配布済み教材 | 6 Part・23章、TeXの53サンプルと47演習、ZIPは通常53本＋ゲーム12本＋PDF/README/LICENSEの68エントリ | 第21・22章の補稿をTeX/PDF/ZIPへ統合。N×N部品は現状リポジトリ側のみ |
+
+第7章File/Byteと第8章`IO.now`/`IO.sleep`は本編統合済み。正本先端`c0c56cb7`のCI4件は成功し、PDF全ページ画像・本文・ZIP内PDFの一致検査も成功。採用済み表紙は不変更。GUI実機・GPU/FFI・一般N×N生成の完成を意味しません。
+
+
+## 2026-10-26：第21・22章の配布範囲を更新
+
+- TeX本編に固定10×10・地雷10個の二手勝利 nxn_playthrough.bend（結果110）と、三公開数字・六未知マスの nxn_public_three_bridge.bend（結果341）を実行教材として追加した。0連鎖・終局・局所制約の仕組みと演習も追加。
+- 読者ZIPは通常サンプル53本＋ゲーム実習28本＋PDF/README/LICENSEの84エントリ。ゲーム実習の相対import依存を機械検査し、解答・内部テスト・編集資料は含めない。
+- XeLaTeXの117ページ組版、レイアウト・フォント警告なし、PDF/ZIP内PDFの一致、表紙の画素一致を検証。第7・8章のByte/File・IO.now・IO.sleepは維持。
+- **未達**：一般N×N公開盤面からの自動frontier抽出と多制約全体推論、一般N×N運ゲー無し生成器、10×10 GUI実機操作・保存、GPU/FFI実機、全23章校閲。固定例の有限一致を一般の形式的証明と混同しない。
