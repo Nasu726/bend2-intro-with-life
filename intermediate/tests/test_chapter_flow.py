@@ -76,10 +76,26 @@ class ChapterFlowTest(unittest.TestCase):
         chapter = self.chapters[20][1]
         for phrase in ("nxn_gui_status_app.bend", "nxn_gui_feedback_store.bend",
                        "保存成功", "読込成功", "保存失敗", "読込失敗",
-                       "色だけ", "原子的な保存", "X11仮想デスクトップ"):
+                       "緑1個", "青2個", "赤3個", "橙4個",
+                       "32画素四方", "U32.is_ge(notice, 4)",
+                       "スクリーンリーダー", "原子的な保存",
+                       "X11仮想デスクトップ"):
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, chapter)
         self.assertIn(r"\exercise{", chapter)
+
+    def test_gui_status_reader_text_matches_bend_shape_implementation(self):
+        chapter = self.chapters[20][1]
+        self.assertNotIn(r"通知は\textbf{色だけ}", chapter)
+        self.assertNotIn("色だけではない通知", chapter)
+        gui = (ROOT / "minesweeper" / "nxn_gui_status_app.bend").read_text(encoding="utf-8")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        for threshold in (2, 3, 4):
+            self.assertIn(f"paint_if(U32.is_ge(notice, {threshold})", gui)
+        for phrase in ("緑1個", "青2個", "赤3個", "橙4個", "スクリーンリーダー"):
+            self.assertIn(phrase, readme)
+        self.assertNotIn("これは色だけの通知", readme)
+        self.assertNotIn("失敗の画面通知、原子的", readme)
 
     def test_reader_samples_match_bend_verified_fixtures(self):
         for name, fixture in (
