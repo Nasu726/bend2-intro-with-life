@@ -1,3 +1,19 @@
+## 2026-10-31：第21章GUI形状通知の読者ZIP同期（再検証候補）
+
+- 検証PR #119 の初回CIで、X11 GUI実操作・Tests・Reader bundlesは成功し、Intermediate textbook のBend例・公開情報推論・XeLaTeX組版も成功した。一方、**総合CIは失敗**。原因は読者配布対象 `nxn_gui_status_app.bend` の変更に対してコミット済みZIPが旧版だったこと（`check_bundle_consistency.py` のファイル単位照合）。表紙やTeX/PDFの不一致ではない。
+- PR外の専用検証ブランチで `scripts/build_reader_bundle.py intermediate` と読者バンドルテストを実行し、101ファイルのZIPを再生成。生成ZIPのGit blobだけを候補に取り込み、**一時CI workflowは正本・検証PRへ持ち込まない**。TeXとPDF、採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は不変更。
+- この修正後の**全CIは再検証待ち**。全件成功後にのみ正本PR #4へ単一コミットとして統合する。原子的保存、スクリーンリーダー、物理GPU/他OS、一般N×N運ゲー無し、全23章最終校閲は未完成。
+
+---
+
+## 2026-10-31：第21章GUIの色に依存しない形状通知（検証候補）
+
+- 正本先端 `c3e7df46` の5ワークフロー（Intermediate textbook／Tests／Reader bundles／PDF layout／X11）は全成功。前回の破損データ4条件・Bendデシリアライズ21条件は正本へ統合済み。採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は不変。
+- GUIのS/L成否を従来の色に加え、盤面外の32×32四角1/2/3/4個で表示する。X11試験は4つの座標のRGBと個数を同時に照合し、公開済み盤面の不変性・破損拒否・再読込回帰を継続。第21章補稿には必要性・実Bendコード・期待結果・仕組み・演習を追加。
+- **形状通知のBend型検査・X11実操作・総合CIは未検証**。検証専用PRで全成功後に正本へ1コミット統合。配布TeX/PDF/ZIP・第7章Byte/File・第8章IO.now/IO.sleepは不変更。音声読み上げ、原子的保存、物理GPU/他OS、一般N×N運ゲー無し、全23章最終校閲は未完成。
+
+---
+
 ## 2026-10-31：第21章GUIの壊れた保存データの全体拒否（検証候補）
 
 - 正本PR #4先端 `70278f0a` の5ワークフロー（Intermediate textbook／Tests／Reader bundles／PDF layout／X11）は全成功。前回のPR #117で公開済み盤面のS/L失敗・復元を検証済み統合。表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は不変。

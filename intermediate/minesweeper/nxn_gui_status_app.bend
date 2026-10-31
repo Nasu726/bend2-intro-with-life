@@ -1,7 +1,8 @@
 # Learner-facing 10x10 GUI with an observable S/L outcome.
-# The 32x32 square at x=384..415, y=0..31 is outside the playable board.
-# Green: S succeeded; blue: L succeeded; red: S failed; amber: L failed.
-# A mouse press or reset clears the marker; all public game cells are unchanged.
+# Four 32x32 squares in the non-playable gutter (x=384..447, y=0..63).
+# Color AND count encode the result: green/1=S OK, blue/2=L OK,
+# red/3=S failed, amber/4=L failed. No screen-reader API is provided.
+# A mouse press or reset clears the marker; game cells are unchanged.
 import Base
 import ./nxn_gui_history.bend as History
 import ./nxn_gui_render.bend as Render
@@ -17,46 +18,57 @@ def notice_color(+notice: U32) -> U32:
     Render.choose(U32.is_eq(notice, 2), 255,
       Render.choose(U32.is_eq(notice, 3), 16711680, 16753920)))
 
-# Four levels isolate one tile in the non-interactive right-hand gutter.
-def mark4(img: Image, color: U32) -> Image:
-  match img:
-    case Pix{old}:
-      Pix{color}
-    case Qua{tl, tr, bl, br}:
-      Qua{Pix{color}, tr, bl, br}
-
-def mark3(img: Image, color: U32) -> Image:
-  match img:
-    case Pix{old}:
-      Pix{color}
-    case Qua{tl, tr, bl, br}:
-      Qua{mark4(tl, color), tr, bl, br}
-
-def mark2(img: Image, color: U32) -> Image:
-  match img:
-    case Pix{old}:
-      Pix{color}
-    case Qua{tl, tr, bl, br}:
-      Qua{tl, mark3(tr, color), bl, br}
-
-def mark1(img: Image, color: U32) -> Image:
-  match img:
-    case Pix{old}:
-      Pix{color}
-    case Qua{tl, tr, bl, br}:
-      Qua{tl, mark2(tr, color), bl, br}
-
-def mark_if(show: Bool, img: Image, color: U32) -> Image:
+# Four nested quadrants reach the 64x64 gutter block; its four
+# 32x32 children provide a shape cue independent of color.
+def paint_if(show: Bool, img: Image, color: U32) -> Image:
   match show:
     case False{}:
       img
     case True{}:
-      mark1(img, color)
+      Pix{color}
+
+def mark4(img: Image, +color: U32, +notice: U32) -> Image:
+  match img:
+    case Pix{old}:
+      Pix{color}
+    case Qua{tl, tr, bl, br}:
+      Qua{Pix{color},
+          paint_if(U32.is_ge(notice, 2), tr, color),
+          paint_if(U32.is_ge(notice, 3), bl, color),
+          paint_if(U32.is_ge(notice, 4), br, color)}
+
+def mark3(img: Image, color: U32, notice: U32) -> Image:
+  match img:
+    case Pix{old}:
+      Pix{color}
+    case Qua{tl, tr, bl, br}:
+      Qua{mark4(tl, color, notice), tr, bl, br}
+
+def mark2(img: Image, color: U32, notice: U32) -> Image:
+  match img:
+    case Pix{old}:
+      Pix{color}
+    case Qua{tl, tr, bl, br}:
+      Qua{tl, mark3(tr, color, notice), bl, br}
+
+def mark1(img: Image, color: U32, notice: U32) -> Image:
+  match img:
+    case Pix{old}:
+      Pix{color}
+    case Qua{tl, tr, bl, br}:
+      Qua{tl, mark2(tr, color, notice), bl, br}
+
+def mark_if(show: Bool, img: Image, color: U32, notice: U32) -> Image:
+  match show:
+    case False{}:
+      img
+    case True{}:
+      mark1(img, color, notice)
 
 def attach_view(pair: History.Model & Image, +notice: U32) -> State & Image:
   (model, img) = pair
   (State{model, notice},
-   mark_if(U32.is_ne(notice, 0), img, notice_color(notice)))
+   mark_if(U32.is_ne(notice, 0), img, notice_color(notice), notice))
 
 # Destructure the Render.view result in a function parameter. Directly
 # destructuring a computed result in a branch is not accepted by Bend 2.0.39.

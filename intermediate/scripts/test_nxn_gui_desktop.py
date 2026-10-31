@@ -58,7 +58,8 @@ def preflight():
     assert "App.run(~State" in prototype
     assert "Feedback.save_report(model)" in prototype
     assert "after_load(model, recovery)" in prototype
-    assert "mark1(img, color)" in prototype
+    assert "mark1(img, color, notice)" in prototype
+    assert "paint_if(U32.is_ge(notice, 4), br, color)" in prototype
     source = APP.read_text(encoding="utf-8")
     assert TITLE in source
     assert "History.Model" in source and "Store.save(model)" in source
@@ -73,6 +74,10 @@ def preflight():
     a = Image.new("RGB", (4, 4), "black")
     b = Image.new("RGB", (4, 4), "white")
     assert distinct(a, b) and not distinct(a, a)
+    for color, count in STATUS_COUNTS.items():
+        assert expected_tiles(color).count(color) == (4 if count == 0 else count)
+        if count:
+            assert expected_tiles(color)[count:] == ((0, 0, 0),) * (4 - count)
     print(f"PASS X11 smoke preflight, hidden flag target {index}", flush=True)
 
 
@@ -130,36 +135,62 @@ def press(wid, key):
 # Verification-only visible S/L outcome: assert an actual gutter pixel changes.
 STATUS_APP = ROOT / "minesweeper" / "nxn_gui_status_app.bend"
 
-def status_pixel(wid):
+# Each notification has a second, color-independent cue: 1..4
+# filled squares in a 2x2 block outside the 320x320 playable board.
+STATUS_COUNTS = {
+    (0, 0, 0): 0,
+    (0, 255, 0): 1,     # S succeeded
+    (0, 0, 255): 2,     # L succeeded
+    (255, 0, 0): 3,     # S failed
+    (255, 165, 0): 4,   # L failed
+}
+STATUS_POINTS = ((400, 16), (432, 16), (400, 48), (432, 48))
+
+
+def status_tiles(wid):
     p = subprocess.run(("import", "-window", wid, "png:-"),
                        capture_output=True, timeout=20)
     if p.returncode:
         raise AssertionError(p.stderr.decode(errors="replace"))
     image = Image.open(BytesIO(p.stdout)).convert("RGB")
     image.load()
-    assert image.width >= 416 and image.height >= 32
-    return image.getpixel((400, 16))
+    assert image.width >= 448 and image.height >= 64
+    return tuple(image.getpixel(point) for point in STATUS_POINTS)
+
+
+def expected_tiles(color):
+    count = STATUS_COUNTS[color]
+    return tuple(color if index < count else (0, 0, 0)
+                 for index in range(4))
+
+
+def status_pixel(wid):
+    return status_tiles(wid)[0]
+
 
 def await_status(wid, former, timeout=15):
     limit = time.monotonic() + timeout
+    last = None
     while time.monotonic() < limit:
-        latest = status_pixel(wid)
-        if latest != former:
-            return latest
+        last = status_tiles(wid)
+        if last[0] != former and last[0] in STATUS_COUNTS:
+            if last == expected_tiles(last[0]):
+                return last[0]
         time.sleep(0.2)
-    raise AssertionError("GUI did not render a distinct S/L result marker")
+    raise AssertionError(f"GUI never reached a distinct valid marker: {last}")
+
 
 def await_status_color(wid, expected, timeout=15):
-    # Mouse clicks can clear the marker before the next key event is handled.
-    # Wait for the exact target RGB, not merely a change from a stale color.
+    # Check the complete 2x2 shape, not only a possibly stale first pixel.
+    target = expected_tiles(expected)
     until = time.monotonic() + timeout
     last = None
     while time.monotonic() < until:
-        last = status_pixel(wid)
-        if last == expected:
-            return last
+        last = status_tiles(wid)
+        if last == target:
+            return last[0]
         time.sleep(0.2)
-    raise AssertionError(f"GUI marker never reached {expected}: last={last}")
+    raise AssertionError(f"GUI marker never reached {target}: last={last}")
 
 
 def verify_status_app(tmp, output):
@@ -306,8 +337,8 @@ def verify_status_app(tmp, output):
             press(wid, "Escape")
             process.wait(timeout=15)
             assert process.returncode == 0
-            print("PASS X11 S/L exact amber/green/blue/red pixels, "
-                  "fresh/revealed board preservation, directory failures "
+            print("PASS X11 S/L exact colors plus 1..4-square shapes, "
+                  "fresh/revealed board preservation, directory failures, "
                   "public-history restore and 4 malformed-file rejections", flush=True)
         finally:
             if process.poll() is None:
