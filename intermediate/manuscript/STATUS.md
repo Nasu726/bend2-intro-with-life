@@ -1,3 +1,11 @@
+## 2026-10-31：第21章GUIの色に依存しない形状通知（検証候補）
+
+- 正本先端 `c3e7df46` の5ワークフロー（Intermediate textbook／Tests／Reader bundles／PDF layout／X11）は全成功。前回の破損データ4条件・Bendデシリアライズ21条件は正本へ統合済み。採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は不変。
+- GUIのS/L成否を従来の色に加え、盤面外の32×32四角1/2/3/4個で表示する。X11試験は4つの座標のRGBと個数を同時に照合し、公開済み盤面の不変性・破損拒否・再読込回帰を継続。第21章補稿には必要性・実Bendコード・期待結果・仕組み・演習を追加。
+- **形状通知のBend型検査・X11実操作・総合CIは未検証**。検証専用PRで全成功後に正本へ1コミット統合。配布TeX/PDF/ZIP・第7章Byte/File・第8章IO.now/IO.sleepは不変更。音声読み上げ、原子的保存、物理GPU/他OS、一般N×N運ゲー無し、全23章最終校閲は未完成。
+
+---
+
 ## 2026-10-31：第21章GUIの壊れた保存データの全体拒否（検証候補）
 
 - 正本PR #4先端 `70278f0a` の5ワークフロー（Intermediate textbook／Tests／Reader bundles／PDF layout／X11）は全成功。前回のPR #117で公開済み盤面のS/L失敗・復元を検証済み統合。表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は不変。
