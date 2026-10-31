@@ -6,6 +6,7 @@ on:
       - 'intermediate/Intermediate_Textbook.tex'
       - '.github/workflows/verify-intermediate-ch19-reader-sync.yml'
       - 'intermediate/COMPLETION_PLAN.md'
+      - 'intermediate/tests/test_structure.py'
 permissions:
   contents: write
 jobs:

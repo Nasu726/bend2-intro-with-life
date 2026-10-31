@@ -200,7 +200,8 @@ class BookStructure(unittest.TestCase):
         for name in ("nxn_lazy_game.bend", "nxn_gui_adapter.bend",
                      "nxn_gui_events.bend", "nxn_gui_render.bend", "nxn_gui_app.bend"):
             self.assertIn(name, INTERMEDIATE_GAME_FILES)
-        self.assertIn("ZIPは**101エントリ**", plan)
+        expected_entries = len(INTERMEDIATE_EXAMPLES) + len(INTERMEDIATE_GAME_FILES) + 3
+        self.assertIn(f"ZIPは**{expected_entries}エントリ**", plan)
 
     def test_gui_coordinate_reference_boundaries(self):
         # Independent arithmetic oracle for the chapter's 4x4 / 64px mapping.
