@@ -1,0 +1,60 @@
+name: Intermediate ch18 reader refresh (verification branch only)
+on:
+  push:
+    branches: [verify/intermediate-ch18-gui-claim-20261031]
+    paths:
+      - 'intermediate/Intermediate_Textbook.tex'
+      - '.github/workflows/verify-intermediate-ch18-reader-sync.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: XeLaTeX build
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: intermediate/Intermediate_Textbook.tex
+          latexmk_use_xelatex: true
+          texlive_version: '2025'
+          os: debian
+          extra_system_packages: fonts-noto-cjk fonts-noto-core
+      - name: Check warnings and build exact reader archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOG='Intermediate_Textbook.log'
+          if test -s intermediate/Intermediate_Textbook.log; then LOG='intermediate/Intermediate_Textbook.log'; fi
+          test -s "$LOG"
+          if grep -nE 'Overfull|Underfull|LaTeX Font Warning|LaTeX Warning' "$LOG"; then exit 1; fi
+          if test -s Intermediate_Textbook.pdf; then
+            cp Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          else
+            cp intermediate/Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          fi
+          python3 scripts/build_reader_bundle.py intermediate
+          python3 -m unittest tests.test_reader_bundle -v
+          python3 -m unittest discover -s intermediate/tests -v
+          test "$(git rev-parse HEAD:intermediate/cover_art.tex)" = "ba9b5c4cb296e3adfd119ace6b55abc419c6faf1"
+      - name: Install PDF page/text comparison tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
+      - name: Commit synchronized reader artifacts on verification branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'intermediate-verification-bot'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 'intermediate/Bend2を使いこなす_プレビュー.pdf' reader-packages/bend2-intermediate-reader-preview.zip
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(intermediate): sync chapter 18 PDF and reader ZIP [skip ci]'
+            git push origin HEAD:verify/intermediate-ch18-gui-claim-20261031
+          fi
+          python3 intermediate/scripts/check_bundle_consistency.py

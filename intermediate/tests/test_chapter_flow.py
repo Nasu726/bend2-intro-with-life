@@ -71,6 +71,15 @@ class ChapterFlowTest(unittest.TestCase):
         self.assertNotIn("実際のマウス操作は未検証です", chapter)
         self.assertNotIn("完成したGUIの検証はまだ済んでいません", chapter)
         self.assertNotIn("追加されましたが、0の連鎖公開についても", chapter)
+        for phrase in ("保存失敗は赤い32×32画素の四角3個",
+                       "失敗時にも盤面を維持", "Linux X11仮想デスクトップ",
+                       "物理GPU・他OSでの表示は未検証",
+                       "スクリーンリーダーへの通知", "原子的な更新は未実装",
+                       "有限検証済みの保存失敗通知（赤い四角3個）"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, chapter)
+        self.assertNotIn("保存失敗の画面通知、ファイルの原子的な更新は未検証・未実装", chapter)
+        self.assertNotIn("物理GPU・他OS・保存失敗表示などの未確認項目", chapter)
 
     def test_chapter21_status_gui_is_taught_with_scope(self):
         chapter = self.chapters[20][1]
@@ -88,6 +97,9 @@ class ChapterFlowTest(unittest.TestCase):
         chapter = self.chapters[20][1]
         self.assertNotIn(r"通知は\textbf{色だけ}", chapter)
         self.assertNotIn("色だけではない通知", chapter)
+        self.assertIn("この旧保存対応GUIには", chapter)
+        self.assertIn("次節で、色と四角の個数を使う通知付きGUI", chapter)
+        self.assertNotIn(r"ただし\textbf{失敗を画面に通知する機能は未実装}", chapter)
         gui = (ROOT / "minesweeper" / "nxn_gui_status_app.bend").read_text(encoding="utf-8")
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         for threshold in (2, 3, 4):
