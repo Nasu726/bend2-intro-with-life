@@ -34,6 +34,8 @@ jobs:
         run: python3 -m unittest discover -s intermediate/tests -v
       - name: Validate chapter 3-4 exercise variants without Bend
         run: python3 intermediate/scripts/test_collection_exercises.py --static-only
+      - name: Validate chapter 19 atomic.add exercise variants without Bend
+        run: python3 intermediate/scripts/test_atomic_exercises.py --static-only
       - name: Validate lazy-placement Python invariants before Bend install
         run: python3 intermediate/scripts/test_nxn_lazy_game.py --python-only
       - name: Validate N x N GUI pixel routing before Bend install
@@ -111,6 +113,8 @@ jobs:
         run: python3 intermediate/scripts/test_examples.py
       - name: Execute chapter 3-4 exercise variants in Bend
         run: python3 intermediate/scripts/test_collection_exercises.py
+      - name: Typecheck and execute chapter 19 atomic.add exercise variants
+        run: python3 intermediate/scripts/test_atomic_exercises.py
       - name: Verify N x N Bend clues against independent coordinates
         run: python3 intermediate/scripts/test_nxn_clues.py
       - name: Verify N x N Bend geometry against independent coordinates
