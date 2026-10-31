@@ -1,0 +1,25 @@
+name: Temporary intermediate reader ZIP refresh (verification only)
+on:
+  push:
+    branches:
+      - verify/gui-shape-reader-zip-build-20261031
+    paths:
+      - .github/workflows/temporary-gui-shape-reader-zip.yml
+permissions:
+  contents: write
+jobs:
+  refresh-reader-zip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Regenerate ZIP from committed learner sources and PDF
+        run: |
+          set -euo pipefail
+          python3 scripts/build_reader_bundle.py intermediate
+          python3 -m unittest discover -s tests -p 'test_reader_bundle.py' -v
+          git add reader-packages/bend2-intermediate-reader-preview.zip
+          git diff --cached --quiet && { echo 'No ZIP changes'; exit 1; }
+          git -c user.name='Reader verification bot' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'test: synchronize GUI status learner ZIP on isolated verification branch'
+          git push origin HEAD:verify/gui-shape-reader-zip-build-20261031
