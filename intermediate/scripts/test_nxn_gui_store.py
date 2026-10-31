@@ -36,6 +36,9 @@ PURE = [
     ("trailing-data", FORMAT+"|junk", 600),
     ("too-long", FORMAT+"X"*4097, 600),
     ("too-many-commands", f"BEND2-GUI-1|{SEED}|"+"0|"*513+"END", 600),
+    ("valid-prefix-bad-code", f"BEND2-GUI-1|{SEED}|0|200|END", 600),
+    ("valid-prefix-extra-end", f"BEND2-GUI-1|{SEED}|0|END|END", 600),
+    ("missing-terminal-after-prefix", f"BEND2-GUI-1|{SEED}|0|199", 600),
 ]
 
 def quote_bend(s):
@@ -95,7 +98,7 @@ def static():
     assert "IO.try(File, File.open" not in src and "IO.die(" not in src
     assert "finish_open_read(opened)" in src and "finish_open_write(model, text, opened)" in src
     assert "Words.has(" not in src and "mines:" not in src
-    assert len(PURE)==18 and len(set(x[0] for x in PURE))==18
+    assert len(PURE)==21 and len(set(x[0] for x in PURE))==21
     assert PURE[0][2]==1 and PURE[1][2]==300 and PURE[11][2]==600
     # Independent canonical parser verifies every allowed 0..199.
     def reference(text):
@@ -112,7 +115,7 @@ def static():
                 all(s.isdecimal() and 0<=int(s)<200 for s in parts[2:-1]))
     for label,data,want,*probe in PURE:
         assert reference(data)==(want!=600),label
-    print("PASS 18 canonical and rejected GUI File payloads",flush=True)
+    print("PASS 21 canonical and rejected GUI File payloads",flush=True)
 
 def bend_run(source_path, expected, cwd):
     env=dict(os.environ,BEND_NO_TELEMETRY="1")
@@ -170,7 +173,7 @@ def main():
         target.mkdir()
         bend_run(reader,600,work)
         assert target.is_dir()
-        print("PASS 18 Bend format cases, File I/O, missing save, denied write, 4 corrupt reloads, directory read",flush=True)
+        print("PASS 21 Bend format cases, File I/O, missing save, denied write, 4 corrupt reloads, directory read",flush=True)
 
 if __name__=="__main__":
     main()

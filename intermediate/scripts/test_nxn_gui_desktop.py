@@ -274,12 +274,41 @@ def verify_status_app(tmp, output):
             await_status_color(wid, colors["load-ok"])
             check_opened_board("12_restored_revealed")
 
+            # A corrupted transcript with a valid prefix must not partially
+            # replay that prefix over the already revealed live board.
+            original_save = save.read_bytes()
+            malformed = [
+                ("valid_prefix_bad_code", f"BEND2-GUI-1|{SEED}|0|200|END"),
+                ("valid_prefix_extra_end", f"BEND2-GUI-1|{SEED}|0|END|END"),
+                ("missing_end", f"BEND2-GUI-1|{SEED}|0"),
+                ("oversized", f"BEND2-GUI-1|{SEED}|0|END" + "X" * 4097),
+            ]
+            for label, bad_payload in malformed:
+                click(wid, 400, 400, 1)  # outside the game and marker
+                await_status_color(wid, initial)
+                check_opened_board(f"13_clear_{label}")
+                save.write_text(bad_payload, encoding="ascii")
+                press(wid, "l")
+                await_status_color(wid, colors["load-failed"])
+                assert save.read_text(encoding="ascii") == bad_payload
+                assert process.poll() is None
+                check_opened_board(f"14_rejected_{label}")
+
+            # A rejected load must not poison a subsequent valid recovery.
+            click(wid, 400, 400, 1)
+            await_status_color(wid, initial)
+            save.write_bytes(original_save)
+            press(wid, "l")
+            await_status_color(wid, colors["load-ok"])
+            assert save.read_bytes() == original_save
+            check_opened_board("15_recovered_after_rejections")
+
             press(wid, "Escape")
             process.wait(timeout=15)
             assert process.returncode == 0
             print("PASS X11 S/L exact amber/green/blue/red pixels, "
                   "fresh/revealed board preservation, directory failures "
-                  "and public-history restore", flush=True)
+                  "public-history restore and 4 malformed-file rejections", flush=True)
         finally:
             if process.poll() is None:
                 process.terminate()
