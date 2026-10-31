@@ -1,3 +1,11 @@
+## 2026-11-01：第19章Array.atomic.add二セル・二回更新の有限照合（検証候補）
+
+- 正本Draft PR #4先端 `3827f74a` の5ワークフローは全成功。前回の単一更新・旧値/新値の六条件は検証PR #129成功後に統合済み。第7章Byte/File 56条件、第8章IO.now/IO.sleep 3試行を回帰対象に保持。
+- リポジトリ専用の `scripts/fixtures/atomic_two_cells.bend` と `scripts/test_atomic_exercises.py` を拡張し、二要素配列に二回順次`Array.atomic.add`を行う。二回目が同じセル/異なるセル、加算0、初期値0など六条件について、各更新前の戻り値と両セル最終値の計四行を独立算術オラクルと照合する。既存の配布`51_atomic_counter.bend`と6条件は維持する。第19章補稿に必要性・コード・出力・仕組み・演習・非保証を追記。
+- **新しいBend六条件と全CIは検証待ち。** これは順次実行であり、並列競合やGPU原子性の保証ではない。TeX・PDF・読者ZIP・表紙 `cover_art.tex`（blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1`）は不変更。正式完成ではない。
+
+---
+
 ## 2026-10-31：第19章Array.atomic.addの旧値・新値を六条件で追試（検証候補）
 
 - 正本Draft PR #4基点 `f7924bbd` の5ワークフローはすべて成功。第7章2バイト×6回・56条件と第8章IO.now/IO.sleepの3試行を回帰対象に維持する。
