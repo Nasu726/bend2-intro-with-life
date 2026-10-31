@@ -110,6 +110,15 @@ class TestReaderBundle(unittest.TestCase):
             self.assertEqual(z.read(name),
                              (ROOT / "intermediate/src/53_chan_poll.bend").read_bytes())
 
+    def test_chapter19_two_cell_reader_sample_matches_verified_fixture(self):
+        self.assertIn("56_atomic_two_cells.bend", INTERMEDIATE_EXAMPLES)
+        sample = ROOT / "intermediate/src/56_atomic_two_cells.bend"
+        fixture = ROOT / "intermediate/scripts/fixtures/atomic_two_cells.bend"
+        self.assertEqual(sample.read_bytes(), fixture.read_bytes())
+        with zipfile.ZipFile(ROOT / "reader-packages/bend2-intermediate-reader-preview.zip") as z:
+            member = "bend2-intermediate-reader/examples/56_atomic_two_cells.bend"
+            self.assertEqual(z.read(member), fixture.read_bytes())
+
     def test_pair_exists_sample_when_bend_is_installed(self):
         # The staging job installs Bend before invoking these bundle tests.
         # Keep local ZIP inspection usable on machines without the compiler.

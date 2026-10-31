@@ -49,7 +49,7 @@
 | `law`, `Equal`, 帰納法 | 第15〜18章を再構成（入門的な法則→Boolの全称証明→Nat帰納法→盤面不変条件） | `04_flag_laws.bend`、`14_local_inference.bend`、`22_result_and_game.bend`、`24_bool_proofs.bend`、`33_nat_induction.bend` | Natについての帰納法を `--verdict` で新たに検査。依存型・一般の補題は今後 |
 | `@unsafe`, 外部信頼境界 | 第18・20章 | 追加実習 | 証明検査の境界 |
 | CPU並列、GPU指定 | 第19章を増補（CPU並列・GPU指定・IO並行の比較） | `06_parallel.bend`・`21_io_fork.bend` | CPU並列の実行確認、GPU・他ターゲットでの性能と実機挙動は未検証 |
-| `Array.atomic` | 第19章（APIの返り値と更新前後の違いを実行する） | `51_atomic_counter.bend` | `Array.atomic.add`の型検査、旧値5・新値8を独立出力照合。`Array.fork`で共有した場合の競合・GPU実機動作は未検証 |
+| `Array.atomic` | 第19章（APIの返り値と更新前後の違いを実行する） | `51_atomic_counter.bend`、`56_atomic_two_cells.bend` | 順次実行の単一要素6条件と二要素・二回更新6条件で、各更新前の値と最終値をBend実行・独立算術モデルで有限照合。`Array.fork`で共有した場合の競合・GPU実機動作は未検証 |
 | C/JavaScriptと外部連携 | 第20章にC生成・ネイティブビルド・Node.js実行の一連の手順を追加 | `43_target_hello.bend` | CIでBend/C/JSの3実行結果42を確認。外部FFIの相互呼出し・GPU等は今後 |
 | モジュール・パッケージ | 第20章に二ファイルimport演習を追加 | `board_index.bend`、`42_module_board.bend` | モジュール読み込みと計算結果を照合。BendHubへの公開・外部パッケージ依存は実施せず |
 | 4×4盤面の近傍数 | 第13章 | `10_board_neighbors.bend` | 境界ケースと盤面全体の更新 |
