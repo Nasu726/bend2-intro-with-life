@@ -1,3 +1,11 @@
+## 2026-10-31：第7章Fileの6回目読み取り・12/13バイト不可識別境界（検証候補）
+
+- 正本先端 `3fefecbf` のReader bundles・Tests・PDF layout・X11 GUI・Intermediate textbookの5ワークフローは全成功。前回の第21章GUI色＋形状通知は正本へ統合済み。採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は不変。
+- 第7章のテスト専用 `binary_chunks_values.bend` を6回読み取りへ拡張。5回では区別できない10/11バイトを6回目の空／非空で判別し、同じ先頭12バイトを持つ12/13バイトは6回でも区別できないことを独立Pythonオラクルの4系列×0〜13バイト＝56条件、長さ・257進指紋、元ファイル不変性で照合する。配布 `54_binary_chunks.bend` の4回読み取りは保持。第7章補稿に必要性・Bendコード・予測結果・仕組み・演習を追加。
+- **今回の追加Bend型検査・実行・全CIは検証待ち。** 第8章IO.now/IO.sleepは既存の3試行を回帰対象に保持。採用表紙・TeX・PDF・読者ZIP・読者向けBend例は不変更。原子的保存、スクリーンリーダー、物理GPU/他OS、一般N×N運ゲー無し、全23章最終校閲は未完了。
+
+---
+
 ## 2026-10-31：第21章GUI形状通知の読者ZIP同期（再検証候補）
 
 - 検証PR #119 の初回CIで、X11 GUI実操作・Tests・Reader bundlesは成功し、Intermediate textbook のBend例・公開情報推論・XeLaTeX組版も成功した。一方、**総合CIは失敗**。原因は読者配布対象 `nxn_gui_status_app.bend` の変更に対してコミット済みZIPが旧版だったこと（`check_bundle_consistency.py` のファイル単位照合）。表紙やTeX/PDFの不一致ではない。
