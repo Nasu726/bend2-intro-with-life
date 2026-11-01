@@ -98,7 +98,7 @@ jobs:
           assert len(text)>5000, len(text)
           pages=subprocess.check_output(['pdfinfo',str(pdf)],text=True)
           print('PDF',next(line for line in pages.splitlines() if line.startswith('Pages:')))
-          assert hashlib.sha1(b'blob '+str(Path('intermediate/cover_art.tex').stat().st_size).encode()+b'\\0'+Path('intermediate/cover_art.tex').read_bytes()).hexdigest()=='ba9b5c4cb296e3adfd119ace6b55abc419c6faf1'
+          assert hashlib.sha1(b'blob '+str(Path('intermediate/cover_art.tex').stat().st_size).encode()+b'\0'+Path('intermediate/cover_art.tex').read_bytes()).hexdigest()=='ba9b5c4cb296e3adfd119ace6b55abc419c6faf1'
           PY
           mkdir -p "$RUNNER_TEMP/pages"
           pdftoppm -f 1 -l 1 -r 72 -png 'intermediate/Bend2を使いこなす_プレビュー.pdf' "$RUNNER_TEMP/pages/cover" >/dev/null 2>&1

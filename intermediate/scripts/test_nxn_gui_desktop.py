@@ -264,7 +264,7 @@ def verify_status_app(tmp, output):
             check_board("04b_atomic_replaced")
 
             press(wid, "r")
-            assert await_status(wid, loaded) == initial
+            await_status_color(wid, initial)  # Wait for reset, not a stale green S marker
             check_board("05_reset")
 
             save.unlink()
