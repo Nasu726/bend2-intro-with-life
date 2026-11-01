@@ -33,6 +33,19 @@ def digest(chunk: bytes) -> int:
     return value
 
 
+
+def parse_stdout_lines(stdout: str) -> list[str]:
+    """Preserve blank lines and padding, allowing at most one terminal LF.
+
+    subprocess(text=True) normalizes CRLF to LF before this function.
+    """
+    if not isinstance(stdout, str):
+        raise AssertionError(f"Expected text stdout, got {type(stdout).__name__}")
+    lines = stdout.split("\n")
+    if lines[-1] == "":
+        lines.pop()
+    return lines
+
 def validate_chunk_output(payload: bytes, lines: list[str], *, reads: int = 6) -> None:
     """Compare bounded File.read_bytes output with an independent byte oracle.
 
@@ -44,7 +57,7 @@ def validate_chunk_output(payload: bytes, lines: list[str], *, reads: int = 6) -
     if reads < 1:
         raise ValueError("reads must be positive")
     if len(lines) != 2 * reads or any(
-        not line.isascii() or not line.isdecimal() or len(line) > 5
+        not isinstance(line, str) or not line.isascii() or not line.isdecimal() or len(line) > 5
         or (len(line) > 1 and line[0] == "0")
         for line in lines
     ):
@@ -134,7 +147,7 @@ def main() -> int:
                     # like the original four-length reader, unchanged in the ZIP.
                     sample = run(FIXTURE, cwd)
                     lengths = [str(len(chunk)) for chunk in chunks[:4]]
-                    if sample.returncode or sample.stdout.strip().splitlines() != lengths:
+                    if sample.returncode or parse_stdout_lines(sample.stdout) != lengths:
                         raise AssertionError(
                             f"Reader sample length regression for {payload.hex()}: "
                             f"{sample.stdout!r} / {sample.stderr!r}"
@@ -144,7 +157,7 @@ def main() -> int:
                         raise AssertionError("Fingerprint cannot recover bounded chunk length")
                 expected = [str(value) for chunk in chunks
                             for value in (len(chunk), digest(chunk))]
-                observed = got.stdout.splitlines()
+                observed = parse_stdout_lines(got.stdout)
                 # A zero-length read, not a fixed number of calls, observes EOF.
                 # Four/five/six calls can consume at most 8/10/12 bytes.
                 if (len(chunks[3]) == 0) != (length <= 6):

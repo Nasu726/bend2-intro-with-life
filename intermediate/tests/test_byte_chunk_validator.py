@@ -66,7 +66,7 @@ class ByteChunkValidatorTest(unittest.TestCase):
 
     def test_rejects_noncanonical_output(self):
         valid = oracle(b"abc")
-        for bad in ("", "-1", "+1", "１", " 2", "2 ", "02", "999999", "2.0"):
+        for bad in ("", "-1", "+1", "１", " 2", "2 ", "02", "999999", "2.0", None, 3):
             corrupted = valid.copy()
             corrupted[0] = bad
             with self.subTest(bad=bad), self.assertRaises(AssertionError):
@@ -76,6 +76,27 @@ class ByteChunkValidatorTest(unittest.TestCase):
         payload = bytes(range(13))
         byte_runner.validate_chunk_output(payload, oracle(payload, reads=7), reads=7)
         self.assertNotEqual(oracle(payload[:12], reads=7), oracle(payload, reads=7))
+
+    def test_stdout_accepts_one_terminal_newline(self):
+        payload = b"abc"
+        raw = "\n".join(oracle(payload))
+        for stdout in (raw, raw + "\n"):
+            with self.subTest(terminal_lf=stdout.endswith("\n")):
+                byte_runner.validate_chunk_output(
+                    payload, byte_runner.parse_stdout_lines(stdout)
+                )
+
+    def test_stdout_rejects_extra_lines_padding_and_nonstrings(self):
+        payload = b"abc"
+        raw = "\n".join(oracle(payload))
+        for stdout in (
+            "\n" + raw, raw + "\n\n", raw + "\n ",
+            " " + raw, raw + " ", raw + "\r\n", None,
+        ):
+            with self.subTest(stdout=repr(stdout)[:48]), self.assertRaises(AssertionError):
+                byte_runner.validate_chunk_output(
+                    payload, byte_runner.parse_stdout_lines(stdout)
+                )
 
     def test_rejects_nonpositive_read_count(self):
         for reads in (0, -1):
