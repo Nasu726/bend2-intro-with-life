@@ -16,12 +16,18 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 GAME = ROOT / "minesweeper"
 SOURCE = GAME / "nxn_gui_atomic_store.bend"
+ATOMIC_GUI = GAME / "nxn_gui_atomic_status_app.bend"
 TARGET = "minesweeper_nxn_save.txt"
 EXPECTED = b"BEND2-GUI-1|20261029|0|199|END"
 
 
 def static():
     code = SOURCE.read_text(encoding="utf-8")
+    gui = ATOMIC_GUI.read_text(encoding="utf-8")
+    assert "Atomic.save_atomic_report(model)" in gui
+    assert "Status.event(e, state)" in gui
+    assert "Status.view(state)" in gui
+    assert "Feedback.save_report(model)" not in gui
     for required in (
         'Process.run("/usr/bin/mv",', '["-fT", "--", temp, "minesweeper_nxn_save.txt"]',
         "File.close(file)", "File.write(file, text)", "IO.random_u32()",
@@ -76,6 +82,7 @@ def main():
             (work / file.name).write_bytes(file.read_bytes())
         entry = work / SOURCE.name
         bend_run(entry, work, check=True)
+        bend_run(work / ATOMIC_GUI.name, work, check=True)
         target = work / TARGET
 
         target.write_bytes(b"OLD-CANONICAL-SAVE")

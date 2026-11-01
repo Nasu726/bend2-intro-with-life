@@ -54,6 +54,11 @@ def target_for_flag():
 
 
 def preflight():
+    candidate = ATOMIC_STATUS_APP.read_text(encoding="utf-8")
+    assert "Atomic.save_atomic_report(model)" in candidate
+    assert "Status.event(e, state)" in candidate
+    assert "Status.view(state)" in candidate
+    assert "Feedback.save_report(model)" not in candidate
     prototype = STATUS_APP.read_text(encoding="utf-8")
     assert "App.run(~State" in prototype
     assert "Feedback.save_report(model)" in prototype
@@ -134,6 +139,7 @@ def press(wid, key):
 
 # Verification-only visible S/L outcome: assert an actual gutter pixel changes.
 STATUS_APP = ROOT / "minesweeper" / "nxn_gui_status_app.bend"
+ATOMIC_STATUS_APP = ROOT / "minesweeper" / "nxn_gui_atomic_status_app.bend"
 
 # Each notification has a second, color-independent cue: 1..4
 # filled squares in a 2x2 block outside the 320x320 playable board.
@@ -345,6 +351,58 @@ def verify_status_app(tmp, output):
                 process.terminate()
                 process.wait(timeout=5)
 
+
+def verify_atomic_status_app(tmp, output):
+    """X11 acceptance for the experimental GUI only, not the shipped app."""
+    work = Path(tmp) / "atomic-status-run"
+    work.mkdir()
+    binary = work / "nxn_atomic_status_gui"
+    run("bend", str(ATOMIC_STATUS_APP), "-o", str(binary), timeout=240)
+    save = work / "minesweeper_nxn_save.txt"
+    save.write_bytes(b"OLD-SAVE-BEFORE-S")
+    original_inode = save.stat().st_ino
+    with (output / "atomic_stdout.log").open("wb") as logfile:
+        process = subprocess.Popen((str(binary),), cwd=work,
+                                   stdout=logfile, stderr=subprocess.STDOUT)
+        try:
+            wid = find_window(process)
+            fresh = shot(wid, output / "atomic_00_fresh.png")
+            assert status_tiles(wid) == expected_tiles((0, 0, 0))
+            press(wid, "s")
+            await_status_color(wid, (0, 255, 0))
+            assert save.read_bytes() == f"BEND2-GUI-1|{SEED}|END".encode()
+            assert save.stat().st_ino != original_inode, (
+                "S rewrote existing inode instead of renaming a new temp file"
+            )
+            assert not list(work.glob("minesweeper_nxn_save.txt.tmp.*"))
+            assert not distinct(fresh, shot(wid, output / "atomic_01_saved.png"))
+            press(wid, "l")
+            await_status_color(wid, (0, 0, 255))
+            assert not distinct(fresh, shot(wid, output / "atomic_02_loaded.png"))
+            save.unlink()
+            save.mkdir()
+            sentinel = save / "keep"
+            sentinel.write_bytes(b"KEEP-OLD-DIRECTORY")
+            press(wid, "r")
+            await_status_color(wid, (0, 0, 0))
+            press(wid, "s")
+            await_status_color(wid, (255, 0, 0))
+            assert sentinel.read_bytes() == b"KEEP-OLD-DIRECTORY"
+            assert list(save.iterdir()) == [sentinel]
+            assert not list(work.glob("minesweeper_nxn_save.txt.tmp.*"))
+            assert not distinct(fresh, shot(wid, output / "atomic_03_failed.png"))
+            assert process.poll() is None
+            press(wid, "Escape")
+            process.wait(timeout=15)
+            assert process.returncode == 0
+            print("PASS experimental X11 atomic S: inode replacement, "
+                  "public replay, directory failure, temp cleanup, "
+                  "status shape and board preservation", flush=True)
+        finally:
+            if process.poll() is None:
+                process.terminate()
+                process.wait(timeout=5)
+
 def main():
     preflight()
     if sys.argv[1:] == ["--static-only"]:
@@ -467,6 +525,7 @@ def main():
                         process.wait(timeout=3)
 
         verify_status_app(tmp, output)
+        verify_atomic_status_app(tmp, output)
 
 
 if __name__ == "__main__":
