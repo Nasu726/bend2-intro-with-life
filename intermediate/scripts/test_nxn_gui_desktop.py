@@ -61,7 +61,8 @@ def preflight():
     assert "Feedback.save_report(model)" not in candidate
     prototype = STATUS_APP.read_text(encoding="utf-8")
     assert "App.run(~State" in prototype
-    assert "Feedback.save_report(model)" in prototype
+    assert "Atomic.save_atomic_report(model)" in prototype
+    assert "Feedback.save_report(model)" not in prototype
     assert "after_load(model, recovery)" in prototype
     assert "mark1(img, color, notice)" in prototype
     assert "paint_if(U32.is_ge(notice, 4), br, color)" in prototype
@@ -249,11 +250,18 @@ def verify_status_app(tmp, output):
                 f"BEND2-GUI-1|{SEED}|1|END"
             ), "S wrote an unexpected public history"
             check_board("03_saved")
+            assert not list(work.glob("minesweeper_nxn_save.txt.tmp.*"))
 
             press(wid, "l")
             loaded = await_status(wid, saved)
             assert loaded == colors["load-ok"], loaded
             check_board("04_loaded")
+            previous_inode = save.stat().st_ino
+            press(wid, "s")
+            await_status_color(wid, colors["save-ok"])
+            assert save.stat().st_ino != previous_inode
+            assert not list(work.glob("minesweeper_nxn_save.txt.tmp.*"))
+            check_board("04b_atomic_replaced")
 
             press(wid, "r")
             assert await_status(wid, loaded) == initial
@@ -266,6 +274,7 @@ def verify_status_app(tmp, output):
             assert failed_save == colors["save-failed"], failed_save
             assert process.poll() is None and save.is_dir()
             assert not list(save.iterdir()), "Failed save modified the directory"
+            assert not list(work.glob("minesweeper_nxn_save.txt.tmp.*"))
             check_board("06_failed_save")
 
             # A blank board would not detect an accidental reset. Exercise
@@ -303,6 +312,7 @@ def verify_status_app(tmp, output):
                 f"Reset failed to discard old inputs: {observed_history!r}"
             )
             check_opened_board("10_saved_revealed")
+            assert not list(work.glob("minesweeper_nxn_save.txt.tmp.*"))
 
             press(wid, "r")
             await_status_color(wid, initial)
@@ -343,7 +353,7 @@ def verify_status_app(tmp, output):
             press(wid, "Escape")
             process.wait(timeout=15)
             assert process.returncode == 0
-            print("PASS X11 S/L exact colors plus 1..4-square shapes, "
+            print("PASS staged atomic X11 S/L exact colors plus 1..4-square shapes, "
                   "fresh/revealed board preservation, directory failures, "
                   "public-history restore and 4 malformed-file rejections", flush=True)
         finally:

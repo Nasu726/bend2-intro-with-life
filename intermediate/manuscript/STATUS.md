@@ -1,3 +1,11 @@
+## 2026-11-02：配布GUIの原子的保存接続（PR外検証ブランチ・未検証）
+
+- 正本Draft PR #4の先端 `75056fef` で Reader / Tests / Intermediate / PDF layout / X11 の5ワークフロー成功を確認。採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` 不変。
+- `nxn_gui_status_app.bend` のSキーを `Atomic.save_atomic_report` へ接続し、旧ファイルを直接切り詰める経路を除外。X11テストに同一内容の再保存でのinode置換・tmp残存なし・盤面保持を追加。Bendテストも配布GUIのAtomic参照を静的検査する。
+- **PR外の編集候補であり、Bend型検査・X11実操作・XeLaTeX・PDF/ZIP同一版生成・全CIは未実行。** 既存PDF/ZIPは古い配布版のため、現状の検証ブランチを正本へ統合しない。次は読者allowlistへ `nxn_gui_atomic_store.bend` を追加し、第18・21・22章TeX/README/構造テストを修正、PDF/ZIPを同一版で再生成してから全ゲートを検査する。
+- 第7章Byte/File56条件と第8章IO.now/IO.sleep3試行は既存回帰対象。電源断耐性・同一UID競合・他OS・スクリーンリーダー・一般N×N運ゲー無し版・149節校閲は未完成。
+
+---
 ## 2026-11-02：原子的保存実験GUIの再起動・破損履歴拒否（検証候補）
 
 - 正本Draft PR #4先端 `b06c92fa` のReader・Tests・Intermediate・PDF layout・X11は5系統すべて成功。採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は不変。前回の公開済み盤面S→R→Lとディレクトリ障害回復は正本に統合済み。
