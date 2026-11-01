@@ -100,9 +100,19 @@ jobs:
           print('PDF',next(line for line in pages.splitlines() if line.startswith('Pages:')))
           assert hashlib.sha1(b'blob '+str(Path('intermediate/cover_art.tex').stat().st_size).encode()+b'\0'+Path('intermediate/cover_art.tex').read_bytes()).hexdigest()=='ba9b5c4cb296e3adfd119ace6b55abc419c6faf1'
           PY
+          # Compare the rendered adopted cover against the previous release.
+          git show HEAD:'intermediate/Bend2を使いこなす_プレビュー.pdf' > "$RUNNER_TEMP/previous.pdf"
+          pdftoppm -f 1 -l 1 -singlefile -r 72 -png "$RUNNER_TEMP/previous.pdf" "$RUNNER_TEMP/old-cover"
+          pdftoppm -f 1 -l 1 -singlefile -r 72 -png 'intermediate/Bend2を使いこなす_プレビュー.pdf' "$RUNNER_TEMP/new-cover"
+          cmp "$RUNNER_TEMP/old-cover.png" "$RUNNER_TEMP/new-cover.png"
+          # Render EVERY page, rather than checking only extractable text.
           mkdir -p "$RUNNER_TEMP/pages"
-          pdftoppm -f 1 -l 1 -r 72 -png 'intermediate/Bend2を使いこなす_プレビュー.pdf' "$RUNNER_TEMP/pages/cover" >/dev/null 2>&1
-          test -s "$RUNNER_TEMP/pages/cover-001.png" || test -s "$RUNNER_TEMP/pages/cover-1.png"
+          pdftoppm -r 72 -png 'intermediate/Bend2を使いこなす_プレビュー.pdf' "$RUNNER_TEMP/pages/book" >/dev/null 2>&1
+          expected_pages="$(pdfinfo 'intermediate/Bend2を使いこなす_プレビュー.pdf' | awk '/^Pages:/ {print $2}')"
+          actual_pages="$(find "$RUNNER_TEMP/pages" -name 'book-*.png' -type f | wc -l)"
+          test "$expected_pages" -ge 120
+          test "$actual_pages" -eq "$expected_pages"
+          echo "PASS unchanged rendered cover and $actual_pages fully rendered pages"
       - name: Commit only regenerated PDF and reader ZIP to verification branch
         shell: bash
         run: |
