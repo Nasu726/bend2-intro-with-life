@@ -33,6 +33,22 @@ def digest(chunk: bytes) -> int:
     return value
 
 
+def split_strict_stdout(stdout: str, count: int) -> list[str]:
+    """Read exactly count LF-separated lines, allowing only one terminal LF.
+
+    subprocess text mode normalizes conventional CRLF input into LF. Keeping
+    all other characters lets the caller reject unexpected extra output.
+    """
+    if not isinstance(stdout, str) or count < 1:
+        raise AssertionError("Expected text stdout and a positive line count")
+    lines = stdout.split("\n")
+    if lines[-1] == "":
+        lines.pop()
+    if len(lines) != count:
+        raise AssertionError(f"Expected {count} lines, got {len(lines)}: {lines!r}")
+    return lines
+
+
 def validate_chunk_output(payload: bytes, lines: list[str], *, reads: int = 6) -> None:
     """Compare bounded File.read_bytes output with an independent byte oracle.
 
@@ -134,7 +150,7 @@ def main() -> int:
                     # like the original four-length reader, unchanged in the ZIP.
                     sample = run(FIXTURE, cwd)
                     lengths = [str(len(chunk)) for chunk in chunks[:4]]
-                    if sample.returncode or sample.stdout.strip().splitlines() != lengths:
+                    if sample.returncode or split_strict_stdout(sample.stdout, len(lengths)) != lengths:
                         raise AssertionError(
                             f"Reader sample length regression for {payload.hex()}: "
                             f"{sample.stdout!r} / {sample.stderr!r}"
@@ -144,7 +160,7 @@ def main() -> int:
                         raise AssertionError("Fingerprint cannot recover bounded chunk length")
                 expected = [str(value) for chunk in chunks
                             for value in (len(chunk), digest(chunk))]
-                observed = got.stdout.splitlines()
+                observed = split_strict_stdout(got.stdout, 2 * len(chunks))
                 # A zero-length read, not a fixed number of calls, observes EOF.
                 # Four/five/six calls can consume at most 8/10/12 bytes.
                 if (len(chunks[3]) == 0) != (length <= 6):

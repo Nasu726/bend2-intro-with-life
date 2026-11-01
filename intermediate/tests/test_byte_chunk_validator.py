@@ -83,5 +83,29 @@ class ByteChunkValidatorTest(unittest.TestCase):
                 byte_runner.validate_chunk_output(b"", [], reads=reads)
 
 
+    def test_strict_stdout_accepts_single_terminal_lf(self):
+        for expected in (["0"] * 4, oracle(b"abc")):
+            text = "\n".join(expected)
+            self.assertEqual(byte_runner.split_strict_stdout(text, len(expected)), expected)
+            self.assertEqual(byte_runner.split_strict_stdout(text + "\n", len(expected)), expected)
+
+    def test_strict_stdout_rejects_extra_lines_and_padding(self):
+        for expected in (["0"] * 4, oracle(b"abc")):
+            text = "\n".join(expected)
+            malformed = (
+                "\n" + text, text + "\n\n", text + "\n ",
+                " " + text, text + " ", text.replace("\n", "\u2028"),
+                None,
+            )
+            for bad in malformed:
+                with self.subTest(lines=len(expected), bad=repr(bad)[:50]):
+                    with self.assertRaises(AssertionError):
+                        lines = byte_runner.split_strict_stdout(bad, len(expected))
+                        if len(expected) == 4:
+                            if lines != expected:
+                                raise AssertionError("Unexpected sample output")
+                        else:
+                            byte_runner.validate_chunk_output(b"abc", lines)
+
 if __name__ == "__main__":
     unittest.main()

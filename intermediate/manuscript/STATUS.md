@@ -1,3 +1,11 @@
+## 2026-11-01：第7章Byte/File標準出力の厳密検査（PR外検証候補）
+
+- Issue #136で、配布サンプルの`stdout.strip().splitlines()`が余分な空行・空白を見逃す反例を確認。Bend File APIの誤りではなくPython検証器の偽陽性である。
+- `split_strict_stdout`で末尾LFを最大1個だけ許し、配布サンプルの4行・実データ指紋の12行とも余計な行を拒否する変更を準備。Python単体テスト2件と第7章補稿を追加し、第8章PR #135の検証先端を親として競合を回避する。
+- 配布Bendソース・TeX・PDF・ZIP・採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は不変更。**実Bend56条件・全CI・PDF/ZIP整合性を再検証するまで正本へ統合しない。** 併走する重いCIを節約するため、PR #135の検収まで新PRは作成しない。
+
+---
+
 ## 2026-11-01：第8章時計の標準出力プロトコル検査（検証候補）
 
 - 正本Draft PR #4先端 `334f947` のReader・Tests・Intermediate・PDF layout・X11の5ワークフローは全成功。検証PR #134の時計オラクル10件・実Bend時計3試行・第7章Byte/File56条件は統合済み。採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` 不変。
