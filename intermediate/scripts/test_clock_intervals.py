@@ -63,6 +63,22 @@ def validate_readings(lines: list[str], wall_ms: float, trial: int) -> list[int]
     return elapsed
 
 
+
+def validate_stdout(stdout: str, wall_ms: float, trial: int) -> list[int]:
+    """Accept one terminal newline without discarding extra lines or padding.
+
+    subprocess text mode normalizes CRLF on platforms that emit it.
+    """
+    if not isinstance(stdout, str):
+        raise AssertionError(
+            f"trial={trial}: expected text stdout, got {type(stdout).__name__}"
+        )
+    lines = stdout.split("\n")
+    if lines[-1] == "":
+        lines.pop()
+    return validate_readings(lines, wall_ms, trial)
+
+
 def main() -> int:
     if not shutil.which("bend"):
         raise AssertionError("Bend 2 is required for clock verification")
@@ -76,13 +92,12 @@ def main() -> int:
 
     for trial in range(3):
         result, wall_ms = run()
-        lines = result.stdout.strip().splitlines()
         if result.returncode:
             raise AssertionError(
                 f"trial={trial}: Bend exited {result.returncode}; "
                 f"stdout={result.stdout!r}; stderr={result.stderr!r}"
             )
-        elapsed = validate_readings(lines, wall_ms, trial)
+        elapsed = validate_stdout(result.stdout, wall_ms, trial)
         print(f"PASS clock trial={trial} waits=0/20/100ms observed={elapsed}", flush=True)
     return 0
 

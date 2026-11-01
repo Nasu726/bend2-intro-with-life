@@ -72,5 +72,20 @@ class ClockValidatorTest(unittest.TestCase):
                 clock.validate_readings(corrupted, 500, 10)
 
 
+    def test_stdout_accepts_one_terminal_newline(self):
+        readings = "0\\n0\\n0\\n20\\n20\\n120".replace("\\n", "\n")
+        self.assertEqual(clock.validate_stdout(readings, 200, 11), [0, 20, 100])
+        self.assertEqual(clock.validate_stdout(readings + "\n", 200, 11), [0, 20, 100])
+
+    def test_stdout_rejects_blank_lines_and_padding(self):
+        readings = "0\\n0\\n0\\n20\\n20\\n120".replace("\\n", "\n")
+        for bad in (
+            "\n" + readings, readings + "\n\n", readings + "\n ",
+            " " + readings, readings + " ", readings + "\r\n", None,
+        ):
+            with self.subTest(bad=repr(bad)[:40]), self.assertRaises(AssertionError):
+                clock.validate_stdout(bad, 200, 12)
+
+
 if __name__ == "__main__":
     unittest.main()
