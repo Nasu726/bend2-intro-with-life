@@ -1,3 +1,11 @@
+## 2026-11-01：第21章GUI原子的保存のBend実装候補・検証ゲート
+
+- 正本Draft PR #4 `56e25ba` はReader・Tests・Intermediate・PDF layout・X11の5系統がすべて成功。採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は保全。第7章Byte/File 56条件、第8章IO.now/IO.sleep 3試行は不変更。
+- 現行のGUI保存が `File.open(...,"w")` で旧データを先に切り詰める問題に対し、Linux限定の一時書込み→close→GNU mv -fT のBend候補、Python独立実ファイルテスト、CIステップと検証計画を用意。ローカルPython構文・静的契約とGNU mvのディレクトリ拒否は成功。
+- **Bend型検査・実行、GitHub CIは新しい検証PRで確認するまで未検証。** この候補はGUIへ未接続、TeX/PDF/読者ZIP・表紙・既存配布Bendは不変更。fsync・競合安全性・他OS・GUI原子的保存・一般N×N運ゲー無し・全149節校閲は未完成。
+
+---
+
 ## 2026-11-01：第21章のGUI時制矛盾と13演習の個別校閲（検証ブランチ）
 
 - 正本Draft PR #4の先端 `ff8dd70c` のReader・Tests・Intermediate・PDF layout・X11の5ワークフローは全成功。前回の149節監査は正本統合済み。第7章Byte/File56条件・第8章時計3試行の既存検証は維持。表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は不変更。

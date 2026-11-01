@@ -93,6 +93,8 @@ jobs:
         run: python3 intermediate/scripts/test_nxn_gui_history.py
       - name: Verify versioned 10x10 GUI save and reload using Bend File API
         run: python3 intermediate/scripts/test_nxn_gui_store.py
+      - name: Verify Linux-only GUI atomic replacement candidate
+        run: python3 intermediate/scripts/test_nxn_gui_atomic_store.py
       - name: Verify headless 10x10 GUI Image and typecheck App.run
         run: python3 intermediate/scripts/test_nxn_gui_render.py
       - name: Verify constructive N x N no-guess Bend board and replay
