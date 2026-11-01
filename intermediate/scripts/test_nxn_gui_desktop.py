@@ -444,10 +444,52 @@ def verify_atomic_status_app(tmp, output):
             press(wid, "Escape")
             process.wait(timeout=15)
             assert process.returncode == 0
+
+            # A same-process R/L round-trip does not establish persistence
+            # across process boundaries. Relaunch the exact compiled GUI.
+            second = subprocess.Popen((str(binary),), cwd=work,
+                                      stdout=logfile, stderr=subprocess.STDOUT)
+            try:
+                wid2 = find_window(second)
+                restarted = shot(wid2, output / "atomic_10_restart_fresh.png")
+                assert not distinct(fresh, restarted)
+                assert status_tiles(wid2) == expected_tiles((0, 0, 0))
+                press(wid2, "l")
+                await_status_color(wid2, (0, 0, 255))
+                assert not distinct(
+                    opened, shot(wid2, output / "atomic_11_restart_loaded.png")
+                )
+                assert save.read_bytes() == expected_revealed
+
+                # A valid public prefix followed by an illegal event must
+                # reject the entire replay, leaving the live board intact.
+                malformed = f"BEND2-GUI-1|{SEED}|0|200|END".encode()
+                save.write_bytes(malformed)
+                press(wid2, "l")
+                await_status_color(wid2, (255, 165, 0))
+                assert not distinct(
+                    opened, shot(wid2, output / "atomic_12_corrupt_rejected.png")
+                )
+                assert save.read_bytes() == malformed
+                assert not list(work.glob("minesweeper_nxn_save.txt.tmp.*"))
+
+                save.write_bytes(expected_revealed)
+                press(wid2, "l")
+                await_status_color(wid2, (0, 0, 255))
+                assert not distinct(
+                    opened, shot(wid2, output / "atomic_13_recovered_load.png")
+                )
+                press(wid2, "Escape")
+                second.wait(timeout=15)
+                assert second.returncode == 0
+            finally:
+                if second.poll() is None:
+                    second.terminate()
+                    second.wait(timeout=5)
             print("PASS experimental X11 atomic S/L: Fresh and revealed "
                   "history replay, two inode replacements, directory "
-                  "save/load failures, retry, temp cleanup, notice shapes "
-                  "and board preservation", flush=True)
+                  "save/load failures, retry, temp cleanup, notice shapes, "
+                  "process restart, corrupt replay rejection and board preservation", flush=True)
         finally:
             if process.poll() is None:
                 process.terminate()

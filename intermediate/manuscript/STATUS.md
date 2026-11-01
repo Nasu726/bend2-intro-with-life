@@ -1,3 +1,11 @@
+## 2026-11-02：原子的保存実験GUIの再起動・破損履歴拒否（検証候補）
+
+- 正本Draft PR #4先端 `b06c92fa` のReader・Tests・Intermediate・PDF layout・X11は5系統すべて成功。採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は不変。前回の公開済み盤面S→R→Lとディレクトリ障害回復は正本に統合済み。
+- `scripts/test_nxn_gui_desktop.py` の非配布原子的保存GUI検査に、Esc終了後の**別プロセス再起動→L復元**と、合法プレフィックス＋不正イベントを含む破損履歴の**全体拒否・盤面保持→修復後L成功**を追加。期待結果・実行手順・有限保証を第21章検証計画へ記載。
+- **新規のBendコンパイル・X11実行と全CIは検証PRの成功待ち**。配布Bend・TeX・PDF・読者ZIP・表紙は変更しない。第7章Byte/File56条件、第8章IO.now/IO.sleep3試行は既存の成功範囲を維持。配布GUIへの原子的保存接続、電源断耐性、競合、スクリーンリーダー、一般N×N運ゲー無し版、全149節校閲は未完成。
+
+---
+
 ## 2026-11-02：非配布GUIの公開済み盤面S/L往復・失敗回復（検証候補）
 
 - 正本Draft PR #4先端 `fad66e42`、Reader・Tests・Intermediate・PDF layout・X11の5系統CIは全成功。表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は不変。前回の原子的保存実験GUIは正本に統合済みだが、読者配布GUIへは未接続。
