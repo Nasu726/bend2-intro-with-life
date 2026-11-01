@@ -74,11 +74,12 @@ class ChapterFlowTest(unittest.TestCase):
         for phrase in ("保存失敗は赤い32×32画素の四角3個",
                        "失敗時にも盤面を維持", "Linux X11仮想デスクトップ",
                        "物理GPU・他OSでの表示は未検証",
-                       "スクリーンリーダーへの通知", "原子的な名前置換はLinux限定の検証候補",
+                       "スクリーンリーダーへの通知", "原子的な名前置換はLinux限定で",
                        "有限検証済みの保存失敗通知（赤い四角3個）"):
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, chapter)
         self.assertNotIn("保存失敗の画面通知、ファイルの原子的な更新は未検証・未実装", chapter)
+        self.assertNotIn("読者PDF・ZIPへの反映と配布版のX11検収は残っています", chapter)
         self.assertNotIn("物理GPU・他OS・保存失敗表示などの未確認項目", chapter)
 
     def test_chapter21_status_gui_is_taught_with_scope(self):

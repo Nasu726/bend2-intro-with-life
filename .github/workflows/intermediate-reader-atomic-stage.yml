@@ -35,6 +35,8 @@ jobs:
           set -euo pipefail
           test "$(git hash-object intermediate/cover_art.tex)" = ba9b5c4cb296e3adfd119ace6b55abc419c6faf1
           python3 intermediate/scripts/test_nxn_gui_atomic_store.py --static-only
+          ! grep -q 'この配布GUIへの接続候補' intermediate/Intermediate_Textbook.tex
+          ! grep -q '同一版検収はまだです' intermediate/Intermediate_Textbook.tex
       - name: Install native GUI prerequisites
         run: |
           sudo apt-get update -qq
