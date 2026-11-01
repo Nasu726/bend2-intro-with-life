@@ -1,3 +1,13 @@
+## 2026-11-02：配布GUI原子的保存・本文・129ページPDF・103エントリZIPの検証済み候補
+
+- 正本Draft PR #4 は `75056fef`（統合前）、検証ブランチの生成物コミットは [`b92c98ef`](https://github.com/Nasu726/bend2-intro-with-life/commit/b92c98efa87a445be5f74b7a7388e230652f9eb6)。PR外の [staging run #41353976090](https://github.com/Nasu726/bend2-intro-with-life/actions/runs/41353976090) は全ステップ成功。採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` 不変更、旧PDFの表紙ページと新PDFの画素一致も確認。
+- 配布 `nxn_gui_status_app.bend` のSキーを `Atomic.save_atomic_report` に接続。Linuxの `File.open(temp, "x")` とGNU `mv -fT` で同一ディレクトリの排他的な一時ファイルから名前置換する。Bend型検査・実ファイルの置換/障害/復旧/シンボリックリンク/衝突検査とX11実ウィンドウのS/L・保存失敗・再起動・公開済み盤面保持・不正履歴全体拒否に成功。X11テストの通知遷移競合（旧色を基準にした誤待機）も修正し再実行成功。
+- 第18・21・22章の保証範囲を更新。XeLaTeX警告ゲート、構造304テスト、Reader10テスト、129ページすべてのラスター描画、表紙の旧版との画素一致、PDF全文、103エントリZIPのallowlist・解答除外・相対import閉包、ZIP内PDFバイト一致、再生成PDF/ZIPとの全ページ・全文・収録ファイル照合が成功。配布TeX・PDF・ZIPは同じ候補版。
+- **この記録時点では正本PR #4への統合前。** 一時staging workflowは検証ブランチから除去し、通常のReader / Tests / Intermediate / X11 CIを検証PRで通した後、正本先端・表紙blobを再確認して単一コミットで統合する。第7章Byte/File56条件・第8章IO.now/IO.sleep3試行は既存回帰対象。
+- **正式完成ではない。** 電源断/fsync、close失敗検出、同一UID複数プロセス競合、他OS・物理GPU・スクリーンリーダー、一般N×N運ゲー無し、全149節の最終校閲は残る。
+
+---
+
 ## 2026-11-02：原子的保存の読者ZIP依存・本文保証範囲を同期する検証候補
 
 - 正本PR #4 は `75056fef`、全5系統CI成功。既存の検証ブランチ `8008c381` は先行1・遅れ0で競合なし。採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` を保持。
