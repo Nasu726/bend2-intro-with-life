@@ -217,6 +217,11 @@ class BookStructure(unittest.TestCase):
         self.assertIn('File.open(temp, "x")', atomic)
         self.assertIn('Process.run("/usr/bin/mv"', atomic)
         self.assertIn("nxn_gui_atomic_store.bend", book)
+        plan = (ROOT / "COMPLETION_PLAN.md").read_text(encoding="utf-8")
+        coverage = (ROOT / "COVERAGE.md").read_text(encoding="utf-8")
+        self.assertIn("ZIPは**103エントリ**", plan)
+        self.assertIn("原子的保存の配布GUIはLinux限定の検証候補", coverage)
+        self.assertIn("非配布実験GUIのX11有限操作は検証済み", coverage)
 
     def test_gui_coordinate_reference_boundaries(self):
         # Independent arithmetic oracle for the chapter's 4x4 / 64px mapping.
