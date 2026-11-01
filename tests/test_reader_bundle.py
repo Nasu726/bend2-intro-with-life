@@ -7,7 +7,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from build_reader_bundle import (INTRO_EXAMPLES, INTERMEDIATE_EXAMPLES,
-                                 readme, build)
+                                 INTERMEDIATE_GAME_FILES, readme, build)
 
 class TestReaderBundle(unittest.TestCase):
     def check_one(self, kind):
@@ -18,6 +18,9 @@ class TestReaderBundle(unittest.TestCase):
             expected_examples = INTRO_EXAMPLES if kind == "intro" else INTERMEDIATE_EXAMPLES
             expected = {prefix + n for n in ("README.md", "LICENSE", "textbook.pdf")}
             expected |= {prefix + "examples/" + name for name in expected_examples}
+            if kind == "intermediate":
+                expected |= {prefix + "examples/minesweeper/" + name
+                             for name in INTERMEDIATE_GAME_FILES}
             with zipfile.ZipFile(p) as z:
                 names = z.namelist()
                 self.assertEqual(set(names), expected)
@@ -33,10 +36,111 @@ class TestReaderBundle(unittest.TestCase):
                     self.assertFalse(name.endswith(".tex"))
                     self.assertFalse(name.endswith(".py"))
 
+    def test_nxn_lesson_imports_are_in_reader_bundle(self):
+        """Every relative Bend import in a shipped game must also be shipped."""
+        import re
+        included = set(INTERMEDIATE_GAME_FILES)
+        self.assertIn("nxn_playthrough.bend", included)
+        self.assertIn("nxn_public_three_bridge.bend", included)
+        self.assertIn("nxn_public_local.bend", included)
+        self.assertIn("nxn_public_three_step.bend", included)
+        for filename in ("nxn_public_three_fixpoint.bend",
+                         "nxn_public_many_fixpoint.bend",
+                         "nxn_public_pair_gap.bend"):
+            self.assertIn(filename, included)
+        for name in sorted(included):
+            source = (ROOT / "intermediate/minesweeper" / name).read_text(
+                encoding="utf-8")
+            imports = set(re.findall(
+                r"(?m)^import \./([A-Za-z0-9_]+\.bend)\s+as\b", source))
+            self.assertFalse(imports - included,
+                             f"{name} imports omitted learner files: "
+                             f"{sorted(imports - included)}")
+
+    def test_nxn_gui_is_complete_learner_material(self):
+        """Ship the validated lazy GUI with all relative-import dependencies."""
+        expected = ["nxn_lazy_game.bend", "nxn_gui_adapter.bend", "nxn_gui_events.bend",
+                    "nxn_gui_render.bend", "nxn_gui_app.bend", "nxn_gui_history.bend",
+                    "nxn_gui_store.bend", "nxn_gui_app_store.bend"]
+        for filename in expected:
+            self.assertIn(filename, INTERMEDIATE_GAME_FILES)
+        with zipfile.ZipFile(ROOT / "reader-packages/bend2-intermediate-reader-preview.zip") as z:
+            for filename in expected:
+                name = "bend2-intermediate-reader/examples/minesweeper/" + filename
+                self.assertEqual(z.read(name),
+                                 (ROOT / "intermediate/minesweeper" / filename).read_bytes())
+
+    def test_gui_save_lesson_is_replay_only(self):
+        """The shipped GUI records public actions and no internal mine truth."""
+        game = ROOT / "intermediate/minesweeper"
+        app = (game / "nxn_gui_app_store.bend").read_text(encoding="utf-8")
+        history = (game / "nxn_gui_history.bend").read_text(encoding="utf-8")
+        store = (game / "nxn_gui_store.bend").read_text(encoding="utf-8")
+        self.assertIn("Store.save(model)", app)
+        self.assertIn("Store.load()", app)
+        self.assertIn("History.pointer(model", app)
+        self.assertIn("2*cell", history)
+        self.assertIn("BEND2-GUI-1|", store)
+        self.assertIn("File.read(file, 4097)", store)
+        self.assertNotIn("mines:", store)
+        self.assertIn("Sで保存", readme("intermediate"))
+        self.assertIn("失敗の画面通知", readme("intermediate"))
+
+    def test_public_three_step_is_learner_material(self):
+        with zipfile.ZipFile(ROOT / "reader-packages/bend2-intermediate-reader-preview.zip") as z:
+            for filename in ("nxn_public_local.bend", "nxn_public_three_step.bend"):
+                name = "bend2-intermediate-reader/examples/minesweeper/" + filename
+                self.assertEqual(z.read(name),
+                                 (ROOT / "intermediate/minesweeper" / filename).read_bytes())
+
+    def test_chapter22_new_examples_are_exact_learner_material(self):
+        files = ("nxn_public_three_fixpoint.bend",
+                 "nxn_public_many_fixpoint.bend",
+                 "nxn_public_pair_gap.bend")
+        with zipfile.ZipFile(ROOT / "reader-packages/bend2-intermediate-reader-preview.zip") as z:
+            for filename in files:
+                name = "bend2-intermediate-reader/examples/minesweeper/" + filename
+                self.assertEqual(z.read(name),
+                                 (ROOT / "intermediate/minesweeper" / filename).read_bytes())
+
+    def test_poll_example_is_learner_material(self):
+        self.assertIn("53_chan_poll.bend", INTERMEDIATE_EXAMPLES)
+        with zipfile.ZipFile(ROOT / "reader-packages/bend2-intermediate-reader-preview.zip") as z:
+            name = "bend2-intermediate-reader/examples/53_chan_poll.bend"
+            self.assertEqual(z.read(name),
+                             (ROOT / "intermediate/src/53_chan_poll.bend").read_bytes())
+
+    def test_chapter19_two_cell_reader_sample_matches_verified_fixture(self):
+        self.assertIn("56_atomic_two_cells.bend", INTERMEDIATE_EXAMPLES)
+        sample = ROOT / "intermediate/src/56_atomic_two_cells.bend"
+        fixture = ROOT / "intermediate/scripts/fixtures/atomic_two_cells.bend"
+        self.assertEqual(sample.read_bytes(), fixture.read_bytes())
+        with zipfile.ZipFile(ROOT / "reader-packages/bend2-intermediate-reader-preview.zip") as z:
+            member = "bend2-intermediate-reader/examples/56_atomic_two_cells.bend"
+            self.assertEqual(z.read(member), fixture.read_bytes())
+
+    def test_pair_exists_sample_when_bend_is_installed(self):
+        # The staging job installs Bend before invoking these bundle tests.
+        # Keep local ZIP inspection usable on machines without the compiler.
+        import os
+        import shutil
+        import subprocess
+        if shutil.which("bend") is None:
+            self.skipTest("Bend executable not installed")
+        sample = ROOT / "intermediate" / "src" / "52_pair_exists.bend"
+        env = dict(os.environ, BEND_NO_TELEMETRY="1")
+        for args in (["bend", str(sample), "--check-only"], ["bend", str(sample)]):
+            result = subprocess.run(args, capture_output=True, text=True,
+                                    timeout=180, env=env, cwd=ROOT)
+            self.assertEqual(result.returncode, 0,
+                             f"{args} failed:\\n{result.stdout}\\n{result.stderr}")
+            if len(args) == 2:
+                self.assertEqual(result.stdout.strip(), "5")
+
     def test_intro_bundle(self):
         self.check_one("intro")
 
-    @unittest.skipUnless((ROOT / "intermediate/マインスイーパーで学ぶ_Bend2中級_初稿.pdf").exists(),
+    @unittest.skipUnless((ROOT / "intermediate/Bend2を使いこなす_プレビュー.pdf").exists(),
                          "Intermediate manuscript is on its separate PR branch")
     def test_intermediate_bundle(self):
         self.check_one("intermediate")
