@@ -1,0 +1,80 @@
+name: One-shot intermediate PDF and reader ZIP verification
+on:
+  push:
+    branches: [verify/gui-text-distribution-20261101]
+    paths:
+      - 'intermediate/Intermediate_Textbook.tex'
+      - '.github/workflows/verify-gui-text-distribution.yml'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check editorial regression tests
+        run: python3 -m unittest discover -s intermediate/tests -v
+      - name: Compile XeLaTeX
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: intermediate/Intermediate_Textbook.tex
+          latexmk_use_xelatex: true
+          texlive_version: '2025'
+          os: debian
+          extra_system_packages: fonts-noto-cjk fonts-noto-core
+      - name: Validate layout and generate PDF/ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOG=Intermediate_Textbook.log
+          if test -s intermediate/Intermediate_Textbook.log; then LOG=intermediate/Intermediate_Textbook.log; fi
+          test -s "$LOG"
+          if grep -nE 'Overfull|Underfull|LaTeX Font Warning|LaTeX Warning' "$LOG"; then
+            echo 'XeLaTeX warnings' >&2
+            exit 1
+          fi
+          if test -s Intermediate_Textbook.pdf; then
+            cp Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          else
+            cp intermediate/Intermediate_Textbook.pdf 'intermediate/Bend2を使いこなす_プレビュー.pdf'
+          fi
+          python3 scripts/build_reader_bundle.py intermediate
+          python3 -m unittest tests.test_reader_bundle -v
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
+          git show 'HEAD:intermediate/Bend2を使いこなす_プレビュー.pdf' > /tmp/previous.pdf
+          pdftoppm -f 1 -l 1 -singlefile -r 72 -png /tmp/previous.pdf /tmp/old-cover
+          pdftoppm -f 1 -l 1 -singlefile -r 72 -png 'intermediate/Bend2を使いこなす_プレビュー.pdf' /tmp/new-cover
+          cmp /tmp/old-cover.png /tmp/new-cover.png
+          python3 - <<'PY'
+          from pathlib import Path
+          import io,zipfile
+          pdf=Path('intermediate/Bend2を使いこなす_プレビュー.pdf').read_bytes()
+          with zipfile.ZipFile('reader-packages/bend2-intermediate-reader-preview.zip') as z:
+              names=z.namelist()
+              assert len(names)==102 and len(names)==len(set(names)), len(names)
+              p=[x for x in names if x.endswith('/textbook.pdf')]
+              assert len(p)==1 and z.read(p[0])==pdf
+              assert not any('solution' in x.lower() or '/test' in x.lower() for x in names)
+          tex=Path('intermediate/Intermediate_Textbook.tex').read_text()
+          assert 'GUIはまだ統合していません。' not in tex
+          assert 'GUI実機操作はまだ完成していません。' not in tex
+          print('PDF/ZIP byte consistency and cover first-page pixels OK')
+          PY
+          test "$(git hash-object intermediate/cover_art.tex)" = 'ba9b5c4cb296e3adfd119ace6b55abc419c6faf1'
+      - name: Commit verified generated distribution only on isolated branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- 'intermediate/Bend2を使いこなす_プレビュー.pdf' 'reader-packages/bend2-intermediate-reader-preview.zip'
+          if git diff --cached --quiet; then echo 'Expected regenerated distribution change' >&2; exit 1; fi
+          git commit -m 'build: synchronize validated intermediate PDF and reader ZIP'
+          git push origin HEAD:verify/gui-text-distribution-20261101
