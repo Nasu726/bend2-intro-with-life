@@ -379,25 +379,75 @@ def verify_atomic_status_app(tmp, output):
             press(wid, "l")
             await_status_color(wid, (0, 0, 255))
             assert not distinct(fresh, shot(wid, output / "atomic_02_loaded.png"))
+
+            # Saving only a Fresh board does not establish that the replay
+            # survives a real move. Exercise a revealed board and verify
+            # that both the on-disk history and the X11 pixels round-trip.
+            click(wid, 16, 16, 1)
+            opened = await_screen(
+                wid, fresh, output / "atomic_03_opened.png", True
+            )
+            await_status_color(wid, (0, 0, 0))
+            before_revealed_save = save.stat().st_ino
+            press(wid, "s")
+            await_status_color(wid, (0, 255, 0))
+            expected_revealed = f"BEND2-GUI-1|{SEED}|0|END".encode()
+            assert save.read_bytes() == expected_revealed
+            assert save.stat().st_ino != before_revealed_save
+            assert not list(work.glob("minesweeper_nxn_save.txt.tmp.*"))
+            assert not distinct(
+                opened, shot(wid, output / "atomic_04_saved_opened.png")
+            )
+            press(wid, "r")
+            await_status_color(wid, (0, 0, 0))
+            assert not distinct(
+                fresh, shot(wid, output / "atomic_05_reset.png")
+            )
+            press(wid, "l")
+            await_status_color(wid, (0, 0, 255))
+            assert not distinct(
+                opened, shot(wid, output / "atomic_06_restored.png")
+            )
+
             save.unlink()
             save.mkdir()
             sentinel = save / "keep"
             sentinel.write_bytes(b"KEEP-OLD-DIRECTORY")
-            press(wid, "r")
+            # Clear the L notification without resetting the revealed board.
+            click(wid, 480, 480, 1)
             await_status_color(wid, (0, 0, 0))
+            assert not distinct(
+                opened, shot(wid, output / "atomic_06b_before_failure.png")
+            )
             press(wid, "s")
             await_status_color(wid, (255, 0, 0))
             assert sentinel.read_bytes() == b"KEEP-OLD-DIRECTORY"
             assert list(save.iterdir()) == [sentinel]
             assert not list(work.glob("minesweeper_nxn_save.txt.tmp.*"))
-            assert not distinct(fresh, shot(wid, output / "atomic_03_failed.png"))
+            assert not distinct(opened, shot(wid, output / "atomic_07_failed.png"))
             assert process.poll() is None
+            press(wid, "l")
+            await_status_color(wid, (255, 165, 0))
+            assert not distinct(
+                opened, shot(wid, output / "atomic_08_failed_load.png")
+            )
+            assert sentinel.read_bytes() == b"KEEP-OLD-DIRECTORY"
+            sentinel.unlink()
+            save.rmdir()
+            press(wid, "s")
+            await_status_color(wid, (0, 255, 0))
+            assert save.read_bytes() == expected_revealed
+            assert not list(work.glob("minesweeper_nxn_save.txt.tmp.*"))
+            assert not distinct(
+                opened, shot(wid, output / "atomic_09_recovered_save.png")
+            )
             press(wid, "Escape")
             process.wait(timeout=15)
             assert process.returncode == 0
-            print("PASS experimental X11 atomic S: inode replacement, "
-                  "public replay, directory failure, temp cleanup, "
-                  "status shape and board preservation", flush=True)
+            print("PASS experimental X11 atomic S/L: Fresh and revealed "
+                  "history replay, two inode replacements, directory "
+                  "save/load failures, retry, temp cleanup, notice shapes "
+                  "and board preservation", flush=True)
         finally:
             if process.poll() is None:
                 process.terminate()
