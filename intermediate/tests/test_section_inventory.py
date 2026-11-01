@@ -32,6 +32,28 @@ class EditorialInventoryTest(unittest.TestCase):
         self.assertEqual([x["ending_review"] for x in rows], [0, 1])
         self.assertEqual(missing, ["missing.bend"])
 
+
+    def test_review_locations_and_nested_braces(self):
+        text = (r"\chapter{One}" + "\n" +
+                r"\section{S1}\exercise{\code{Map.has}を予想しましょう。}" + "\n" +
+                r"\section{S2}\exercise{結果を試してみましょう。}" + "\n" +
+                r"\chapter{Two}" + "\n" +
+                r"\section{S3}GUIはまだ統合していません。")
+        details = audit.review_details(text)
+        self.assertEqual([(d["chapter"], d["section"], d["line"], d["kind"])
+                          for d in details],
+                         [(1, "S1", 2, "exercise_ending"),
+                          (2, "S3", 5, "stale_gui_status")])
+
+    def test_review_not_a_publication_gate(self):
+        text = (r"\chapter{One}" + "\n" +
+                r"\section{S}\exercise{結果を調べてみましょう。}")
+        self.assertEqual(audit.review_details(text), [])
+
+    def test_review_unclosed_exercise_is_error(self):
+        with self.assertRaises(ValueError):
+            audit.review_details(r"\chapter{A}\exercise{broken")
+
     def test_actual_reader_samples_resolve(self):
         text = (ROOT / "Intermediate_Textbook.tex").read_text(encoding="utf-8")
         files = {p.name for p in (ROOT / "src").glob("*.bend")}

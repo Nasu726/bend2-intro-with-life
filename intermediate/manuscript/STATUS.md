@@ -1,3 +1,12 @@
+## 2026-11-01：第21章のGUI時制矛盾と13演習の個別校閲（検証ブランチ）
+
+- 正本Draft PR #4の先端 `ff8dd70c` のReader・Tests・Intermediate・PDF layout・X11の5ワークフローは全成功。前回の149節監査は正本統合済み。第7章Byte/File56条件・第8章時計3試行の既存検証は維持。表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` は不変更。
+- TeX第21章2110行の「GUIはまだ統合していません。」が、同章後半の10×10 GUI/X11有限実行・保存復元の説明と矛盾すると判明。[Issue #139](https://github.com/Nasu726/bend2-intro-with-life/issues/139)を登録。修正文案・受入条件を `manuscript/21_GUI時制と13演習の個別校閲.md` に記録。
+- 13演習を個別確認し、単なる語尾差と、実行結果の確認不足（第3・4・9・13・15章など）を区別。監査スクリプトに `--details` を追加し、章・節・行・警告種別を出力する。独立Python単体テストを3件追加する候補。合成入力の位置判定をローカルで確認済み。
+- **検証ブランチ候補のみ**。新コードの全Pythonテスト・GitHub CIは未実行。TeX・生成PDF・読者ZIP・Bend配布コード・表紙は変更していない。CI消費を抑えるため今回の小さな監査候補単独では新PRを起動しない。後続の本文修正・PDF/ZIP同期とまとめて検証する。正式完成ではない。
+
+---
+
 ## 2026-11-01：第7章Byte/Fileの標準出力フレーミング検証（検証候補）
 
 - 正本Draft PR #4の先端 `3727cf53` は前回統合時から不変。Reader・Tests・Intermediate・PDF layout・X11の5ワークフローは全成功。第7章のBend 56条件と第8章時計3試行も既存CIで成功。採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` を保持。

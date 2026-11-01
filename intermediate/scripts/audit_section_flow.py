@@ -60,7 +60,53 @@ def inventory(text, filenames):
     return result, sorted(set(referenced) - filenames)
 
 
+
+def review_details(text):
+    """Return actionable locations; these are editorial hints, not failures."""
+    chapters = list(CHAPTER.finditer(text))
+    sections = list(SECTION.finditer(text))
+
+    def location(offset):
+        chapter = next((m for m in reversed(chapters) if m.start() <= offset), None)
+        section = next((m for m in reversed(sections)
+                        if m.start() <= offset and
+                        (chapter is None or m.start() > chapter.start())), None)
+        return {
+            "chapter": chapters.index(chapter) + 1 if chapter else None,
+            "section": section.group(1) if section else None,
+            "line": text.count("\n", 0, offset) + 1,
+        }
+
+    details = []
+    needle = r"\exercise{"
+    pos = 0
+    while (at := text.find(needle, pos)) >= 0:
+        start = at + len(needle)
+        depth = 1
+        end = start
+        while end < len(text) and depth:
+            if text[end] in "{}" and (end == 0 or text[end-1] != "\\"):
+                depth += 1 if text[end] == "{" else -1
+            end += 1
+        if depth:
+            raise ValueError(f"Unclosed exercise at {at}")
+        body = text[start:end-1].strip()
+        if not target_ending(body):
+            details.append({**location(at), "kind": "exercise_ending",
+                            "excerpt": body[-90:]})
+        pos = end
+
+    # A historical statement now conflicts with the later verified X11 GUI.
+    phrase = "GUIはまだ統合していません。"
+    pos = 0
+    while (at := text.find(phrase, pos)) >= 0:
+        details.append({**location(at), "kind": "stale_gui_status",
+                        "excerpt": phrase})
+        pos = at + len(phrase)
+    return sorted(details, key=lambda x: x["line"])
+
 def main():
+    import json
     text = (ROOT / "Intermediate_Textbook.tex").read_text(encoding="utf-8")
     filenames = {p.name for p in (ROOT / "src").glob("*.bend")}
     rows, missing = inventory(text, filenames)
@@ -73,6 +119,9 @@ def main():
           f"exercises={sum(x['exercises'] for x in rows)} "
           f"ending_review={sum(x['ending_review'] for x in rows)}")
     print(f"missing samples={missing}")
+    if "--details" in sys.argv[1:]:
+        for item in review_details(text):
+            print(json.dumps(item, ensure_ascii=False))
     # Only actual missing sample references or a changed chapter count fail.
     # Lexical code/output/exercise signals are review hints, not acceptance.
     return 0 if len(rows) == 23 and not missing else 1
