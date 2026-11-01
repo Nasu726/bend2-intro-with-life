@@ -1,6 +1,6 @@
 ## 2026-11-01：第19章二要素atomic.addの読者配布・検証候補
 
-第19章に`56_atomic_two_cells.bend`を追加し、順次二回の`Array.atomic.add`に対する旧値と最終セル値の4行出力・実コード・演習を本編へ掲載する。検証済みfixtureと同一Bendソースを読者ZIPに含め、通常56本＋ゲーム43本＋PDF/README/LICENSEの**102エントリ**に同期する。**この候補は組版・PDF/ZIP同期・総合CIの全成功前には正本統合しない。** 表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1`は保護し、第7章Byte/File 56条件と第8章IO.now/IO.sleep 3試行を維持。GPU・並列競合は未検証。
+第19章に`56_atomic_two_cells.bend`を追加し、順次二回の`Array.atomic.add`に対する旧値と最終セル値の4行出力・実コード・演習を本編へ掲載する。検証済みfixtureと同一Bendソースを読者ZIPに含め、通常56本＋ゲーム44本＋PDF/README/LICENSEの**103エントリ**に同期する。**この候補は組版・PDF/ZIP同期・総合CIの全成功前には正本統合しない。** 表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1`は保護し、第7章Byte/File 56条件と第8章IO.now/IO.sleep 3試行を維持。GPU・並列競合は未検証。
 
 ---
 

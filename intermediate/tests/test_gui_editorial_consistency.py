@@ -22,7 +22,8 @@ class GuiEditorialConsistencyTest(unittest.TestCase):
     def test_bounded_x11_claim_and_unverified_environments(self):
         for expected in (
             "Linux X11仮想デスクトップで確認した有限の操作例",
-            "物理GPU・他OS・スクリーンリーダー通知・保存の原子的更新",
+            "物理GPU・他OS・スクリーンリーダー通知",
+            "配布PDF・ZIPとの",
             "10×10 GUIのOS上での有限操作",
         ):
             with self.subTest(expected=expected):

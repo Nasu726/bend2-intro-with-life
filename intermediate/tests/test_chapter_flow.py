@@ -74,7 +74,7 @@ class ChapterFlowTest(unittest.TestCase):
         for phrase in ("保存失敗は赤い32×32画素の四角3個",
                        "失敗時にも盤面を維持", "Linux X11仮想デスクトップ",
                        "物理GPU・他OSでの表示は未検証",
-                       "スクリーンリーダーへの通知", "原子的な更新は未実装",
+                       "スクリーンリーダーへの通知", "原子的な名前置換はLinux限定の検証候補",
                        "有限検証済みの保存失敗通知（赤い四角3個）"):
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, chapter)
@@ -108,6 +108,8 @@ class ChapterFlowTest(unittest.TestCase):
             self.assertIn(phrase, readme)
         self.assertNotIn("これは色だけの通知", readme)
         self.assertNotIn("失敗の画面通知、原子的", readme)
+        self.assertIn("nxn_gui_atomic_store.bend", readme)
+        self.assertIn("Atomic.save_atomic_report(model)", gui)
 
     def test_chapter19_two_cell_lesson_is_runnable(self):
         chapter = self.chapters[18][1]

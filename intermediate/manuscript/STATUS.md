@@ -1,3 +1,12 @@
+## 2026-11-02：原子的保存の読者ZIP依存・本文保証範囲を同期する検証候補
+
+- 正本PR #4 は `75056fef`、全5系統CI成功。既存の検証ブランチ `8008c381` は先行1・遅れ0で競合なし。採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` を保持。
+- 配布通知GUIの `Atomic.save_atomic_report` importに対し、読者ZIPの明示allowlistに `nxn_gui_atomic_store.bend` がない不整合を修正する候補。通常56本＋ゲーム44本＋PDF/README/LICENSEで103エントリへ。相対import閉包の退行テストを追加。
+- 第18・21・22章の原子的保存と一般N×N推論の検証範囲を区別し、Linux限定の `File.open("x")` と `mv -fT` のBend実コード・期待通知・演習を本編に追記する。配布READMEと生成ZIPの案内文も更新。
+- **これはPR外の検証ブランチに置く未検収候補。** 新版のBend型検査・X11実操作・XeLaTeX・PDF全ページ・103エントリZIP・同一PDFバイト一致・全CIは未実施。既存PDF/ZIPは旧版であり、正本へ統合しない。第7章Byte/File56条件と第8章時計3試行は既存回帰対象。電源断耐性、同一UID競合、他OS、スクリーンリーダー、一般N×N運ゲー無し、149節最終校閲は未完了。
+
+---
+
 ## 2026-11-02：配布GUIの原子的保存接続（PR外検証ブランチ・未検証）
 
 - 正本Draft PR #4の先端 `75056fef` で Reader / Tests / Intermediate / PDF layout / X11 の5ワークフロー成功を確認。採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` 不変。
