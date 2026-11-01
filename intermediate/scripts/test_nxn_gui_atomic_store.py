@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Linux-only candidate GUI atomic save; does not alter the shipped GUI.
 
-Bend writes a randomized same-directory temporary file and invokes GNU mv -fT
+Bend exclusively creates a randomized same-directory temporary file (mode x)
+and invokes GNU mv -fT
 after File.write and File.close. This checks replacement and failure preservation,
 not fsync, power-loss durability, or multi-process races.
 """
@@ -24,11 +25,13 @@ def static():
     for required in (
         'Process.run("/usr/bin/mv",', '["-fT", "--", temp, "minesweeper_nxn_save.txt"]',
         "File.close(file)", "File.write(file, text)", "IO.random_u32()",
+        'File.open(temp, "x")',
         "History.valid_entries(chronological)", "cleanup_failed(model, temp)",
         "Store.payload(seed, chronological)",
     ):
         assert required in code, required
     assert 'File.open("minesweeper_nxn_save.txt", "w")' not in code
+    assert 'File.open(temp, "w")' not in code
     assert "mines:" not in code and "IO.die(" not in code
     assert shutil.which("/usr/bin/mv"), "Linux GNU mv required"
     with tempfile.TemporaryDirectory() as td:
@@ -108,8 +111,45 @@ def main():
         assert not target.is_symlink() and target.read_bytes() == EXPECTED
         assert referent.read_bytes() == b"KEEP-REFERENT"
         no_temp(work)
+
+        # Deterministic collision probe: the real entry point uses random
+        # suffixes, so a fixed suffix is required to test EEXIST reliably.
+        source = SOURCE.read_text(encoding="utf-8")
+        marker = "\ndef main() -> IO(Unit):"
+        assert source.count(marker) == 1
+        probe = work / "nxn_gui_atomic_collision_probe.bend"
+        probe.write_text(source.split(marker)[0] + """
+def main() -> IO(Unit):
+  do IO<Unit>:
+    result: History.Model & Bool <- write_temp(
+      History.new(20261029), "BEND2-GUI-1|20261029|0|199|END",
+      "minesweeper_nxn_save.txt.tmp.fixed")
+    print_result(result)
+""", encoding="utf-8")
+        bend_run(probe, work, check=True)
+        target.write_bytes(b"OLD-UNTIL-EXCLUSIVE")
+        temp = work / (TARGET + ".tmp.fixed")
+        temp.write_bytes(b"PREEXISTING-TEMP")
+        assert bend_run(probe, work) == "0"
+        assert target.read_bytes() == b"OLD-UNTIL-EXCLUSIVE"
+        assert temp.read_bytes() == b"PREEXISTING-TEMP"
+        temp.unlink()
+
+        victim = work / "victim"
+        victim.write_bytes(b"KEEP-PRIVATE")
+        temp.symlink_to(victim)
+        assert bend_run(probe, work) == "0"
+        assert target.read_bytes() == b"OLD-UNTIL-EXCLUSIVE"
+        assert temp.is_symlink()
+        assert victim.read_bytes() == b"KEEP-PRIVATE"
+        temp.unlink()
+
+        assert bend_run(probe, work) == "1"
+        assert target.read_bytes() == EXPECTED
+        no_temp(work)
     print("PASS Bend atomic save: existing/fresh, directory failure, recovery, "
-          "symlink isolation and temporary cleanup", flush=True)
+          "destination symlink isolation, exclusive temp collisions, "
+          "and temporary cleanup", flush=True)
 
 
 if __name__ == "__main__":

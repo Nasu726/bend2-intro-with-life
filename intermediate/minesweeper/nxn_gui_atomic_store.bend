@@ -2,7 +2,9 @@
 # Not wired to the learner-facing GUI until the Bend + X11 gate succeeds.
 # Same-directory temporary write, close, then GNU mv -fT (rename on Linux).
 # No fsync: this protects against partial replacement, not power-loss durability.
-# No multi-process lock; randomized temporary names reduce, not eliminate, races.
+# File.open(..., "x") uses O_CREAT|O_EXCL on native Linux: an existing
+# temporary file or symlink fails without truncating its referent.
+# A random-name collision returns failure; no multi-process lock or fsync.
 import Base
 import ./nxn_gui_history.bend as History
 import ./nxn_gui_store.bend as Store
@@ -63,7 +65,7 @@ def after_open(model: History.Model, text: String, +temp: String,
 def write_temp(model: History.Model, text: String, +temp: String) ->
   IO(History.Model & Bool):
   do IO<History.Model & Bool>:
-    opened: Result<&1, &1, U32 & String, File> <- File.open(temp, "w")
+    opened: Result<&1, &1, U32 & String, File> <- File.open(temp, "x")
     after_open(model, text, temp, opened)
 
 def with_nonce(model: History.Model, text: String,
