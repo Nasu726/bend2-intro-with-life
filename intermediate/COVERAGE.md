@@ -1,3 +1,11 @@
+## 2026-11-02：通知付きGUIの原子的保存を読者配布へ接続する検証候補
+
+- 原子的保存の配布GUIはLinux限定の検証候補です。`nxn_gui_status_app.bend`のSキーは`nxn_gui_atomic_store.bend`を呼び、`File.open(temp, "x")`で排他的に一時ファイルを作成し、書込み・close後にGNU `mv -fT`で保存先の名前を置換します。比較用の旧`nxn_gui_app_store.bend`は従来の直接上書きです。
+- **検証の区別：** 非配布実験GUIのX11有限操作は検証済み。読者向けGUI接続候補はBend型検査・X11操作・組版・PDF/ZIP同一版検収をまだ終えていません。新allowlistは通常56本＋ゲーム44本＋PDF/README/LICENSEで103エントリの予定です。
+- 電源断後の永続性（fsyncなし）、同一UID競合、他OS、スクリーンリーダー通知、一般N×N運ゲー無し生成は保証しません。採用済み表紙は変更しません。
+
+---
+
 ## 2026-10-31：第21章GUI成否通知の読者配布（検証済み）
 
 - S/L成功／失敗を画面右端に**4色と32×32四角1〜4個の個数**で示す`nxn_gui_status_app.bend`と、`History.Model & Bool`を返す`nxn_gui_feedback_store.bend`は101エントリの学習者ZIPへ収録済み。第21章の必要性→起動コード→観察結果→仕組み→演習に対応する。

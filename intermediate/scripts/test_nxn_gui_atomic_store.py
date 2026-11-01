@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Linux-only candidate GUI atomic save; does not alter the shipped GUI.
+"""Linux-only atomic save, staged for the learner-facing status GUI.
 
 Bend exclusively creates a randomized same-directory temporary file (mode x)
 and invokes GNU mv -fT
@@ -24,10 +24,13 @@ EXPECTED = b"BEND2-GUI-1|20261029|0|199|END"
 def static():
     code = SOURCE.read_text(encoding="utf-8")
     gui = ATOMIC_GUI.read_text(encoding="utf-8")
+    shipped = (GAME / "nxn_gui_status_app.bend").read_text(encoding="utf-8")
     assert "Atomic.save_atomic_report(model)" in gui
     assert "Status.event(e, state)" in gui
     assert "Status.view(state)" in gui
     assert "Feedback.save_report(model)" not in gui
+    assert "Atomic.save_atomic_report(model)" in shipped
+    assert "Feedback.save_report(model)" not in shipped
     for required in (
         'Process.run("/usr/bin/mv",', '["-fT", "--", temp, "minesweeper_nxn_save.txt"]',
         "File.close(file)", "File.write(file, text)", "IO.random_u32()",

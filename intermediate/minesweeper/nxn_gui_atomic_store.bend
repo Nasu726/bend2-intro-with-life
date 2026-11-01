@@ -1,5 +1,5 @@
-# Experimental Linux-only atomic replacement for the GUI's PUBLIC replay.
-# Not wired to the learner-facing GUI until the Bend + X11 gate succeeds.
+# Linux-only atomic replacement for the GUI's PUBLIC replay.
+# Staged for the learner-facing status GUI; PDF/ZIP sync and CI are pending.
 # Same-directory temporary write, close, then GNU mv -fT (rename on Linux).
 # No fsync: this protects against partial replacement, not power-loss durability.
 # File.open(..., "x") uses O_CREAT|O_EXCL on native Linux: an existing

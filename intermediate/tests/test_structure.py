@@ -189,6 +189,7 @@ class BookStructure(unittest.TestCase):
         self.assertIn("nxn_gui_app_store.bend", text)
         self.assertIn("nxn_gui_status_app.bend", text)
         self.assertIn("nxn_gui_feedback_store.bend", INTERMEDIATE_GAME_FILES)
+        self.assertIn("nxn_gui_atomic_store.bend", INTERMEDIATE_GAME_FILES)
         self.assertIn("BEND2-GUI-1|20261029|0|199|END", text)
         self.assertIn("nxn_gui_app.bend", readme)
         app = (ROOT / "minesweeper" / "nxn_gui_app.bend").read_text(encoding="utf-8")
@@ -202,6 +203,25 @@ class BookStructure(unittest.TestCase):
             self.assertIn(name, INTERMEDIATE_GAME_FILES)
         expected_entries = len(INTERMEDIATE_EXAMPLES) + len(INTERMEDIATE_GAME_FILES) + 3
         self.assertIn(f"ZIPは**{expected_entries}エントリ**", plan)
+
+    def test_atomic_status_gui_reader_import_closure(self):
+        # A learner ZIP must contain the module imported by its GUI entrypoint.
+        from build_reader_bundle import INTERMEDIATE_GAME_FILES
+        gui = (ROOT / "minesweeper" / "nxn_gui_status_app.bend").read_text(encoding="utf-8")
+        atomic = (ROOT / "minesweeper" / "nxn_gui_atomic_store.bend").read_text(encoding="utf-8")
+        book = BOOK.read_text(encoding="utf-8")
+        self.assertIn("import ./nxn_gui_atomic_store.bend as Atomic", gui)
+        self.assertIn("Atomic.save_atomic_report(model)", gui)
+        self.assertNotIn("Feedback.save_report(model)", gui)
+        self.assertIn("nxn_gui_atomic_store.bend", INTERMEDIATE_GAME_FILES)
+        self.assertIn('File.open(temp, "x")', atomic)
+        self.assertIn('Process.run("/usr/bin/mv"', atomic)
+        self.assertIn("nxn_gui_atomic_store.bend", book)
+        plan = (ROOT / "COMPLETION_PLAN.md").read_text(encoding="utf-8")
+        coverage = (ROOT / "COVERAGE.md").read_text(encoding="utf-8")
+        self.assertIn("ZIPは**103エントリ**", plan)
+        self.assertIn("原子的保存の配布GUIはLinux限定の検証候補", coverage)
+        self.assertIn("非配布実験GUIのX11有限操作は検証済み", coverage)
 
     def test_gui_coordinate_reference_boundaries(self):
         # Independent arithmetic oracle for the chapter's 4x4 / 64px mapping.

@@ -102,6 +102,8 @@ INTERMEDIATE_GAME_FILES = (
     "nxn_gui_app_store.bend",
     # Chapter 21: opt-in visible GUI File success/failure indicator.
     "nxn_gui_feedback_store.bend",
+    # Linux-only same-directory temporary write and atomic name replacement.
+    "nxn_gui_atomic_store.bend",
     "nxn_gui_status_app.bend",
 )
 
@@ -129,7 +131,9 @@ PDFを読み、examples/ 内のコードを実行してください。
 初稿は執筆途中です。GUI、操作列の保存・復元、4×4・地雷2個限定の
 「運ゲー無し」盤面生成を含みます。
 10×10 GUIのS/Lによる保存・復元・成否通知はLinux X11仮想画面で有限検証済みです。
-物理GPU・他OS、原子的保存、スクリーンリーダー通知、対話CLI、任意サイズの盤面生成は未完成です。
+通知付きGUIのSはLinux限定で、排他的な一時ファイルからGNU mv -fTで保存先を置換します。
+物理GPU・他OS、電源断後の永続性、同一UIDの同時保存、スクリーンリーダー通知、
+対話CLI、任意サイズの盤面生成は未完成です。
 
 公式ガイド: https://github.com/bendlang/bend/blob/main/guide/GUIDE.md
 
@@ -191,7 +195,10 @@ bend examples/minesweeper/nxn_public_pair_gap.bend
 bend examples/minesweeper/nxn_gui_status_app.bend -o minesweeper10status
 ./minesweeper10status
 S成功は緑1個、L成功は青2個、S失敗は赤3個、L失敗は橙4個の四角で表示します。
-保存データはminesweeper_nxn_save.txt。旧版nxn_gui_app_store.bendも残します。
+保存データはminesweeper_nxn_save.txt。Linux限定のnxn_gui_atomic_store.bendを同梱します。
+一時ファイルはFile.open(..., "x")で排他的に作り、書込・close後にGNU mv -fTで置換します。
+旧版nxn_gui_app_store.bendは直接上書きの比較用であり、原子的ではありません。
+電源断時の永続性、同一UIDの競合、他OSでの動作は保証しません。
 
 4×4マインスイーパーのGUIをネイティブビルドして起動:
 bend examples/minesweeper/gui.bend -o minesweeper

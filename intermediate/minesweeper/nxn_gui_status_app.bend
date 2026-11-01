@@ -1,4 +1,4 @@
-# Learner-facing 10x10 GUI with an observable S/L outcome.
+# Learner-facing Linux/X11 10x10 GUI with atomic S replacement and observable S/L outcome.
 # Four 32x32 squares in the non-playable gutter (x=384..447, y=0..63).
 # Color AND count encode the result: green/1=S OK, blue/2=L OK,
 # red/3=S failed, amber/4=L failed. No screen-reader API is provided.
@@ -7,7 +7,7 @@ import Base
 import ./nxn_gui_history.bend as History
 import ./nxn_gui_render.bend as Render
 import ./nxn_gui_store.bend as Store
-import ./nxn_gui_feedback_store.bend as Feedback
+import ./nxn_gui_atomic_store.bend as Atomic
 import ./nxn_lazy_game.bend as Lazy
 
 type State is Type:
@@ -115,7 +115,7 @@ def save_state(state: State) -> IO(State):
   match state:
     case State{model, notice}:
       do IO<State>:
-        outcome: History.Model & Bool <- Feedback.save_report(model)
+        outcome: History.Model & Bool <- Atomic.save_atomic_report(model)
         return after_save(outcome)
 
 def load_state(state: State) -> IO(State):
