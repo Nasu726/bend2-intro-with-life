@@ -220,8 +220,12 @@ class BookStructure(unittest.TestCase):
         plan = (ROOT / "COMPLETION_PLAN.md").read_text(encoding="utf-8")
         coverage = (ROOT / "COVERAGE.md").read_text(encoding="utf-8")
         self.assertIn("ZIPは**103エントリ**", plan)
-        self.assertIn("原子的保存の配布GUIはLinux限定の検証候補", coverage)
-        self.assertIn("非配布実験GUIのX11有限操作は検証済み", coverage)
+        current = coverage.partition("---")[0]
+        self.assertIn("原子的な名前置換を行う配布GUIはLinux限定の学習用実装", current)
+        self.assertIn("読者向け通知付きGUIでも、Bend型検査", current)
+        self.assertIn("電源断耐性・競合安全性・他OSでの保証ではありません", current)
+        self.assertNotIn("検証候補", current)
+        self.assertNotIn("検収をまだ終えていません", current)
 
     def test_gui_coordinate_reference_boundaries(self):
         # Independent arithmetic oracle for the chapter's 4x4 / 64px mapping.
