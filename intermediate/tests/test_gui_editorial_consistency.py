@@ -59,6 +59,10 @@ class GuiEditorialConsistencyTest(unittest.TestCase):
         self.assertNotIn("合計103エントリを予定", readme)
         self.assertIn("fsyncなし", checklist)
         self.assertIn("同一UID競合", checklist)
+        self.assertNotIn("PDFと学習用ZIPは再生成・同一版検収前です", readme)
+        self.assertNotIn("GUI実機操作の受け入れ試験とGUIの状態保存・復元は未完成です", readme)
+        self.assertIn("現行の129ページPDFと103エントリ読者ZIPは同一版で検収済み", readme)
+        self.assertIn("10×10の通知付きGUIはLinux X11仮想デスクトップで有限の実操作・保存復元を検査済み", readme)
 
 if __name__ == "__main__":
     unittest.main()
