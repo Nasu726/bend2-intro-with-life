@@ -43,5 +43,26 @@ class GuiEditorialConsistencyTest(unittest.TestCase):
                 self.assertIn(expected, self.text)
 
 
+    def test_current_reader_distribution_status(self):
+        root = TEX.parent
+        readme = (root / "README.md").read_text(encoding="utf-8")
+        coverage = (root / "COVERAGE.md").read_text(encoding="utf-8")
+        checklist = (root / "EDITORIAL_CHECKLIST.md").read_text(encoding="utf-8")
+        current_coverage = coverage.partition("---")[0]
+        self.assertIn("129ページPDF", current_coverage)
+        self.assertIn("103エントリ", current_coverage)
+        self.assertIn("原子的な名前置換", current_coverage)
+        self.assertNotIn("検収をまだ終えていません", current_coverage)
+        self.assertIn("現行の読者ZIPに収録しています", readme)
+        self.assertIn("PDF・ZIPへの反映と配布版のX11有限検収を完了", readme)
+        self.assertNotIn("次版へ収録する候補", readme)
+        self.assertNotIn("合計103エントリを予定", readme)
+        self.assertIn("fsyncなし", checklist)
+        self.assertIn("同一UID競合", checklist)
+        self.assertNotIn("PDFと学習用ZIPは再生成・同一版検収前です", readme)
+        self.assertNotIn("GUI実機操作の受け入れ試験とGUIの状態保存・復元は未完成です", readme)
+        self.assertIn("現行の129ページPDFと103エントリ読者ZIPは同一版で検収済み", readme)
+        self.assertIn("10×10の通知付きGUIはLinux X11仮想デスクトップで有限の実操作・保存復元を検査済み", readme)
+
 if __name__ == "__main__":
     unittest.main()

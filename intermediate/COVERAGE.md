@@ -1,7 +1,7 @@
-## 2026-11-02：通知付きGUIの原子的保存を読者配布へ接続する検証候補
+## 2026-11-02：通知付きGUIの原子的保存を読者配布へ統合（検証済み）
 
-- 原子的保存の配布GUIはLinux限定の検証候補です。`nxn_gui_status_app.bend`のSキーは`nxn_gui_atomic_store.bend`を呼び、`File.open(temp, "x")`で排他的に一時ファイルを作成し、書込み・close後にGNU `mv -fT`で保存先の名前を置換します。比較用の旧`nxn_gui_app_store.bend`は従来の直接上書きです。
-- **検証の区別：** 非配布実験GUIのX11有限操作は検証済み。読者向けGUI接続候補はBend型検査・X11操作・組版・PDF/ZIP同一版検収をまだ終えていません。新allowlistは通常56本＋ゲーム44本＋PDF/README/LICENSEで103エントリの予定です。
+- 原子的な名前置換を行う配布GUIはLinux限定の学習用実装です。`nxn_gui_status_app.bend`のSキーは`nxn_gui_atomic_store.bend`を呼び、`File.open(temp, "x")`で排他的に一時ファイルを作成し、書込み・close後にGNU `mv -fT`で保存先の名前を置換します。比較用の旧`nxn_gui_app_store.bend`は従来の直接上書きです。
+- **検証の区別：** 非配布実験GUIだけでなく読者向け通知付きGUIでも、Bend型検査・Linux X11有限操作・実ファイルの保存/復元/障害回復・XeLaTeX・129ページPDF全描画・ZIP内PDFバイト一致を検証済みです。読者ZIPは通常56本＋ゲーム44本＋PDF/README/LICENSEの103エントリです。検証PR #147の4ワークフローと統合後の正本 `97d8bda1` の5ワークフローは成功。これらは電源断耐性・競合安全性・他OSでの保証ではありません。
 - 電源断後の永続性（fsyncなし）、同一UID競合、他OS、スクリーンリーダー通知、一般N×N運ゲー無し生成は保証しません。採用済み表紙は変更しません。
 
 ---
@@ -30,7 +30,7 @@
 
 - **説明**：本文で引数・返り値・制約・使用方法に触れています。
 - **例**：`intermediate/src/`にコードがあります。
-- **検証**：CIが型検査・実行照合などを行います。実機のGUI・音声・ネットワークは含めません。
+- **検証**：CIが型検査・実行照合などを行います。Linux X11仮想デスクトップの有限GUI操作と127.0.0.1ループバック通信を含みますが、音声の実再生・物理GPU・他OSは対象外です。
 - **追加実習**：本の初稿ではまだAPI名と制約の説明が中心で、次の改訂で実例を補強する必要があります。
 
 | 機能群 | 本文 | コード | 追加すべき実習・検査 |
@@ -45,7 +45,7 @@
 | `Pair`, `Sigma`, `Exists`, `Or` | 第5・第16章 | `52_pair_exists.bend` | PairとExistsの構築・値の取り出しを実習。`n=2`の証拠は一般全称証明ではない。`Or`と複雑な依存型の演習は今後 |
 | `Kind`, `Quant`, 消去引数 | 第5・第16章 | 追加実習 | 型エラーとの対比 |
 | `IO`, `IO.try`, `IO.die` | 第6章＋[詳細補稿](manuscript/06_IOと失敗を読む.md)（PDFに一部反映、残りは補稿） | `08_args.bend` | 失敗時の終了コード |
-| `File`（文字列・バイト） | 第7章と第21章（保存・復元） | `12_file_write.bend`、`13_file_read.bend`、`45_binary_file.bend`、`minesweeper/cli_save.bend` | 文字列・バイト列の保存と閉鎖、実ファイルの `00 0A 0D FF` 照合。10×10 GUIのS/L保存・再読込はX11有限検証済み。大容量の反復読取・原子的保存は未完了 |
+| `File`（文字列・バイト） | 第7章と第21章（保存・復元） | `12_file_write.bend`、`13_file_read.bend`、`45_binary_file.bend`、`minesweeper/cli_save.bend` | 文字列・バイト列の保存と閉鎖、実ファイルの `00 0A 0D FF` 照合。10×10 GUIのS/L保存・再読込はX11有限検証済み。大容量の反復読取は未検証。Linux同一ディレクトリでの一時ファイル作成とGNU `mv -fT`による名前置換は有限検証済み（fsync・電源断耐性・同時保存は未検証） |
 | 引数・環境変数・乱数・時刻 | 第8章 | `08_args.bend`、`11_random_io.bend`、`19_environment.bend`、`46_elapsed_clock.bend` | IO.now/sleepの実行検証。経過時間を固定せず数値形式を照合 |
 | `Process.run` | 第8章 | `20_process_run.bend` | Linuxでの終了コード実行例。stderr・失敗は今後 |
 | `IO.fork/join`, `Chan` | 第9章 | `21_io_fork.bend`、`28_chan_roundtrip.bend`、`53_chan_poll.bend` | fork/join、送受信・close、空の受信/送信後のPollを実行照合。閉鎖後の受信・送信待機・取消は今後 |
@@ -67,12 +67,12 @@
 | 16マスArray・地雷マスク・隣接地雷数・境界検査 | `minesweeper/LESSON.md`に解説草稿（第13・17章に一部統合） | `minesweeper/board4.bend`、`LAWS.bend`、`PROOF.bend` | 地雷マスク不変・空盤面の数字・具体的な数字・配列外操作の8法則を証明。Python独立オラクルで154ケースを実行。一般の隣接数の全称証明、公開時の安全判定は未完成 |
 | 旗の基本操作・局所法則 | 第13・15・17章 | `09_minesweeper_status.bend`, `04_flag_laws.bend`, `34_mine_mask_law.bend` | 最小の地雷マスク不変と旗ビット変更を `--verdict` で検査。全盤面の他条件は別途 |
 | クリック・旗・敗北・勝利の純粋ゲーム進行（G-02/G-03部分） | `minesweeper/LESSON.md`に追記（第17・21章に一部統合） | `minesweeper/session.bend`・`LAWS.bend`・`PROOF.bend` | 7法則を証明。初手と0領域の処理を別モジュールへ追加。43法則を先行宣言し、Bend検査と独立オラクルを利用。GUIの実機動作は未検証 |
-| 通常版マインスイーパー（GUI統合） | 第21章に固定4×4 GUIと初手生成10×10 GUIの責任分離・起動方法・公開情報Image・Array.clone・演習を収録 | `minesweeper/start.bend`、`cli_replay.bend`、`gui.bend`、`nxn_lazy_game.bend`、`nxn_gui_app.bend`（10×10関連5モジュールを読者ZIPに収録） | 4×4 GUIの13件の純粋入力検査とLinuxネイティブビルド、10×10 GUIのheadless描画37条件とApp.run型検査が成功。Linux X11仮想デスクトップで10×10のクリック・旗・リセット・S/L保存復元・再起動後復元・色＋四角個数の通知を有限検証済み。物理GPU・他OS・スクリーンリーダーは未検証、原子的保存は未実装。固定CLI操作履歴保存も別途検証済み |
+| 通常版マインスイーパー（GUI統合） | 第21章に固定4×4 GUIと初手生成10×10 GUIの責任分離・起動方法・公開情報Image・Array.clone・演習を収録 | `minesweeper/start.bend`、`cli_replay.bend`、`gui.bend`、`nxn_lazy_game.bend`、`nxn_gui_app.bend`（10×10関連5モジュールを読者ZIPに収録） | 4×4 GUIの13件の純粋入力検査とLinuxネイティブビルド、10×10 GUIのheadless描画37条件とApp.run型検査が成功。Linux X11仮想デスクトップで10×10のクリック・旗・リセット・S/L保存復元・再起動後復元・色＋四角個数の通知を有限検証済み。物理GPU・他OS・スクリーンリーダーは未検証。通知付き配布GUIのLinux限定原子的名前置換は有限検証済みで、電源断耐性・同時保存は未検証。固定CLI操作履歴保存も別途検証済み |
 | 運ゲー無し版 | 第22章に公開モデル120候補、実際に勝利まで追う限定版生成を収録 | `14_local_inference.bend`、`minesweeper/public_solver.bend`、`minesweeper/noguess_generator.bend`、`solutions/noguess_reference.py` | 公開情報だけを使うBendソルバーは独立13ケース照合、限定版生成はBendゲームで勝利しPython別実装でも `40960 / 0,12,14` を検証。Python参考検証器を全120配置・1,680件の0連鎖で独立照合し、不正公開情報と探索上限も検査。これはBendの全称証明ではない。一般サイズ・GUIへの導入は未了 |
 
 ## CIの判定範囲
 
-`intermediate.yml`は、上記の**存在する**Bendコードを型検査し、純粋関数のサンプルについて期待値を照合し、`law`の判定を確認します。GUIコードの型検査に加え、Linux X11仮想デスクトップで10×10ウィンドウのクリック・旗・S/L保存復元・通知を有限の入力列で実機検査します。物理GPU・他OS・スクリーンリーダーは対象外で、原子的保存は未実装です。XeLaTeXで原稿を組版しPDFを成果物としてアップロードします。
+`intermediate.yml`は、上記の**存在する**Bendコードを型検査し、純粋関数のサンプルについて期待値を照合し、`law`の判定を確認します。GUIコードの型検査に加え、Linux X11仮想デスクトップで10×10ウィンドウのクリック・旗・S/L保存復元・通知を有限の入力列で実機検査します。物理GPU・他OS・スクリーンリーダーは対象外です。通知付き配布GUIのLinux限定原子的名前置換は有限検証済みですが、fsyncによる永続性や同時保存の安全性は検証していません。XeLaTeXで原稿を組版しPDFを成果物としてアップロードします。
 
 **未実装項目をCIの合格だけで実装済みと見なしてはいけません。** 最終的には、すべての機能群に独立して実行できる学習サンプルとテストを追加する方針です。
 
