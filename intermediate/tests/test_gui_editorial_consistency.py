@@ -43,5 +43,22 @@ class GuiEditorialConsistencyTest(unittest.TestCase):
                 self.assertIn(expected, self.text)
 
 
+    def test_current_reader_distribution_status(self):
+        root = TEX.parent
+        readme = (root / "README.md").read_text(encoding="utf-8")
+        coverage = (root / "COVERAGE.md").read_text(encoding="utf-8")
+        checklist = (root / "EDITORIAL_CHECKLIST.md").read_text(encoding="utf-8")
+        current_coverage = coverage.partition("---")[0]
+        self.assertIn("129ページPDF", current_coverage)
+        self.assertIn("103エントリ", current_coverage)
+        self.assertIn("原子的な名前置換", current_coverage)
+        self.assertNotIn("検収をまだ終えていません", current_coverage)
+        self.assertIn("現行の読者ZIPに収録しています", readme)
+        self.assertIn("PDF・ZIPへの反映と配布版のX11有限検収を完了", readme)
+        self.assertNotIn("次版へ収録する候補", readme)
+        self.assertNotIn("合計103エントリを予定", readme)
+        self.assertIn("fsyncなし", checklist)
+        self.assertIn("同一UID競合", checklist)
+
 if __name__ == "__main__":
     unittest.main()
