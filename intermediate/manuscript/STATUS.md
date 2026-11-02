@@ -1,3 +1,9 @@
+## 2026-11-02：第7・8章13節の個別校閲（検証候補）
+
+正本 `ccbb24f2` のReader・Tests・Intermediate・PDF layout・X11の5系統CIは全成功。第7章8節と第8章5節を本文・配布コード・期待値・有限保証で照合し、[節単位レビュー](07_08_節単位校閲_20261102.md)と新規の節単位回帰テスト `tests/test_chapter7_8_sections.py` を用意。Byte/File 56条件と時計3試行は既存CIで成功済みだが、**新しい静的テストは検証ブランチCI待ち**。Bend・TeX・PDF・103エントリZIP・採用表紙は不変更。全149節の最終校閲、一般N×N運ゲー無し、保存の電源断・同時実行安全性、他OS・物理GPU・スクリーンリーダーは未完了。
+
+---
+
 ## 2026-11-02：配布GUI原子的保存・本文・129ページPDF・103エントリZIPの検証済み候補
 
 - 正本Draft PR #4 は `75056fef`（統合前）、検証ブランチの生成物コミットは [`b92c98ef`](https://github.com/Nasu726/bend2-intro-with-life/commit/b92c98efa87a445be5f74b7a7388e230652f9eb6)。PR外の [staging run #41353976090](https://github.com/Nasu726/bend2-intro-with-life/actions/runs/41353976090) は全ステップ成功。採用表紙blob `ba9b5c4cb296e3adfd119ace6b55abc419c6faf1` 不変更、旧PDFの表紙ページと新PDFの画素一致も確認。
