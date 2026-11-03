@@ -1,0 +1,50 @@
+name: Intermediate N x N GUI virtual-desktop acceptance
+on:
+  pull_request:
+    paths:
+      - 'intermediate/minesweeper/nxn_gui_*.bend'
+      - 'intermediate/scripts/test_nxn_gui_desktop.py'
+      - '.github/workflows/intermediate-gui-desktop.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-x11:
+    name: Native X11 window, pixel, and input smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      BEND_NO_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install X11, screenshots, and native build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb xdotool imagemagick libx11-dev clang
+          python3 -m pip install --disable-pip-version-check pillow
+      - name: Install Bend 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://bend-lang.com/install.sh -o /tmp/install-bend.sh
+          sh /tmp/install-bend.sh
+          echo "$HOME/.bend/bin" >> "$GITHUB_PATH"
+      - name: Native GUI smoke preflight
+        run: python3 intermediate/scripts/test_nxn_gui_desktop.py --static-only
+      - name: Build and operate native 10x10 GUI under Xvfb
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/gui-acceptance"
+          GUI_SMOKE_SCREENSHOTS="$RUNNER_TEMP/gui-acceptance" xvfb-run -a -s '-screen 0 1280x960x24' python3 intermediate/scripts/test_nxn_gui_desktop.py
+      - name: Preserve X11 images and native log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nxn-gui-virtual-desktop-evidence
+          path: ${{ runner.temp }}/gui-acceptance/
+          if-no-files-found: ignore

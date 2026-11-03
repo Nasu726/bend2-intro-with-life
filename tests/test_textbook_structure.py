@@ -33,9 +33,20 @@ class TextbookStructureTests(unittest.TestCase):
 
     def test_part_two_starts_with_life_specification(self):
         first = self.part2.index(r"\chapter{ライフゲームのしくみと制作するもの}")
-        implementation = self.part2.index(r"\chapter{一次元配列で8×8盤面を表す}")
+        implementation = self.part2.index(r"\chapter{座標とindex関数で8×8盤面を扱う}")
         self.assertLess(first, implementation)
         self.assertIn("B3/S23", self.part2[first:implementation])
+
+    def test_life_uses_xy_index_consistently(self):
+        self.assertIn("def index(x: U32, y: U32)", self.part2)
+        for sample in ("05_glider.bend", "06_neighbors.bend",
+                       "07_life_core.bend", "08_life_terminal.bend", "life_core.bend"):
+            code = (ROOT / "src" / sample).read_text(encoding="utf8")
+            self.assertIn("def index(x: U32, y: U32) -> U32:", code)
+            self.assertIn("(y * 8 + x : U32)", code)
+            self.assertIn("index(", code)
+        self.assertIn("index(1, 0)", (ROOT/"src/05_glider.bend").read_text())
+        self.assertIn("index(2, 2)", (ROOT/"src/05_glider.bend").read_text())
 
     def test_no_editorial_warnings_to_readers(self):
         for term in ("ゲームの規則とプログラミング言語の仕様は別物", "別物であることを意識", "このPartでは、まず"):

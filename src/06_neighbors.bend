@@ -1,9 +1,14 @@
 import Base
 
+# In an 8x8 board, x is the column and y is the row (both 0..7).
+# This helper assumes the caller has already checked the range.
+def index(x: U32, y: U32) -> U32:
+  (y * 8 + x : U32)
+
 # Read one cell from an 8x8 torus.
 # Each read consumes a board and produces a new board plus a cell value.
 def at(b: Array<U32>, x: U32, y: U32) -> Array<U32> & U32:
-  Array.get(U32, b, (y * 8 + x : U32))
+  Array.get(U32, b, index(x, y))
 
 # Returned board, neighbour count and original cell value.
 def near_9(r: Array<U32> & U32, sum: U32) -> Array<U32> & (U32 & U32):
@@ -51,9 +56,9 @@ def neighbors(+x: U32, +y: U32, b: Array<U32>) -> Array<U32> & (U32 & U32):
 
 def blinker() -> Array<U32>:
   b0 = [0 : U32*64n]
-  b1 = Array.set(U32, b0, 27, 1)
-  b2 = Array.set(U32, b1, 28, 1)
-  Array.set(U32, b2, 29, 1)
+  b1 = Array.set(U32, b0, index(3, 3), 1)
+  b2 = Array.set(U32, b1, index(4, 3), 1)
+  Array.set(U32, b2, index(5, 3), 1)
 
 def count_from_pair(r: Array<U32> & (U32 & U32)) -> U32:
   (board, values) = r
