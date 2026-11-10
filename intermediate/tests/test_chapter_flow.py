@@ -112,6 +112,22 @@ class ChapterFlowTest(unittest.TestCase):
         self.assertIn("nxn_gui_atomic_store.bend", readme)
         self.assertIn("Atomic.save_atomic_report(model)", gui)
 
+
+    def test_gui_4x4_and_10x10_scope_is_explicit(self):
+        chapter12, chapter21 = self.chapters[11][1], self.chapters[20][1]
+        for phrase in ("この4×4 GUIについてCIで確認したのは",
+                       "13件のヘッドレス入力検査", "第21章の10×10通知付きGUI",
+                       "Linux X11仮想デスクトップ", "電源断後の永続性"):
+            with self.subTest(chapter=12, phrase=phrase):
+                self.assertIn(phrase, chapter12)
+        self.assertNotIn("GUIの現在状態の保存・復元はまだ検収していません", chapter12)
+        for phrase in ("現行配布の通知付きGUI", "原子的な名前置換は有限検証済み",
+                       "同一UIDでの同時保存", "スクリーンリーダー"):
+            with self.subTest(chapter=21, phrase=phrase):
+                self.assertIn(phrase, chapter21)
+        self.assertNotIn("原子的保存候補の配布検収", chapter21)
+        self.assertNotIn("通知付きGUIの新候補", chapter21)
+
     def test_chapter19_two_cell_lesson_is_runnable(self):
         chapter = self.chapters[18][1]
         for phrase in ("56_atomic_two_cells.bend", "Array.atomic.add(array, 1, 7)",
